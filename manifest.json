@@ -6,7 +6,7 @@
       "chipFamily": "ESP32-C3",
       "ota": {
         "url": "https://github.com/chpeps/tinyrail-releases/releases/download/v0.1.0/firmware.bin",
-        "md5": "80935fd668feed960f1421dfc90efa29",
+        "md5": "4333d615bb5bfec4a0da5a07403c352f",
         "summary": "Voir les notes de release sur GitHub",
         "release_url": "https://github.com/chpeps/tinyrail-releases/releases/tag/v0.1.0"
       }
