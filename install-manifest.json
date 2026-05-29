@@ -1,0 +1,13 @@
+{
+  "name": "TinyRail ESP32 v2",
+  "version": "0.5.0",
+  "home_assistant_domain": "esphome",
+  "builds": [
+    {
+      "chipFamily": "ESP32-C3",
+      "parts": [
+        { "path": "https://github.com/chpeps/tinyrail-releases/releases/download/v0.5.0/firmware.factory.bin", "offset": 0 }
+      ]
+    }
+  ]
+}
