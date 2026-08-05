@@ -388,6 +388,11 @@
         <button id="btnOc">Écrire</button>
       </div>
       <div class="row">
+        <label for="cfgShed">Délester sous (V) — 0 pour ne jamais délester</label>
+        <input type="number" id="cfgShed" min="0" max="30" step="0.1">
+        <button id="btnShed">Écrire</button>
+      </div>
+      <div class="row">
         <label for="cfgDelay">Délai de coupure (s) — global</label>
         <input type="number" id="cfgDelay" min="1" max="10" step="0.5">
         <button id="btnDelay">Écrire</button>
@@ -1018,6 +1023,9 @@ const PRESETS = {
   },
 };
 
+// ⚠️ Appelé au chargement, pas seulement une fois authentifié : sinon la
+// section reste vide pour qui l'ouvre avant de s'appairer, et le fait de
+// s'authentifier ensuite ne la remplit pas davantage.
 function buildShedRows() {
   const box = el('shedRows');
   if (box.childElementCount) return;
@@ -1028,16 +1036,22 @@ function buildShedRows() {
                      <input type="number" id="shed${c}" min="0" max="30" step="0.1"
                             placeholder="0 = jamais">`;
     box.appendChild(row);
-    el('shed' + c).addEventListener('change', () => sendShed(c));
+    el('shed' + c).addEventListener('change', () => sendShed(c, 'apercu'));
   }
 }
 
-async function sendShed(ch) {
-  const cv = Math.round((parseFloat(el('shed' + ch).value) || 0) * 100);
+// Le seuil apparaît à deux endroits — dans la configuration du canal et dans la
+// vue d'ensemble de la protection batterie. `source` dit d'où vient la valeur,
+// pour recopier dans l'autre plutôt que de laisser les deux diverger.
+async function sendShed(ch, source) {
+  const champ = source === 'config' ? el('cfgShed') : el('shed' + ch);
+  const cv = Math.round((parseFloat(champ.value) || 0) * 100);
   const r = await sendCmd(OP.SET_SHED, ch, [cv & 0xff, (cv >> 8) & 0xff]);
   if (r && r.status === 0) {
-    log(cv === 0 ? `CH${ch} : jamais délesté`
-                 : `CH${ch} délesté sous ${(cv / 100).toFixed(1)} V`, 'k');
+    const v = (cv / 100).toFixed(1);
+    el('shed' + ch).value = v;
+    if (+el('cfgCh').value === ch) el('cfgShed').value = v;
+    log(cv === 0 ? `CH${ch} : jamais délesté` : `CH${ch} délesté sous ${v} V`, 'k');
   }
 }
 
@@ -1066,7 +1080,7 @@ async function applyPreset(name) {
   await sendBattery();
   for (let c = 1; c <= 8; c++) {
     el('shed' + c).value = p.seuils[c - 1].toFixed(1);
-    await sendShed(c);
+    await sendShed(c, 'apercu');
   }
 }
 
@@ -1139,6 +1153,13 @@ async function loadConfig() {
     el('cfgTos').value = dv.getInt16(0, true);
     el('cfgThyst').value = dv.getInt16(2, true);
   }
+  const sh = await sendCmd(OP.GET_SHED, ch);
+  if (sh && sh.status === 0) {
+    const dv = new DataView(sh.payload.buffer, sh.payload.byteOffset);
+    const v = (dv.getUint16(0, true) / 100).toFixed(1);
+    el('cfgShed').value = v;
+    el('shed' + ch).value = v;
+  }
   el('cfgLabel').value = S.labels[ch] || '';
 }
 
@@ -1207,6 +1228,8 @@ function wire() {
     if (r && r.status === 0) { S.labels[ch] = el('cfgLabel').value; renderChannels();
                                log(`CH${ch} renommé`, 'k'); }
   });
+  el('btnShed').addEventListener('click',
+    () => sendShed(+el('cfgCh').value, 'config'));
   el('btnOc').addEventListener('click', async () => {
     const ma = Math.round(parseFloat(el('cfgOc').value) * 1000);
     const r = await sendCmd(OP.SET_OC_THRESHOLD, +el('cfgCh').value, u16(ma));
@@ -1280,6 +1303,7 @@ function wire() {
 
 if (typeof document !== 'undefined') {
   buildChannels();
+  buildShedRows();
   wire();
   if (!navigator.bluetooth) el('unsupported').classList.remove('hidden');
   else offerKnownDevice();
