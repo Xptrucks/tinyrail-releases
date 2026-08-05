@@ -646,7 +646,7 @@
 // Remplacé à la publication par tools/webble/publish.sh ou par le workflow de
 // release. Reste tel quel lorsqu'on sert le fichier directement : c'est ainsi
 // qu'on distingue une page de travail d'une page publiée.
-const CONSOLE_VERSION = '2026-08-06 · 1595b0d';
+const CONSOLE_VERSION = '2026-08-06 · 136017a';
 
 const BASE = '12340000-1234-1234-1234-1234123400';   // + 2 hex
 const U = {
@@ -846,6 +846,7 @@ async function connectTo(device) {
     S.device.addEventListener('gattserverdisconnected', onDisconnect);
 
     setStatus('connexion…', 'busy');
+    purgerFileGatt();          // rien de la session précédente ne doit survivre
     S.server = await S.device.gatt.connect();
     const svc = await S.server.getPrimaryService(U.service);
 
@@ -977,6 +978,7 @@ function planifierReconnexion() {
 
 function onDisconnect() {
   S.server = null; S.chars = {}; S.authed = false;
+  purgerFileGatt();
   el('btnConnect').textContent = 'Connecter';
   refreshEnabled();
   if (S.reconnexionVoulue) {
@@ -1050,9 +1052,21 @@ let gattQueue = Promise.resolve();
 // suffisait à provoquer « GATT operation already in progress » dès qu'une
 // authentification croisait un chargement.
 function filerGatt(fn) {
-  const run = () => fn();
+  const run = async () => {
+    // ⚠️ Ne rien tenter sur un lien mort : après un redémarrage de la carte,
+    // les opérations restées en file s'exécutaient sur la connexion suivante
+    // et entraient en collision avec son authentification.
+    if (!S.server || !S.server.connected) return null;
+    return fn();
+  };
   gattQueue = gattQueue.then(run, run);
   return gattQueue;
+}
+
+// La file appartient à une connexion : elle repart à zéro à chaque transition.
+function purgerFileGatt() {
+  gattQueue = Promise.resolve();
+  if (pending) { clearTimeout(pending.timer); pending = null; }
 }
 
 function sendCmd(op, idx = 0, payload = []) {
@@ -1377,7 +1391,7 @@ function buildInputConfig() {
     }
   });
   el('icfgProf').addEventListener('change', () => {
-    const b = [null, [180, 10], [0, 190], [240, 33], [0, 90]][+el('icfgProf').value];
+    const b = [null, [10, 180], [0, 190], [240, 33], [0, 90]][+el('icfgProf').value];
     if (b) { el('icfgRe').value = b[0]; el('icfgRf').value = b[1]; }
     envoyerSonde();
   });
