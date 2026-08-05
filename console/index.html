@@ -256,14 +256,16 @@
   .an select { width: 100%; margin-top: 8px; flex: none; }
   .an-head { display: flex; align-items: center; gap: 8px; }
   .an-head b { flex: 1; }
-  .an-detail {
-    font-size: 12px; color: rgb(var(--muted)); margin-top: 8px;
-    font-variant-numeric: tabular-nums; min-height: 1em;
+  /* Liaison entrée → sortie, séparée du réglage de mesure par un filet. */
+  .an-link {
+    margin-top: 10px; padding-top: 10px;
+    border-top: 1px solid rgb(var(--border));
+    display: grid; gap: 8px;
   }
-  button.tiny {
-    padding: 5px 11px; font-size: 11px; min-height: 0; font-weight: 600;
-    color: rgb(var(--muted)); text-transform: uppercase; letter-spacing: .6px;
-  }
+  .an-link select, .an-link input { width: 100%; flex: none; }
+  .an-link-row { display: flex; gap: 8px; }
+  .an-link-row select { flex: 1 1 auto; min-width: 0; }
+  .an-link-row input { flex: 0 0 96px; }
 
   /* ── Journal ─────────────────────────────────────────── */
   #log {
@@ -459,7 +461,7 @@ const OP = {
   GET_OVERCURRENT: 0x20, SET_OC_THRESHOLD: 0x21, SET_OC_DELAY: 0x22,
   GET_THERMAL: 0x30, SET_THERMAL: 0x31,
   GET_LABEL: 0x40, SET_LABEL: 0x41,
-  GET_INPUT: 0x50, SET_INPUT_MODE: 0x51,
+  GET_INPUT: 0x50, SET_INPUT_MODE: 0x51, GET_LINK: 0x52, SET_LINK: 0x53,
   GET_INFO: 0x60, RESTART: 0x61, SAFE_MODE: 0x62,
 };
 const OP_NAME = Object.fromEntries(Object.entries(OP).map(([k, v]) => [v, k]));
@@ -471,6 +473,12 @@ const STATUS = {
 
 const MODES = ['Tension 0-30 V', 'Sonde 0-90 Ω', 'Sonde 10-180 Ω',
                'Sonde 50-500 Ω', 'Contact sec'];
+
+// Actions de liaison — même ordre que le select an{n}_link_mode du firmware.
+const ACTIONS = ['Aucune action', 'Contact — suit l\'état', 'Contact — bascule',
+                 'Tension — au-dessus du seuil', 'Tension — en dessous du seuil'];
+const ACTION_NEEDS_THRESHOLD = i => i === 3 || i === 4;
+const ACTION_IS_CONTACT = i => i === 1 || i === 2;
 
 const NAN16 = -32768;   // sentinelle « capteur non publié » (to_i16)
 
@@ -715,7 +723,7 @@ async function authenticate() {
       el('pairHint').classList.add('hidden');
       setStatus((S.device.name || 'connecté') + ' · authentifié', 'on');
       log('authentifié — commandes actives', 'k');
-      loadLabels();
+      loadLabels().then(loadLinks);   // GET_LINK est refusé sans authentification
     } else {
       log('authentification refusée (clé invalide ?)', 'e');
     }
@@ -834,21 +842,33 @@ function renderInputs(list) {
       const d = document.createElement('div');
       d.className = 'an';
       d.innerHTML =
-        `<div class="an-head">AN${i + 1} <b id="anv${i}">—</b>
-           <button class="ghost tiny" id="and${i}"
-                   aria-label="Détail entrée ${i + 1}">détail</button></div>
+        `<div class="an-head">AN${i + 1} <b id="anv${i}">—</b></div>
          <select id="anm${i}" aria-label="Mode entrée ${i + 1}"></select>
-         <div class="an-detail" id="anx${i}"></div>`;
+         <div class="an-link">
+           <select id="anact${i}" aria-label="Action de l'entrée ${i + 1}"></select>
+           <div class="an-link-row">
+             <select id="antgt${i}" aria-label="Sortie pilotée par l'entrée ${i + 1}"></select>
+             <input type="number" id="anthr${i}" min="0" max="30" step="0.1"
+                    placeholder="seuil" aria-label="Seuil de l'entrée ${i + 1}">
+           </div>
+         </div>`;
       box.appendChild(d);
-      const sel = d.querySelector('select');
+
+      const sel = el('anm' + i);
       MODES.forEach((m, k) => sel.add(new Option(m, k)));
       sel.addEventListener('change', async () => {
         const r = await sendCmd(OP.SET_INPUT_MODE, i + 1, [+sel.value]);
         if (r && r.status === 0) log(`AN${i + 1} → ${MODES[+sel.value]}`, 'k');
       });
-      // GET_INPUT donne les trois mesures simultanées, que la trame temps réel
-      // ne transporte pas (elle n'envoie que la valeur du mode courant).
-      el('and' + i).addEventListener('click', () => showInputDetail(i + 1));
+
+      const act = el('anact' + i), tgt = el('antgt' + i);
+      ACTIONS.forEach((a, k) => act.add(new Option(a, k)));
+      tgt.add(new Option('Aucune sortie', 0));
+      for (let c = 1; c <= 8; c++) tgt.add(new Option('pilote CH' + c, c));
+      act.addEventListener('change', () => { refreshLinkRow(i); sendLink(i + 1); });
+      tgt.addEventListener('change', () => sendLink(i + 1));
+      el('anthr' + i).addEventListener('change', () => sendLink(i + 1));
+      refreshLinkRow(i);
     });
   }
   list.forEach((inp, i) => {
@@ -858,17 +878,41 @@ function renderInputs(list) {
   });
 }
 
-async function showInputDetail(n) {
-  const box = el('anx' + (n - 1));
-  const r = await sendCmd(OP.GET_INPUT, n);
-  if (!r || r.status !== 0) {
-    box.textContent = r ? (STATUS[r.status] || 'refusé') : 'pas de réponse';
-    return;
+/* ── Liaison entrée → sortie ─────────────────────────────────── */
+
+// Le seuil n'a de sens que pour les deux actions de tension ; la sortie n'en a
+// aucun tant qu'aucune action n'est choisie.
+function refreshLinkRow(i) {
+  const a = +el('anact' + i).value;
+  el('anthr' + i).classList.toggle('hidden', !ACTION_NEEDS_THRESHOLD(a));
+  el('antgt' + i).classList.toggle('hidden', a === 0);
+}
+
+async function sendLink(n) {
+  const i = n - 1;
+  const action = +el('anact' + i).value;
+  const target = +el('antgt' + i).value;
+  const cv = Math.round((parseFloat(el('anthr' + i).value) || 0) * 100);
+  const r = await sendCmd(OP.SET_LINK, n,
+                          [action, target, cv & 0xff, (cv >> 8) & 0xff]);
+  if (r && r.status === 0) {
+    log(action === 0 ? `AN${n} : liaison désactivée`
+      : `AN${n} → ${ACTIONS[action]}${target ? ' · CH' + target : ''}`
+        + (ACTION_NEEDS_THRESHOLD(action) ? ` · ${(cv / 100).toFixed(1)} V` : ''), 'k');
   }
-  const dv = new DataView(r.payload.buffer, r.payload.byteOffset);
-  const cv = dv.getInt16(3, true), ohm = dv.getInt16(5, true), pct = dv.getInt16(7, true);
-  const f = (v, u, d = 0) => v === NAN16 ? '—' : (d ? (v / 100).toFixed(2) : v) + ' ' + u;
-  box.textContent = `${f(cv, 'V', 1)} · ${f(ohm, 'Ω')} · ${f(pct, '%')}`;
+}
+
+async function loadLinks() {
+  for (let n = 1; n <= 4; n++) {
+    const r = await sendCmd(OP.GET_LINK, n);
+    if (!r || r.status !== 0) continue;
+    const i = n - 1;
+    const dv = new DataView(r.payload.buffer, r.payload.byteOffset);
+    el('anact' + i).value = String(r.payload[0]);
+    el('antgt' + i).value = String(r.payload[1]);
+    el('anthr' + i).value = (dv.getUint16(2, true) / 100).toFixed(1);
+    refreshLinkRow(i);
+  }
 }
 
 /* ══════════════════════════════════════════════════════════════
