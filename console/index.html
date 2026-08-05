@@ -507,7 +507,7 @@
 // Remplacé à la publication par tools/webble/publish.sh ou par le workflow de
 // release. Reste tel quel lorsqu'on sert le fichier directement : c'est ainsi
 // qu'on distingue une page de travail d'une page publiée.
-const CONSOLE_VERSION = '2026-08-05 · e2f811d';
+const CONSOLE_VERSION = '2026-08-05 · 99bda07';
 
 const BASE = '12340000-1234-1234-1234-1234123400';   // + 2 hex
 const U = {
@@ -530,6 +530,7 @@ const OP = {
   GET_THERMAL: 0x30, SET_THERMAL: 0x31,
   GET_LABEL: 0x40, SET_LABEL: 0x41,
   GET_INPUT: 0x50, SET_INPUT_MODE: 0x51, GET_LINK: 0x52, SET_LINK: 0x53,
+  GET_SHED: 0x54, SET_SHED: 0x55, GET_BATTERY: 0x56, SET_BATTERY: 0x57,
   GET_INFO: 0x60, RESTART: 0x61, SAFE_MODE: 0x62, FACTORY_RESET: 0x63,
 };
 const OP_NAME = Object.fromEntries(Object.entries(OP).map(([k, v]) => [v, k]));
@@ -759,6 +760,14 @@ function dispatchResp(dv) {
 let cmdQueue = Promise.resolve();
 
 function sendCmd(op, idx = 0, payload = []) {
+  // ⚠️ Un opcode absent de OP vaut undefined, et Uint8Array le convertit
+  // silencieusement en 0 : la carte répondait « opcode inconnu » sur op=0
+  // pendant que la console attendait une réponse d'opcode undefined. Trois
+  // minutes de journal illisible pour une constante oubliée.
+  if (typeof op !== 'number') {
+    log('opcode inconnu côté console — page à mettre à jour', 'e');
+    return Promise.resolve(null);
+  }
   const run = () => new Promise(async (resolve) => {
     if (!S.chars.cmd) { resolve(null); return; }
     const frame = new Uint8Array([op, idx, ...payload]);
@@ -773,13 +782,22 @@ function sendCmd(op, idx = 0, payload = []) {
     }, 3000) };
     try {
       await S.chars.cmd.writeValue(frame);
+      ecriture = true;
     } catch (e) {
+      ecriture = true;
       clearTimeout(pending.timer); pending = null;
       log('écriture : ' + e.message, 'e');
       resolve(null);
     }
   });
-  cmdQueue = cmdQueue.then(run, run);   // une seule commande en vol à la fois
+  // ⚠️ Sur expiration du délai, la promesse se résout alors que l'écriture
+  // BLE peut être encore en vol. Lancer la suivante donnerait « GATT operation
+  // already in progress » : on attend donc aussi la fin de l'écriture.
+  let ecriture = false;
+  const attendreEcriture = async () => {
+    for (let i = 0; i < 60 && !ecriture; i++) await new Promise(r => setTimeout(r, 50));
+  };
+  cmdQueue = cmdQueue.then(run, run).finally(attendreEcriture);
   return cmdQueue;
 }
 
