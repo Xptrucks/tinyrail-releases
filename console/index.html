@@ -186,6 +186,7 @@
   }
   .ch-id { font-weight: 600; }
   .ch-meta .trip { color: rgb(var(--err)); font-weight: 600; }
+  .ch-meta .linked { color: rgb(var(--neon)); font-weight: 600; }
   /* Le curseur n'occupe que la colonne de gauche : l'interrupteur peut alors
      s'étendre sur les deux lignes et se centrer sur toute la hauteur. */
   .slider { grid-column: 1; }
@@ -743,13 +744,25 @@ function dispatchResp(dv) {
   }
 }
 
+// ⚠️ Les commandes sont sérialisées. Le firmware n'a qu'une réponse courante et
+// `pending` ne peut suivre qu'un échange : sans cette file, un clic pendant un
+// chargement (la section batterie en enchaîne 9, les libellés 12) écrasait
+// l'échange en cours. L'ancienne promesse ne se résolvait jamais et son minuteur
+// signalait « pas de réponse » sur une commande pourtant honorée.
+let cmdQueue = Promise.resolve();
+
 function sendCmd(op, idx = 0, payload = []) {
-  return new Promise(async (resolve) => {
+  const run = () => new Promise(async (resolve) => {
     if (!S.chars.cmd) { resolve(null); return; }
     const frame = new Uint8Array([op, idx, ...payload]);
     pending = { op, resolve, timer: setTimeout(() => {
-      if (pending && pending.op === op) { pending = null; resolve(null); }
-      log(`${OP_NAME[op] || op} : pas de réponse`, 'e');
+      // Le message reste dans la garde : hors d'elle, il s'affichait même
+      // quand la réponse était arrivée.
+      if (pending && pending.op === op) {
+        pending = null;
+        log(`${OP_NAME[op] || op} : pas de réponse`, 'e');
+        resolve(null);
+      }
     }, 3000) };
     try {
       await S.chars.cmd.writeValue(frame);
@@ -759,6 +772,8 @@ function sendCmd(op, idx = 0, payload = []) {
       resolve(null);
     }
   });
+  cmdQueue = cmdQueue.then(run, run);   // une seule commande en vol à la fois
+  return cmdQueue;
 }
 
 /* ── Authentification ────────────────────────────────────────── */
@@ -918,8 +933,14 @@ function renderChannels() {
     el('ch' + i).classList.toggle('trip', !!tripped);
 
     const amps = S.telemetry ? S.telemetry.amps[i].toFixed(3) + ' A' : '—';
+    const pil = pilotePour(i + 1);
+    // Les actions 1 et 2 imposent l'état en continu : le signaler évite de
+    // chercher pourquoi la sortie « revient toute seule ».
+    const asservi = pil && (pil.action === 1 || pil.action === 2);
     el('meta' + i).innerHTML = '· ' + (ch.on ? `${pct} % · ` : 'éteint · ') + amps
-      + (tripped ? ' · <span class="trip">surintensité</span>' : '');
+      + (tripped ? ' · <span class="trip">surintensité</span>' : '')
+      + (pil ? ` · <span class="linked">${asservi ? 'asservi à' : 'commandé par'}`
+             + ` AN${pil.entree}</span>` : '');
     // Sans libellé lu (avant authentification), on garde « Canal n » plutôt
     // qu'un titre vide.
     if (S.labels[i + 1]) el('lbl' + i).textContent = S.labels[i + 1];
@@ -1096,6 +1117,7 @@ async function sendBattery() {
 }
 
 async function loadLinks() {
+  S.links = {};
   for (let n = 1; n <= 4; n++) {
     const r = await sendCmd(OP.GET_LINK, n);
     if (!r || r.status !== 0) continue;
@@ -1105,7 +1127,21 @@ async function loadLinks() {
     el('antgt' + i).value = String(r.payload[1]);
     el('anthr' + i).value = (dv.getUint16(2, true) / 100).toFixed(1);
     refreshLinkRow(i);
+    // Mémorisé pour signaler, sur la carte du canal, qu'il est asservi :
+    // sans cela une sortie « qui revient toute seule » reste inexplicable.
+    if (r.payload[0] !== 0 && r.payload[1] !== 0) {
+      S.links[n] = { action: r.payload[0], target: r.payload[1] };
+    }
   }
+  renderChannels();
+}
+
+// Quelle entrée pilote ce canal, et de façon permanente ou non ?
+function pilotePour(ch) {
+  for (const [n, l] of Object.entries(S.links || {})) {
+    if (l.target === ch) return { entree: +n, action: l.action };
+  }
+  return null;
 }
 
 /* ══════════════════════════════════════════════════════════════
@@ -1114,6 +1150,11 @@ async function loadLinks() {
 
 async function setChannel(ch, on, pct) {
   if (!S.authed) { log('non authentifié — appairez d\'abord', 'e'); return; }
+  const pil = pilotePour(ch);
+  if (pil && (pil.action === 1 || pil.action === 2)) {
+    log(`CH${ch} est asservi à AN${pil.entree} : la commande sera reprise `
+        + 'dans la seconde. Changez l\'action de l\'entrée pour reprendre la main.', 'e');
+  }
   const raw = on ? Math.max(0, Math.min(255, Math.round(pct * 255 / 100))) : 0;
   await sendCmd(OP.SET_CHANNEL, ch, [on ? 1 : 0, raw]);
 }
