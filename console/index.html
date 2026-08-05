@@ -21,171 +21,240 @@
 <meta name="color-scheme" content="dark light">
 <title>TinyRail — console BLE</title>
 <style>
+  /* Jetons repris de tinyrail.xptrucks.fr (site_web/) pour que la console
+     et le site se lisent comme un même produit. Valeurs en composantes RGB :
+     elles servent aussi aux fonds translucides, comme sur le site. */
   :root {
-    --bg: #070b14;
-    --panel: #0e1524;
-    --panel-2: #131c30;
-    --line: #1e2b45;
-    --txt: #e8eefc;
-    --txt-dim: #8296bb;
-    --accent: #2f9bff;
-    --accent-glow: #2f9bff55;
-    --on: #21d07a;
-    --warn: #ffb020;
-    --err: #ff4d5e;
-    --radius: 14px;
+    --bg: 5 8 16;
+    --surface: 13 18 32;
+    --fg: 233 238 247;
+    --muted: 148 163 184;
+    --border: 30 41 59;
+    --neon: 56 160 255;
+    --halo: 120 170 255;
+    --halo-strength: .35;
+    --on: 33 208 122;
+    --warn: 255 176 32;
+    --err: 255 77 94;
+    --radius: 16px;
   }
   @media (prefers-color-scheme: light) {
     :root {
-      --bg: #f4f7fc; --panel: #fff; --panel-2: #eef3fb; --line: #d7e0ef;
-      --txt: #0d1626; --txt-dim: #5c6f8e; --accent-glow: #2f9bff33;
+      --bg: 247 249 252; --surface: 255 255 255; --fg: 15 23 42;
+      --muted: 71 85 105; --border: 213 222 235; --neon: 12 110 220;
+      --halo: 30 90 200; --halo-strength: .12;
     }
   }
   * { box-sizing: border-box; }
   body {
-    margin: 0; background: var(--bg); color: var(--txt);
+    margin: 0; color: rgb(var(--fg));
+    background: rgb(var(--bg));
     font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
     padding: env(safe-area-inset-top) env(safe-area-inset-right)
              env(safe-area-inset-bottom) env(safe-area-inset-left);
     -webkit-text-size-adjust: 100%;
+    min-height: 100dvh;
   }
-  .wrap { max-width: 720px; margin: 0 auto; padding: 16px 14px 40px; }
+  /* Halo bleu du site : une nappe radiale fixe derrière le contenu. */
+  body::before {
+    content: ''; position: fixed; inset: 0; pointer-events: none; z-index: -1;
+    background:
+      radial-gradient(1100px 620px at 50% -12%,
+        rgb(var(--halo) / var(--halo-strength)), transparent 62%),
+      radial-gradient(760px 420px at 88% 8%,
+        rgb(var(--neon) / calc(var(--halo-strength) * .5)), transparent 60%);
+  }
+  .wrap { max-width: 720px; margin: 0 auto; padding: 14px 14px 48px; }
 
   /* ── En-tête ─────────────────────────────────────────── */
+  /* En-tête : barre en pilule translucide, comme la navigation du site. */
   header {
-    display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
-    margin-bottom: 16px;
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 14px; padding: 8px 8px 8px 14px;
+    /* Opacité élevée : en position collante, un fond trop translucide laisse
+       lire le contenu qui défile dessous, même avec le flou. */
+    background: rgb(var(--surface) / .94);
+    border: 1px solid rgb(var(--border));
+    border-radius: 999px;
+    backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+    box-shadow: 0 6px 24px -12px rgb(0 0 0 / .8);
+    position: sticky; top: 6px; z-index: 5;
   }
   h1 {
-    font-size: 19px; margin: 0; letter-spacing: -0.2px; flex: 1 1 auto;
+    font-size: 17px; margin: 0; flex: 1 1 auto; min-width: 0;
+    letter-spacing: -0.3px; font-weight: 700;
   }
-  h1 small { display: block; font-weight: 400; font-size: 12px; color: var(--txt-dim); }
+  h1 small {
+    display: block; font-weight: 400; font-size: 11.5px; color: rgb(var(--muted));
+    letter-spacing: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
   .dot {
-    width: 9px; height: 9px; border-radius: 50%; background: var(--txt-dim);
-    box-shadow: 0 0 0 0 transparent; transition: .3s; flex: none;
+    width: 9px; height: 9px; border-radius: 50%; flex: none;
+    background: rgb(var(--muted)); transition: .3s;
   }
-  .dot.on { background: var(--on); box-shadow: 0 0 10px var(--on); }
-  .dot.busy { background: var(--warn); box-shadow: 0 0 10px var(--warn); }
+  .dot.on { background: rgb(var(--on)); box-shadow: 0 0 12px rgb(var(--on) / .9); }
+  .dot.busy { background: rgb(var(--warn)); box-shadow: 0 0 12px rgb(var(--warn) / .9); }
 
   button {
-    font: inherit; font-weight: 600; color: var(--txt); cursor: pointer;
-    background: var(--panel-2); border: 1px solid var(--line);
-    border-radius: 10px; padding: 9px 14px; transition: .15s;
-    min-height: 40px;
+    font: inherit; font-weight: 600; color: rgb(var(--fg)); cursor: pointer;
+    background: rgb(var(--surface)); border: 1px solid rgb(var(--border));
+    border-radius: 999px; padding: 10px 16px; transition: .15s;
+    min-height: 44px;                    /* cible tactile confortable */
+    white-space: nowrap;
   }
-  button:hover:not(:disabled) { border-color: var(--accent); }
+  button:hover:not(:disabled) { border-color: rgb(var(--neon) / .8); }
+  button:active:not(:disabled) { transform: scale(.97); }
   button:disabled { opacity: .4; cursor: not-allowed; }
   button.primary {
-    background: var(--accent); border-color: var(--accent); color: #04101f;
-    box-shadow: 0 0 18px var(--accent-glow);
+    background: rgb(var(--neon)); border-color: rgb(var(--neon)); color: #04101f;
+    box-shadow: 0 0 22px rgb(var(--neon) / .45);
   }
   button.ghost { background: transparent; }
+  :focus-visible { outline: 2px solid rgb(var(--neon)); outline-offset: 2px; }
 
   /* ── Bandeau de mesures ──────────────────────────────── */
   .strip {
     display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;
-    margin-bottom: 14px;
+    margin-bottom: 12px;
   }
   .metric {
-    background: var(--panel); border: 1px solid var(--line);
-    border-radius: var(--radius); padding: 10px 12px; text-align: center;
+    background: rgb(var(--surface) / .8); border: 1px solid rgb(var(--border));
+    border-radius: var(--radius); padding: 12px 10px; text-align: center;
   }
-  .metric b { display: block; font-size: 18px; font-variant-numeric: tabular-nums; }
-  .metric span { font-size: 11px; color: var(--txt-dim); text-transform: uppercase;
-                 letter-spacing: .5px; }
-  @media (max-width: 480px) { .strip { grid-template-columns: repeat(2, 1fr); } }
+  .metric b {
+    display: block; font-size: 19px; font-weight: 700;
+    font-variant-numeric: tabular-nums; letter-spacing: -0.4px;
+  }
+  /* Libellé en petites capitales espacées, comme les « eyebrow » du site. */
+  .metric span {
+    font-size: 10px; color: rgb(var(--muted)); text-transform: uppercase;
+    letter-spacing: 1.2px; font-weight: 600;
+  }
+  @media (max-width: 520px) { .strip { grid-template-columns: repeat(2, 1fr); } }
 
   /* ── Canaux ──────────────────────────────────────────── */
   .channels { display: grid; gap: 8px; }
   .ch {
-    background: var(--panel); border: 1px solid var(--line);
+    background: rgb(var(--surface) / .8); border: 1px solid rgb(var(--border));
     border-radius: var(--radius); padding: 12px 14px;
-    display: grid; grid-template-columns: 1fr auto; gap: 6px 12px;
-    align-items: center;
+    display: grid; grid-template-columns: 1fr auto; gap: 4px 14px;
+    align-items: center; transition: border-color .2s, box-shadow .2s;
   }
-  .ch.lit { border-color: var(--accent); box-shadow: 0 0 20px -6px var(--accent-glow); }
-  .ch.trip { border-color: var(--err); }
-  .ch-name { font-weight: 600; }
-  .ch-name em { font-style: normal; color: var(--txt-dim); font-weight: 400; font-size: 12px; }
-  .ch-meta { font-size: 12px; color: var(--txt-dim); font-variant-numeric: tabular-nums; }
-  .ch-meta .trip { color: var(--err); font-weight: 600; }
-  .slider { grid-column: 1 / -1; }
-  input[type=range] { width: 100%; accent-color: var(--accent); height: 28px; }
+  .ch.lit {
+    border-color: rgb(var(--neon) / .85);
+    box-shadow: 0 0 26px -8px rgb(var(--neon) / .75);
+  }
+  .ch.trip { border-color: rgb(var(--err) / .9); }
+  .ch-name { font-weight: 700; letter-spacing: -0.2px; }
+  .ch-name em {
+    font-style: normal; color: rgb(var(--muted)); font-weight: 400; font-size: 13px;
+  }
+  .ch-meta {
+    font-size: 12.5px; color: rgb(var(--muted)); font-variant-numeric: tabular-nums;
+  }
+  .ch-meta .trip { color: rgb(var(--err)); font-weight: 600; }
+  /* Le curseur n'occupe que la colonne de gauche : l'interrupteur peut alors
+     s'étendre sur les deux lignes et se centrer sur toute la hauteur. */
+  .slider { grid-column: 1; }
+  input[type=range] {
+    width: 100%; accent-color: rgb(var(--neon)); height: 30px; margin: 0;
+  }
   /* Canal éteint : le firmware renvoie quand même la dernière luminosité.
      L'atténuer évite de lire « 100 % » sur une sortie qui ne débite rien.
      Le curseur reste actif — le manipuler rallume le canal à ce niveau. */
-  .ch:not(.lit) input[type=range] { opacity: .3; }
+  .ch:not(.lit) input[type=range] { opacity: .28; }
 
-  /* Interrupteur */
+  /* Interrupteur — ⚠️ min-height: 0 obligatoire, sinon la règle générique
+     button{min-height:44px} l'étire et décentre la pastille. */
   .sw {
-    position: relative; width: 52px; height: 30px; flex: none;
-    background: var(--panel-2); border: 1px solid var(--line);
-    border-radius: 999px; cursor: pointer; transition: .2s; padding: 0;
+    position: relative; width: 54px; height: 32px; min-height: 0; padding: 0;
+    grid-column: 2; grid-row: 1 / span 2; align-self: center; justify-self: end;
+    background: rgb(var(--border)); border: 1px solid rgb(var(--border));
+    border-radius: 999px; cursor: pointer; transition: background .2s, box-shadow .2s;
   }
-  .sw::after {
+  .sw::after {                       /* 30 px utiles − 24 de pastille = 3 de part et d'autre */
     content: ''; position: absolute; top: 3px; left: 3px;
-    width: 22px; height: 22px; border-radius: 50%;
-    background: var(--txt-dim); transition: .2s;
+    width: 24px; height: 24px; border-radius: 50%;
+    background: rgb(var(--muted)); transition: transform .2s, background .2s;
   }
-  .sw[aria-checked=true] { background: var(--accent); border-color: var(--accent); }
+  .sw[aria-checked=true] {
+    background: rgb(var(--neon)); border-color: rgb(var(--neon));
+    box-shadow: 0 0 16px rgb(var(--neon) / .55);
+  }
   .sw[aria-checked=true]::after { transform: translateX(22px); background: #fff; }
 
   /* ── Sections ────────────────────────────────────────── */
   details {
-    background: var(--panel); border: 1px solid var(--line);
-    border-radius: var(--radius); margin-top: 10px; overflow: hidden;
+    background: rgb(var(--surface) / .8); border: 1px solid rgb(var(--border));
+    border-radius: var(--radius); margin-top: 8px; overflow: hidden;
   }
   summary {
-    padding: 13px 14px; cursor: pointer; font-weight: 600; list-style: none;
+    padding: 15px 14px; cursor: pointer; font-weight: 700; list-style: none;
     display: flex; justify-content: space-between; align-items: center;
+    letter-spacing: -0.2px;
   }
   summary::-webkit-details-marker { display: none; }
-  summary::after { content: '⌄'; color: var(--txt-dim); font-size: 18px; line-height: 1; }
-  details[open] summary::after { content: '⌃'; }
-  .body { padding: 0 14px 14px; display: grid; gap: 12px; }
+  summary::after {
+    content: ''; width: 8px; height: 8px; flex: none; margin-right: 4px;
+    border-right: 2px solid rgb(var(--muted)); border-bottom: 2px solid rgb(var(--muted));
+    transform: rotate(45deg) translate(-2px, -2px); transition: transform .2s;
+  }
+  details[open] summary::after { transform: rotate(-135deg) translate(-2px, -2px); }
+  .body { padding: 0 14px 16px; display: grid; gap: 14px; }
 
   .row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-  .row label { flex: 1 1 130px; font-size: 13px; color: var(--txt-dim); }
-  input[type=number], input[type=text], select {
-    font: inherit; color: var(--txt); background: var(--panel-2);
-    border: 1px solid var(--line); border-radius: 9px; padding: 8px 10px;
-    min-width: 0; flex: 0 1 120px; min-height: 40px;
+  .row label {
+    flex: 1 1 150px; font-size: 13px; color: rgb(var(--muted)); line-height: 1.35;
   }
-  input[type=text] { flex: 1 1 160px; }
+  .row label em { font-style: normal; }
+  input[type=number], input[type=text], select {
+    font: inherit; color: rgb(var(--fg)); background: rgb(var(--bg) / .6);
+    border: 1px solid rgb(var(--border)); border-radius: 12px; padding: 10px 12px;
+    min-width: 0; flex: 0 1 116px; min-height: 44px;
+  }
+  input[type=text] { flex: 1 1 170px; }
+  input:focus, select:focus { border-color: rgb(var(--neon) / .8); outline: none; }
 
   .inputs { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
-  @media (max-width: 480px) { .inputs { grid-template-columns: 1fr; } }
+  @media (max-width: 520px) { .inputs { grid-template-columns: 1fr; } }
   .an {
-    background: var(--panel-2); border: 1px solid var(--line);
-    border-radius: 11px; padding: 10px 12px;
+    background: rgb(var(--bg) / .5); border: 1px solid rgb(var(--border));
+    border-radius: 13px; padding: 12px;
   }
-  .an b { font-variant-numeric: tabular-nums; }
-  .an select { width: 100%; margin-top: 6px; flex: none; }
+  .an b { font-variant-numeric: tabular-nums; font-size: 16px; }
+  .an select { width: 100%; margin-top: 8px; flex: none; }
   .an-head { display: flex; align-items: center; gap: 8px; }
   .an-head b { flex: 1; }
-  .an-detail { font-size: 12px; color: var(--txt-dim); margin-top: 6px;
-               font-variant-numeric: tabular-nums; min-height: 1em; }
-  button.tiny { padding: 4px 8px; font-size: 11px; min-height: 0; font-weight: 500; }
+  .an-detail {
+    font-size: 12px; color: rgb(var(--muted)); margin-top: 8px;
+    font-variant-numeric: tabular-nums; min-height: 1em;
+  }
+  button.tiny {
+    padding: 5px 11px; font-size: 11px; min-height: 0; font-weight: 600;
+    color: rgb(var(--muted)); text-transform: uppercase; letter-spacing: .6px;
+  }
 
   /* ── Journal ─────────────────────────────────────────── */
   #log {
-    font: 12px/1.6 ui-monospace, SFMono-Regular, Menlo, monospace;
+    font: 12px/1.7 ui-monospace, SFMono-Regular, Menlo, monospace;
     white-space: pre-wrap; word-break: break-word;
-    max-height: 210px; overflow-y: auto; color: var(--txt-dim);
+    max-height: 210px; overflow-y: auto; color: rgb(var(--muted));
   }
-  #log .e { color: var(--err); }
-  #log .k { color: var(--on); }
+  #log .e { color: rgb(var(--err)); }
+  #log .k { color: rgb(var(--on)); }
 
   .notice {
-    background: var(--panel); border: 1px solid var(--line);
-    border-left: 3px solid var(--warn);
-    border-radius: var(--radius); padding: 12px 14px; margin-bottom: 14px;
-    font-size: 13px; color: var(--txt-dim);
+    background: rgb(var(--surface) / .8); border: 1px solid rgb(var(--border));
+    border-left: 3px solid rgb(var(--warn));
+    border-radius: var(--radius); padding: 13px 15px; margin-bottom: 12px;
+    font-size: 13.5px; color: rgb(var(--muted)); line-height: 1.55;
   }
-  .notice b { color: var(--txt); }
+  .notice b { color: rgb(var(--fg)); }
   .hidden { display: none !important; }
-  code { font: 12px ui-monospace, Menlo, monospace; background: var(--panel-2);
-         padding: 1px 5px; border-radius: 5px; }
+  code {
+    font: 12px ui-monospace, Menlo, monospace; background: rgb(var(--bg) / .6);
+    padding: 2px 6px; border-radius: 6px;
+  }
 </style>
 </head>
 <body>
@@ -635,7 +704,9 @@ function renderMetrics() {
     if (f.trips.length) bits.push('CH' + f.trips.join(','));
     if (f.thermal) bits.push('therm.');
     el('mFault').textContent = bits.length ? bits.join(' ') : 'aucun';
-    el('mFault').style.color = bits.length ? 'var(--err)' : '';
+    // ⚠️ Les jetons portent des composantes RGB (« 255 77 94 ») : il faut les
+    // envelopper dans rgb(), sinon la couleur est silencieusement ignorée.
+    el('mFault').style.color = bits.length ? 'rgb(var(--err))' : '';
   }
 }
 
