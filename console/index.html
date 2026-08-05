@@ -340,8 +340,9 @@
   </div>
 
   <div class="notice hidden" id="pairHint">
-    <b>Première connexion à cette carte.</b><br>
-    Appuyez <b>3&nbsp;secondes</b> sur le bouton BOOT (SW13) du TinyRail pour ouvrir la
+    <b id="pairTitle">Première connexion à cette carte.</b><br>
+    <span id="pairWhy">Pour commander la carte, il faut récupérer sa clé : </span>
+    appuyez <b>3&nbsp;secondes</b> sur le bouton BOOT (SW13) du TinyRail pour ouvrir la
     fenêtre d'appairage de 30&nbsp;s, puis touchez « Appairer ». La consultation fonctionne
     sans cela ; seules les commandes exigent la clé.
     <div class="row" style="margin-top:10px">
@@ -670,7 +671,7 @@ async function connectTo(device) {
 
     S.key = loadKey();
     if (S.key) { await authenticate(); }
-    else { el('pairHint').classList.remove('hidden'); }
+    else { showPairHint('none'); }
   } catch (e) {
     setStatus('non connecté');
     log('connexion : ' + (e && e.message ? e.message : e), 'e');
@@ -792,13 +793,30 @@ async function authenticate() {
       log('authentifié — commandes actives', 'k');
       loadLabels().then(loadLinks);   // GET_LINK est refusé sans authentification
     } else {
-      log('authentification refusée (clé invalide ?)', 'e');
+      // ⚠️ Sans ce rappel du bandeau, une clé devenue invalide laissait
+      // l'utilisateur devant un journal qui dit « non authentifié » et aucun
+      // moyen visible de se réappairer.
+      log('authentification refusée — clé invalide ou carte réinitialisée', 'e');
+      showPairHint('rejected');
     }
     return S.authed;
   } catch (e) {
     log('authentification : ' + e.message, 'e');
     return false;
   }
+}
+
+// Deux situations mènent à l'appairage, et elles n'appellent pas le même
+// message : ne jamais avoir appairé, ou avoir une clé que la carte refuse.
+function showPairHint(reason) {
+  el('pairTitle').textContent = reason === 'rejected'
+    ? 'La carte refuse la clé enregistrée.'
+    : 'Première connexion à cette carte.';
+  el('pairWhy').textContent = reason === 'rejected'
+    ? 'Elle a sans doute été réinitialisée depuis, ou appairée à une autre '
+      + 'clé. Il faut la réappairer : '
+    : 'Pour commander la carte, il faut récupérer sa clé : ';
+  el('pairHint').classList.remove('hidden');
 }
 
 async function pair() {
