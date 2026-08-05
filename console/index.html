@@ -172,13 +172,17 @@
     box-shadow: 0 0 26px -8px rgb(var(--neon) / .75);
   }
   .ch.trip { border-color: rgb(var(--err) / .9); }
-  .ch-name { font-weight: 700; letter-spacing: -0.2px; }
-  .ch-name em {
-    font-style: normal; color: rgb(var(--muted)); font-weight: 400; font-size: 13px;
+  /* Le nom donné par l'utilisateur porte la carte : c'est lui qu'on lit de loin. */
+  .ch-name {
+    font-weight: 700; font-size: 17px; letter-spacing: -0.3px;
+    color: rgb(var(--fg)); line-height: 1.3;
+    overflow-wrap: anywhere;              /* un libellé long ne pousse pas l'interrupteur */
   }
   .ch-meta {
     font-size: 12.5px; color: rgb(var(--muted)); font-variant-numeric: tabular-nums;
+    margin-top: 1px;
   }
+  .ch-id { font-weight: 600; }
   .ch-meta .trip { color: rgb(var(--err)); font-weight: 600; }
   /* Le curseur n'occupe que la colonne de gauche : l'interrupteur peut alors
      s'étendre sur les deux lignes et se centrer sur toute la hauteur. */
@@ -774,10 +778,13 @@ function buildChannels() {
   for (let i = 0; i < 8; i++) {
     const c = document.createElement('div');
     c.className = 'ch'; c.id = 'ch' + i;
+    // Le libellé de l'utilisateur porte le titre ; la référence figée du canal
+    // passe en second, avec l'état et le courant.
     c.innerHTML = `
       <div>
-        <div class="ch-name">CH${i + 1} <em id="lbl${i}"></em></div>
-        <div class="ch-meta" id="meta${i}">—</div>
+        <div class="ch-name" id="lbl${i}">Canal ${i + 1}</div>
+        <div class="ch-meta"><span class="ch-id">CH${i + 1}</span>
+          <span id="meta${i}">—</span></div>
       </div>
       <button class="sw" role="switch" aria-checked="false" id="sw${i}"
               aria-label="Canal ${i + 1}"></button>
@@ -811,8 +818,10 @@ function renderChannels() {
     el('ch' + i).classList.toggle('trip', !!tripped);
 
     const amps = S.telemetry ? S.telemetry.amps[i].toFixed(3) + ' A' : '—';
-    el('meta' + i).innerHTML = (ch.on ? `${pct} % · ` : 'éteint · ') + amps
+    el('meta' + i).innerHTML = '· ' + (ch.on ? `${pct} % · ` : 'éteint · ') + amps
       + (tripped ? ' · <span class="trip">surintensité</span>' : '');
+    // Sans libellé lu (avant authentification), on garde « Canal n » plutôt
+    // qu'un titre vide.
     if (S.labels[i + 1]) el('lbl' + i).textContent = S.labels[i + 1];
   });
 }
