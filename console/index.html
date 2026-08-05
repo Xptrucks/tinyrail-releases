@@ -257,8 +257,26 @@
   }
   .an b { font-variant-numeric: tabular-nums; font-size: 16px; }
   .an select { width: 100%; margin-top: 8px; flex: none; }
+  /* Le nom donné par l'utilisateur porte la carte, comme pour les canaux. */
+  .an-title {
+    font-weight: 700; font-size: 16px; letter-spacing: -0.2px;
+    overflow-wrap: anywhere; margin-bottom: 2px;
+  }
   .an-head { display: flex; align-items: center; gap: 8px; }
-  .an-head b { flex: 1; }
+  .an-head b { flex: 1; text-align: right; }
+  .an-id { font-size: 12.5px; color: rgb(var(--muted)); font-weight: 600; }
+
+  /* Jauge de réservoir : un niveau se lit d'un coup d'œil, pas en déchiffrant
+     une résistance en ohms. */
+  .an-gauge {
+    height: 10px; margin-top: 8px; border-radius: 999px; overflow: hidden;
+    background: rgb(var(--bg) / .8); border: 1px solid rgb(var(--border));
+  }
+  .an-gauge-fill {
+    height: 100%; width: 0; border-radius: 999px;
+    transition: width .4s ease, background .3s;
+  }
+  .an input[type=text] { width: 100%; margin-top: 8px; flex: none; }
   /* Liaison entrée → sortie, séparée du réglage de mesure par un filet. */
   .an-link {
     margin-top: 10px; padding-top: 10px;
@@ -566,7 +584,7 @@
 // Remplacé à la publication par tools/webble/publish.sh ou par le workflow de
 // release. Reste tel quel lorsqu'on sert le fichier directement : c'est ainsi
 // qu'on distingue une page de travail d'une page publiée.
-const CONSOLE_VERSION = '2026-08-05 · 84e1142';
+const CONSOLE_VERSION = '2026-08-05 · 2395607';
 
 const BASE = '12340000-1234-1234-1234-1234123400';   // + 2 hex
 const U = {
@@ -590,6 +608,7 @@ const OP = {
   GET_LABEL: 0x40, SET_LABEL: 0x41,
   GET_INPUT: 0x50, SET_INPUT_MODE: 0x51, GET_LINK: 0x52, SET_LINK: 0x53,
   GET_SHED: 0x54, SET_SHED: 0x55, GET_BATTERY: 0x56, SET_BATTERY: 0x57,
+  GET_INPUT_META: 0x58, SET_INPUT_KIND: 0x59, SET_INPUT_LABEL: 0x5A,
   GET_INFO: 0x60, RESTART: 0x61, SAFE_MODE: 0x62, FACTORY_RESET: 0x63,
 };
 const OP_NAME = Object.fromEntries(Object.entries(OP).map(([k, v]) => [v, k]));
@@ -611,6 +630,22 @@ const ACTIONS = ['Aucune action',
                  'Tension — au-dessus du seuil',
                  'Tension — en dessous du seuil'];
 const ACTION_NEEDS_THRESHOLD = i => i === 4 || i === 5;
+
+// Ce que mesure l'entrée — même ordre que le select an{n}_kind du firmware.
+// Chaque type porte sa représentation : une jauge pour un réservoir n'a pas
+// de sens pour un contact de porte.
+const KINDS = [
+  { nom: 'Générique',            vue: 'valeur' },
+  // Teintes prêtes à poser : composer la valeur CSS à la volée donnait
+  // « rgb(--neon) », que le navigateur ignore sans rien dire.
+  { nom: 'Réservoir eau propre', vue: 'jauge', teinte: 'rgb(var(--neon))' },
+  { nom: 'Réservoir eaux grises', vue: 'jauge', teinte: 'rgb(150 160 175)' },
+  { nom: 'Réservoir eaux noires', vue: 'jauge', teinte: 'rgb(120 95 75)' },
+  { nom: 'Niveau de gaz',        vue: 'jauge', teinte: 'rgb(var(--warn))' },
+  { nom: 'Tension',              vue: 'valeur' },
+  { nom: 'Contact',              vue: 'contact' },
+  { nom: 'Température',          vue: 'valeur' },
+];
 
 const NAN16 = -32768;   // sentinelle « capteur non publié » (to_i16)
 
@@ -649,6 +684,12 @@ function decodeInputs(dv) {
     else                     text = raw + ' Ω';
     out.push({ mode, contact, raw, text });
   }
+  // Les 4 derniers octets (niveau en %, 255 = pas de mesure) sont arrivés avec
+  // les jauges : une trame plus courte reste lisible.
+  for (let i = 0; i < 4; i++) {
+    const p = dv.byteLength > 16 + i ? dv.getUint8(16 + i) : 255;
+    out[i].pct = p === 255 ? null : p;
+  }
   return out;
 }
 
@@ -675,6 +716,7 @@ const el = id => document.getElementById(id);
 const S = {                       // état de session
   device: null, server: null, chars: {}, key: null, authed: false,
   state: null, telemetry: null, faults: null, labels: {},
+  inputKinds: {}, inputLabels: {},   // type et nom de chaque entrée
 };
 
 function log(msg, cls) {
@@ -1030,7 +1072,8 @@ async function authenticate() {
       setStatus((S.device.name || 'connecté') + ' · authentifié', 'on');
       refreshEnabled();
       log('authentifié — commandes actives', 'k');
-      loadLabels().then(loadLinks);   // GET_LINK est refusé sans authentification
+      // Ces lectures sont refusées sans authentification.
+      loadLabels().then(loadLinks).then(loadInputMeta);
     } else {
       // ⚠️ Sans ce rappel du bandeau, une clé devenue invalide laissait
       // l'utilisateur devant un journal qui dit « non authentifié » et aucun
@@ -1174,8 +1217,18 @@ function renderInputs(list) {
     list.forEach((_, i) => {
       const d = document.createElement('div');
       d.className = 'an';
+      // Comme pour les canaux : le nom donné par l'utilisateur porte la carte,
+      // la référence figée passe en second.
       d.innerHTML =
-        `<div class="an-head">AN${i + 1} <b id="anv${i}">—</b></div>
+        `<div class="an-title" id="anname${i}">Entrée ${i + 1}</div>
+         <div class="an-head"><span class="an-id">AN${i + 1}</span>
+           <b id="anv${i}">—</b></div>
+         <div class="an-gauge hidden" id="angauge${i}">
+           <div class="an-gauge-fill" id="angfill${i}"></div>
+         </div>
+         <input type="text" id="anlbl${i}" maxlength="32" placeholder="nom"
+                aria-label="Nom de l'entrée ${i + 1}">
+         <select id="ankind${i}" aria-label="Type de l'entrée ${i + 1}"></select>
          <select id="anm${i}" aria-label="Mode entrée ${i + 1}"></select>
          <div class="an-link">
            <select id="anact${i}" aria-label="Action de l'entrée ${i + 1}"></select>
@@ -1194,6 +1247,24 @@ function renderInputs(list) {
         if (r && r.status === 0) log(`AN${i + 1} → ${MODES[+sel.value]}`, 'k');
       });
 
+      const kind = el('ankind' + i);
+      KINDS.forEach((k, j) => kind.add(new Option(k.nom, j)));
+      kind.addEventListener('change', async () => {
+        const r = await sendCmd(OP.SET_INPUT_KIND, i + 1, [+kind.value]);
+        if (r && r.status === 0) {
+          S.inputKinds[i + 1] = +kind.value;
+          log(`AN${i + 1} : ${KINDS[+kind.value].nom}`, 'k');
+        }
+      });
+      el('anlbl' + i).addEventListener('change', async () => {
+        const octets = new TextEncoder().encode(el('anlbl' + i).value.slice(0, 32));
+        const r = await sendCmd(OP.SET_INPUT_LABEL, i + 1, [...octets]);
+        if (r && r.status === 0) {
+          el('anname' + i).textContent = el('anlbl' + i).value || `Entrée ${i + 1}`;
+          log(`AN${i + 1} renommée`, 'k');
+        }
+      });
+
       const act = el('anact' + i), tgt = el('antgt' + i);
       ACTIONS.forEach((a, k) => act.add(new Option(a, k)));
       tgt.add(new Option('Aucune sortie', 0));
@@ -1205,9 +1276,26 @@ function renderInputs(list) {
     });
   }
   list.forEach((inp, i) => {
-    el('anv' + i).textContent = inp.text;
+    const kind = KINDS[(S.inputKinds || {})[i + 1] || 0];
     const sel = el('anm' + i);
     if (document.activeElement !== sel) sel.value = String(inp.mode);
+
+    // Un réservoir se lit d'un coup d'œil sur une jauge ; une tension ou un
+    // contact n'en tirent rien. Le pourcentage vient de la courbe du firmware
+    // (an{n}_level), donc du mode de sonde choisi.
+    const jauge = kind.vue === 'jauge' && inp.pct !== null && inp.pct !== undefined;
+    el('angauge' + i).classList.toggle('hidden', !jauge);
+    if (jauge) {
+      const pct = Math.max(0, Math.min(100, inp.pct));
+      const f = el('angfill' + i);
+      f.style.width = pct + '%';
+      f.style.background = kind.teinte;
+      el('anv' + i).textContent = pct + ' %';
+    } else if (kind.vue === 'contact') {
+      el('anv' + i).textContent = inp.contact ? 'fermé' : 'ouvert';
+    } else {
+      el('anv' + i).textContent = inp.text;
+    }
   });
 }
 
@@ -1337,6 +1425,21 @@ async function sendBattery() {
   if (r && r.status === 0) {
     log(cv === 0 ? `coupure générale désactivée, temporisation ${s} s`
                  : `coupure générale ${(cv / 100).toFixed(1)} V, temporisation ${s} s`, 'k');
+  }
+}
+
+// Nom et type de chaque entrée : ce qui décide de la représentation.
+async function loadInputMeta() {
+  for (let n = 1; n <= 4; n++) {
+    const r = await sendCmd(OP.GET_INPUT_META, n);
+    if (!r || r.status !== 0 || !r.payload.length) continue;
+    const i = n - 1;
+    S.inputKinds[n] = r.payload[0];
+    const nom = new TextDecoder().decode(r.payload.slice(1));
+    S.inputLabels[n] = nom;
+    if (el('ankind' + i)) el('ankind' + i).value = String(r.payload[0]);
+    if (el('anlbl' + i)) el('anlbl' + i).value = nom;
+    if (el('anname' + i)) el('anname' + i).textContent = nom || `Entrée ${n}`;
   }
 }
 
