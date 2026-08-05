@@ -310,17 +310,35 @@
 
   /* ── États de liaison ────────────────────────────────────
      off = pas de carte · ro = connectée, non authentifiée · rw = pilotable.
-     Rien ne doit laisser croire qu'on pilote une carte absente. */
-  .offline-only { border-left-color: rgb(var(--err)); }
-  body:not([data-link=off]) .offline-only { display: none; }
+     Sans carte, on ne montre pas huit canaux grisés : on montre pourquoi
+     il n'y a rien à voir. */
+  [data-link=off] #app { display: none; }
+  body:not([data-link=off]) #welcome { display: none; }
 
-  /* Les zones inertes s'estompent. Les commandes portent en plus l'attribut
-     disabled : l'opacité seule les laisserait annoncer comme actionnables. */
-  [data-link=off] .channels,
-  [data-link=off] #inputs,
-  [data-link=off] .strip { opacity: .45; }
-  [data-link=off] #secConfig, [data-link=off] #secBattery,
-  [data-link=off] #secSystem { opacity: .55; }
+  #welcome { display: grid; place-items: center; padding: 26px 0 10px; }
+  .welcome-card {
+    background: rgb(var(--surface) / .8); border: 1px solid rgb(var(--border));
+    border-radius: var(--radius); padding: 32px 24px; text-align: center;
+    max-width: 460px;
+  }
+  .welcome-icon {
+    width: 46px; height: 46px; margin-bottom: 14px;
+    fill: rgb(var(--neon)); filter: drop-shadow(0 0 14px rgb(var(--neon) / .55));
+  }
+  .welcome-card h2 {
+    margin: 0 0 10px; font-size: 20px; letter-spacing: -0.3px;
+  }
+  .welcome-card p {
+    margin: 0 0 20px; font-size: 14px; line-height: 1.6; color: rgb(var(--muted));
+  }
+  .welcome-card button { width: 100%; max-width: 280px; }
+  .welcome-note { margin: 18px 0 0 !important; font-size: 12.5px; }
+  .welcome-note b { color: rgb(var(--fg)); }
+
+  /* En consultation seule, les commandes portent l'attribut disabled et pas
+     seulement une opacité — sinon un lecteur d'écran les annoncerait comme
+     actionnables. */
+  [data-link=ro] .channels, [data-link=ro] #inputs { opacity: .75; }
   button:disabled, input:disabled, select:disabled { cursor: not-allowed; }
   .sw:disabled { opacity: .5; }
 
@@ -354,17 +372,31 @@
     <button class="primary" id="btnConnect">Connecter</button>
   </header>
 
-  <div class="notice offline-only" id="offlineNotice">
-    <b>Carte non connectée.</b> Les commandes sont inactives — touchez
-    <b>Connecter</b> et choisissez votre TinyRail dans la fenêtre du navigateur.
-  </div>
-
   <div class="notice hidden" id="unsupported">
     <b>Ce navigateur ne gère pas Web Bluetooth.</b><br>
     Sur iPhone et iPad, ouvrez cette page dans <b>Bluefy</b> (App&nbsp;Store) : WebKit
     n'implémente pas Web Bluetooth. Sur Android et sur ordinateur, utilisez Chrome ou Edge.
   </div>
 
+  <div id="welcome">
+    <div class="welcome-card">
+      <svg viewBox="0 0 24 24" aria-hidden="true" class="welcome-icon">
+        <path d="M13 2 4.5 13.5H11l-1 8.5 8.5-11.5H12l1-8.5Z"/>
+      </svg>
+      <h2>Aucune carte connectée</h2>
+      <p>
+        Cette page pilote un TinyRail en Bluetooth, sans Wi-Fi ni Home Assistant.
+        Approchez-vous de la carte, puis choisissez-la dans la fenêtre du navigateur.
+      </p>
+      <button class="primary" id="btnConnectHero">Connecter une carte</button>
+      <p class="welcome-note">
+        Android et ordinateur : Chrome ou Edge. iPhone et iPad : l'application
+        <b>Bluefy</b> — Safari ne gère pas le Bluetooth web.
+      </p>
+    </div>
+  </div>
+
+  <div id="app">
   <div class="notice hidden" id="pairHint">
     <b id="pairTitle">Première connexion à cette carte.</b><br>
     <span id="pairWhy">Pour commander la carte, il faut récupérer sa clé : </span>
@@ -511,6 +543,8 @@
     <div class="body"><div id="log"></div></div>
   </details>
 
+  </div><!-- #app -->
+
   <footer>
     <a href="https://tinyrail.xptrucks.fr" target="_blank" rel="noopener">
       tinyrail.xptrucks.fr
@@ -532,7 +566,7 @@
 // Remplacé à la publication par tools/webble/publish.sh ou par le workflow de
 // release. Reste tel quel lorsqu'on sert le fichier directement : c'est ainsi
 // qu'on distingue une page de travail d'une page publiée.
-const CONSOLE_VERSION = '2026-08-05 · d64ee79';
+const CONSOLE_VERSION = '2026-08-05 · 8ed7dac';
 
 const BASE = '12340000-1234-1234-1234-1234123400';   // + 2 hex
 const U = {
@@ -658,7 +692,7 @@ function setStatus(text, cls) {
 }
 
 // Toujours actifs : sans eux on ne pourrait pas sortir de l'état courant.
-const TOUJOURS_ACTIFS = ['btnConnect', 'btnTheme'];
+const TOUJOURS_ACTIFS = ['btnConnect', 'btnTheme', 'btnConnectHero'];
 // Actifs dès qu'une carte répond, même sans authentification : ce sont les
 // commandes qui permettent justement de s'authentifier.
 const ACTIFS_SI_CONNECTE = ['btnPair', 'btnImport', 'btnExport', 'btnReconnect'];
@@ -1311,6 +1345,9 @@ function wire() {
   el('btnConnect').addEventListener('click', () => {
     if (S.server && S.server.connected) S.device.gatt.disconnect(); else connect();
   });
+  // Le bouton de l'écran d'accueil ne fait que connecter : il n'existe que
+  // dans l'état où il n'y a rien à déconnecter.
+  el('btnConnectHero').addEventListener('click', connect);
   el('btnPair').addEventListener('click', pair);
 
   el('btnImport').addEventListener('click', async () => {
