@@ -474,11 +474,15 @@ const STATUS = {
 const MODES = ['Tension 0-30 V', 'Sonde 0-90 Ω', 'Sonde 10-180 Ω',
                'Sonde 50-500 Ω', 'Contact sec'];
 
-// Actions de liaison — même ordre que le select an{n}_link_mode du firmware.
+// Actions de liaison — l'index est la valeur du protocole, pas un rang
+// d'affichage : les actions s'ajoutent en fin de liste côté firmware pour ne
+// pas changer le sens des liaisons déjà enregistrées.
 const ACTIONS = ['Aucune action', 'Contact — suit l\'état', 'Contact — bascule',
-                 'Tension — au-dessus du seuil', 'Tension — en dessous du seuil'];
+                 'Tension — au-dessus du seuil', 'Tension — en dessous du seuil',
+                 'Contact — suit l\'état inversé'];
+// D'où un ordre d'affichage distinct, qui regroupe les actions par nature.
+const ACTION_ORDER = [0, 1, 5, 2, 3, 4];
 const ACTION_NEEDS_THRESHOLD = i => i === 3 || i === 4;
-const ACTION_IS_CONTACT = i => i === 1 || i === 2;
 
 const NAN16 = -32768;   // sentinelle « capteur non publié » (to_i16)
 
@@ -862,7 +866,7 @@ function renderInputs(list) {
       });
 
       const act = el('anact' + i), tgt = el('antgt' + i);
-      ACTIONS.forEach((a, k) => act.add(new Option(a, k)));
+      ACTION_ORDER.forEach(k => act.add(new Option(ACTIONS[k], k)));
       tgt.add(new Option('Aucune sortie', 0));
       for (let c = 1; c <= 8; c++) tgt.add(new Option('pilote CH' + c, c));
       act.addEventListener('change', () => { refreshLinkRow(i); sendLink(i + 1); });
