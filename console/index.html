@@ -1,0 +1,891 @@
+<!doctype html>
+<!--
+  TinyRail — console Web Bluetooth
+  ================================
+  Page autonome (aucune dépendance externe) qui pilote un TinyRail en BLE
+  depuis un téléphone, sans passer par un app store.
+
+    · Android    → Chrome, nativement.
+    · iPhone/iPad→ navigateur Bluefy (WebKit n'implémente pas Web Bluetooth).
+    · Bureau     → Chrome / Edge.
+
+  Web Bluetooth exige une origine sécurisée : HTTPS, ou http://localhost.
+
+  ⚠️ Ce fichier doit rester le miroir exact de packages/ble_protocol.h.
+     Spec du protocole : README-ble-protocol.md
+-->
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark light">
+<title>TinyRail — console BLE</title>
+<style>
+  :root {
+    --bg: #070b14;
+    --panel: #0e1524;
+    --panel-2: #131c30;
+    --line: #1e2b45;
+    --txt: #e8eefc;
+    --txt-dim: #8296bb;
+    --accent: #2f9bff;
+    --accent-glow: #2f9bff55;
+    --on: #21d07a;
+    --warn: #ffb020;
+    --err: #ff4d5e;
+    --radius: 14px;
+  }
+  @media (prefers-color-scheme: light) {
+    :root {
+      --bg: #f4f7fc; --panel: #fff; --panel-2: #eef3fb; --line: #d7e0ef;
+      --txt: #0d1626; --txt-dim: #5c6f8e; --accent-glow: #2f9bff33;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--txt);
+    font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+    padding: env(safe-area-inset-top) env(safe-area-inset-right)
+             env(safe-area-inset-bottom) env(safe-area-inset-left);
+    -webkit-text-size-adjust: 100%;
+  }
+  .wrap { max-width: 720px; margin: 0 auto; padding: 16px 14px 40px; }
+
+  /* ── En-tête ─────────────────────────────────────────── */
+  header {
+    display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+    margin-bottom: 16px;
+  }
+  h1 {
+    font-size: 19px; margin: 0; letter-spacing: -0.2px; flex: 1 1 auto;
+  }
+  h1 small { display: block; font-weight: 400; font-size: 12px; color: var(--txt-dim); }
+  .dot {
+    width: 9px; height: 9px; border-radius: 50%; background: var(--txt-dim);
+    box-shadow: 0 0 0 0 transparent; transition: .3s; flex: none;
+  }
+  .dot.on { background: var(--on); box-shadow: 0 0 10px var(--on); }
+  .dot.busy { background: var(--warn); box-shadow: 0 0 10px var(--warn); }
+
+  button {
+    font: inherit; font-weight: 600; color: var(--txt); cursor: pointer;
+    background: var(--panel-2); border: 1px solid var(--line);
+    border-radius: 10px; padding: 9px 14px; transition: .15s;
+    min-height: 40px;
+  }
+  button:hover:not(:disabled) { border-color: var(--accent); }
+  button:disabled { opacity: .4; cursor: not-allowed; }
+  button.primary {
+    background: var(--accent); border-color: var(--accent); color: #04101f;
+    box-shadow: 0 0 18px var(--accent-glow);
+  }
+  button.ghost { background: transparent; }
+
+  /* ── Bandeau de mesures ──────────────────────────────── */
+  .strip {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;
+    margin-bottom: 14px;
+  }
+  .metric {
+    background: var(--panel); border: 1px solid var(--line);
+    border-radius: var(--radius); padding: 10px 12px; text-align: center;
+  }
+  .metric b { display: block; font-size: 18px; font-variant-numeric: tabular-nums; }
+  .metric span { font-size: 11px; color: var(--txt-dim); text-transform: uppercase;
+                 letter-spacing: .5px; }
+  @media (max-width: 480px) { .strip { grid-template-columns: repeat(2, 1fr); } }
+
+  /* ── Canaux ──────────────────────────────────────────── */
+  .channels { display: grid; gap: 8px; }
+  .ch {
+    background: var(--panel); border: 1px solid var(--line);
+    border-radius: var(--radius); padding: 12px 14px;
+    display: grid; grid-template-columns: 1fr auto; gap: 6px 12px;
+    align-items: center;
+  }
+  .ch.lit { border-color: var(--accent); box-shadow: 0 0 20px -6px var(--accent-glow); }
+  .ch.trip { border-color: var(--err); }
+  .ch-name { font-weight: 600; }
+  .ch-name em { font-style: normal; color: var(--txt-dim); font-weight: 400; font-size: 12px; }
+  .ch-meta { font-size: 12px; color: var(--txt-dim); font-variant-numeric: tabular-nums; }
+  .ch-meta .trip { color: var(--err); font-weight: 600; }
+  .slider { grid-column: 1 / -1; }
+  input[type=range] { width: 100%; accent-color: var(--accent); height: 28px; }
+  /* Canal éteint : le firmware renvoie quand même la dernière luminosité.
+     L'atténuer évite de lire « 100 % » sur une sortie qui ne débite rien.
+     Le curseur reste actif — le manipuler rallume le canal à ce niveau. */
+  .ch:not(.lit) input[type=range] { opacity: .3; }
+
+  /* Interrupteur */
+  .sw {
+    position: relative; width: 52px; height: 30px; flex: none;
+    background: var(--panel-2); border: 1px solid var(--line);
+    border-radius: 999px; cursor: pointer; transition: .2s; padding: 0;
+  }
+  .sw::after {
+    content: ''; position: absolute; top: 3px; left: 3px;
+    width: 22px; height: 22px; border-radius: 50%;
+    background: var(--txt-dim); transition: .2s;
+  }
+  .sw[aria-checked=true] { background: var(--accent); border-color: var(--accent); }
+  .sw[aria-checked=true]::after { transform: translateX(22px); background: #fff; }
+
+  /* ── Sections ────────────────────────────────────────── */
+  details {
+    background: var(--panel); border: 1px solid var(--line);
+    border-radius: var(--radius); margin-top: 10px; overflow: hidden;
+  }
+  summary {
+    padding: 13px 14px; cursor: pointer; font-weight: 600; list-style: none;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  summary::-webkit-details-marker { display: none; }
+  summary::after { content: '⌄'; color: var(--txt-dim); font-size: 18px; line-height: 1; }
+  details[open] summary::after { content: '⌃'; }
+  .body { padding: 0 14px 14px; display: grid; gap: 12px; }
+
+  .row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .row label { flex: 1 1 130px; font-size: 13px; color: var(--txt-dim); }
+  input[type=number], input[type=text], select {
+    font: inherit; color: var(--txt); background: var(--panel-2);
+    border: 1px solid var(--line); border-radius: 9px; padding: 8px 10px;
+    min-width: 0; flex: 0 1 120px; min-height: 40px;
+  }
+  input[type=text] { flex: 1 1 160px; }
+
+  .inputs { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  @media (max-width: 480px) { .inputs { grid-template-columns: 1fr; } }
+  .an {
+    background: var(--panel-2); border: 1px solid var(--line);
+    border-radius: 11px; padding: 10px 12px;
+  }
+  .an b { font-variant-numeric: tabular-nums; }
+  .an select { width: 100%; margin-top: 6px; flex: none; }
+  .an-head { display: flex; align-items: center; gap: 8px; }
+  .an-head b { flex: 1; }
+  .an-detail { font-size: 12px; color: var(--txt-dim); margin-top: 6px;
+               font-variant-numeric: tabular-nums; min-height: 1em; }
+  button.tiny { padding: 4px 8px; font-size: 11px; min-height: 0; font-weight: 500; }
+
+  /* ── Journal ─────────────────────────────────────────── */
+  #log {
+    font: 12px/1.6 ui-monospace, SFMono-Regular, Menlo, monospace;
+    white-space: pre-wrap; word-break: break-word;
+    max-height: 210px; overflow-y: auto; color: var(--txt-dim);
+  }
+  #log .e { color: var(--err); }
+  #log .k { color: var(--on); }
+
+  .notice {
+    background: var(--panel); border: 1px solid var(--line);
+    border-left: 3px solid var(--warn);
+    border-radius: var(--radius); padding: 12px 14px; margin-bottom: 14px;
+    font-size: 13px; color: var(--txt-dim);
+  }
+  .notice b { color: var(--txt); }
+  .hidden { display: none !important; }
+  code { font: 12px ui-monospace, Menlo, monospace; background: var(--panel-2);
+         padding: 1px 5px; border-radius: 5px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <span class="dot" id="dot"></span>
+    <h1>TinyRail <small id="sub">non connecté</small></h1>
+    <button class="ghost hidden" id="btnReconnect">Reconnecter</button>
+    <button class="primary" id="btnConnect">Connecter</button>
+  </header>
+
+  <div class="notice hidden" id="unsupported">
+    <b>Ce navigateur ne gère pas Web Bluetooth.</b><br>
+    Sur iPhone et iPad, ouvrez cette page dans <b>Bluefy</b> (App&nbsp;Store) : WebKit
+    n'implémente pas Web Bluetooth. Sur Android et sur ordinateur, utilisez Chrome ou Edge.
+  </div>
+
+  <div class="notice hidden" id="pairHint">
+    <b>Première connexion à cette carte.</b><br>
+    Appuyez <b>3&nbsp;secondes</b> sur le bouton BOOT (SW13) du TinyRail pour ouvrir la
+    fenêtre d'appairage de 30&nbsp;s, puis touchez « Appairer ». La consultation fonctionne
+    sans cela ; seules les commandes exigent la clé.
+    <div class="row" style="margin-top:10px">
+      <button id="btnPair">Appairer</button>
+      <button class="ghost" id="btnImport">Coller une clé</button>
+    </div>
+  </div>
+
+  <div class="strip">
+    <div class="metric"><b id="mVbus">—</b><span>Bus</span></div>
+    <div class="metric"><b id="mTotal">—</b><span>Total</span></div>
+    <div class="metric"><b id="mTemp">—</b><span>Carte</span></div>
+    <div class="metric"><b id="mFault">—</b><span>Défauts</span></div>
+  </div>
+
+  <div class="channels" id="channels"></div>
+
+  <details id="secInputs" open>
+    <summary>Entrées universelles</summary>
+    <div class="body"><div class="inputs" id="inputs"></div></div>
+  </details>
+
+  <details id="secConfig">
+    <summary>Configuration</summary>
+    <div class="body">
+      <div class="row">
+        <label for="cfgCh">Canal</label>
+        <select id="cfgCh"></select>
+        <button class="ghost" id="btnCfgLoad">Recharger</button>
+      </div>
+      <div class="row">
+        <label for="cfgLabel">Libellé</label>
+        <input type="text" id="cfgLabel" maxlength="32" placeholder="Frigo">
+        <button id="btnLabel">Écrire</button>
+      </div>
+      <div class="row">
+        <label for="cfgOc">Seuil de surintensité (A)</label>
+        <input type="number" id="cfgOc" min="0.5" max="10" step="0.5">
+        <button id="btnOc">Écrire</button>
+      </div>
+      <div class="row">
+        <label for="cfgDelay">Délai de coupure (s) — global</label>
+        <input type="number" id="cfgDelay" min="1" max="10" step="0.5">
+        <button id="btnDelay">Écrire</button>
+      </div>
+      <div class="row">
+        <label for="cfgTimer">Extinction auto (s)</label>
+        <input type="number" id="cfgTimer" min="1" max="3600" step="1">
+        <button id="btnTimer">Activer</button>
+        <button class="ghost" id="btnTimerOff">Désactiver</button>
+      </div>
+      <div class="row">
+        <label for="cfgAutoOn">Allumer au démarrage de la carte</label>
+        <button class="sw" role="switch" aria-checked="false" id="cfgAutoOn"
+                aria-label="Démarrage automatique"></button>
+      </div>
+      <div class="row">
+        <label for="cfgPair">Apparier avec le canal voisin <em id="pairWith"></em></label>
+        <button class="sw" role="switch" aria-checked="false" id="cfgPair"
+                aria-label="Appairage de canaux"></button>
+      </div>
+      <div class="row">
+        <label for="cfgTos">Seuils thermiques T_OS / T_HYST (°C)</label>
+        <input type="number" id="cfgTos" min="50" max="100" step="1">
+        <input type="number" id="cfgThyst" min="40" max="99" step="1">
+        <button id="btnThermal">Écrire</button>
+      </div>
+    </div>
+  </details>
+
+  <details id="secSystem">
+    <summary>Système</summary>
+    <div class="body">
+      <div class="row">
+        <label>Firmware</label><span id="sysFw">—</span>
+      </div>
+      <div class="row">
+        <button class="ghost" id="btnAllOn">Tout allumer</button>
+        <button class="ghost" id="btnAllOff">Tout éteindre</button>
+      </div>
+      <div class="row">
+        <button class="ghost" id="btnExport">Exporter la clé</button>
+        <button class="ghost" id="btnRestart">Redémarrer</button>
+        <button class="ghost" id="btnSafe">Mode sans échec</button>
+      </div>
+    </div>
+  </details>
+
+  <details id="secLog">
+    <summary>Journal</summary>
+    <div class="body"><div id="log"></div></div>
+  </details>
+</div>
+
+<script>
+'use strict';
+
+/* ══════════════════════════════════════════════════════════════
+   Protocole TinyRail BLE v2 — miroir de packages/ble_protocol.h
+   ══════════════════════════════════════════════════════════════ */
+
+const BASE = '12340000-1234-1234-1234-1234123400';   // + 2 hex
+const U = {
+  service:   BASE + '00',
+  challenge: BASE + '01',
+  auth:      BASE + '02',
+  sharedKey: BASE + '03',
+  state:     BASE + '10',
+  telemetry: BASE + '11',
+  inputs:    BASE + '12',
+  faults:    BASE + '13',
+  cmd:       BASE + '20',
+  resp:      BASE + '21',
+};
+
+const OP = {
+  SET_CHANNEL: 0x01, SET_ALL: 0x02, GET_KEY: 0x03,
+  GET_CH_CONFIG: 0x10, SET_AUTO_OFF: 0x11, SET_AUTO_ON: 0x12, SET_PAIR: 0x13,
+  GET_OVERCURRENT: 0x20, SET_OC_THRESHOLD: 0x21, SET_OC_DELAY: 0x22,
+  GET_THERMAL: 0x30, SET_THERMAL: 0x31,
+  GET_LABEL: 0x40, SET_LABEL: 0x41,
+  GET_INPUT: 0x50, SET_INPUT_MODE: 0x51,
+  GET_INFO: 0x60, RESTART: 0x61, SAFE_MODE: 0x62,
+};
+const OP_NAME = Object.fromEntries(Object.entries(OP).map(([k, v]) => [v, k]));
+
+const STATUS = {
+  0x00: 'OK', 0x01: 'non authentifié', 0x02: 'opcode inconnu',
+  0x03: 'index hors plage', 0x04: 'payload invalide', 0x05: 'réponse tronquée',
+};
+
+const MODES = ['Tension 0-30 V', 'Sonde 0-90 Ω', 'Sonde 10-180 Ω',
+               'Sonde 50-500 Ω', 'Contact sec'];
+
+const NAN16 = -32768;   // sentinelle « capteur non publié » (to_i16)
+
+/* ── Décodeurs (testés contre les mêmes vecteurs que tinyrail_ble.py) ── */
+
+function decodeState(dv) {
+  const mask = dv.getUint8(0), ch = [];
+  for (let i = 0; i < 8; i++) {
+    ch.push({ on: !!(mask & (1 << i)), brightness: dv.getUint8(1 + i) });
+  }
+  return ch;
+}
+
+function decodeTelemetry(dv) {
+  const amps = [];
+  for (let i = 0; i < 8; i++) amps.push(dv.getUint16(2 * i, true) / 1000);
+  const rawT = dv.getInt16(18, true);
+  return {
+    amps,
+    total: amps.reduce((a, b) => a + b, 0),
+    vbus: dv.getUint16(16, true) / 1000,
+    temp: rawT === NAN16 ? null : rawT / 100,
+  };
+}
+
+function decodeInputs(dv) {
+  const out = [];
+  for (let i = 0; i < 4; i++) {
+    const mode = dv.getUint8(4 * i);
+    const contact = !!dv.getUint8(4 * i + 1);
+    const raw = dv.getInt16(4 * i + 2, true);
+    let text;
+    if (mode === 4)          text = contact ? 'fermé' : 'ouvert';
+    else if (raw === NAN16)  text = '—';
+    else if (mode === 0)     text = (raw / 100).toFixed(2) + ' V';
+    else                     text = raw + ' Ω';
+    out.push({ mode, contact, raw, text });
+  }
+  return out;
+}
+
+function decodeFaults(dv) {
+  const mask = dv.getUint8(0), trips = [];
+  for (let i = 0; i < 8; i++) if (mask & (1 << i)) trips.push(i + 1);
+  return { trips, thermal: !!(dv.getUint8(1) & 0x01) };
+}
+
+/* ══════════════════════════════════════════════════════════════
+   Connexion BLE
+   ══════════════════════════════════════════════════════════════ */
+
+const el = id => document.getElementById(id);
+const S = {                       // état de session
+  device: null, server: null, chars: {}, key: null, authed: false,
+  state: null, telemetry: null, faults: null, labels: {},
+};
+
+function log(msg, cls) {
+  const line = document.createElement('div');
+  if (cls) line.className = cls;
+  const t = new Date().toTimeString().slice(0, 8);
+  line.textContent = `${t}  ${msg}`;
+  el('log').prepend(line);
+  while (el('log').childElementCount > 200) el('log').lastChild.remove();
+}
+
+function setStatus(text, cls) {
+  el('sub').textContent = text;
+  el('dot').className = 'dot' + (cls ? ' ' + cls : '');
+}
+
+async function connect() {
+  if (!navigator.bluetooth) { el('unsupported').classList.remove('hidden'); return; }
+  try {
+    setStatus('sélection…', 'busy');
+    // La carte annonce son service, mais on accepte aussi le préfixe de nom :
+    // un advertisement tronqué ou un firmware plus ancien resteraient trouvables.
+    const device = await navigator.bluetooth.requestDevice({
+      filters: [{ services: [U.service] }, { namePrefix: 'tinyrail' }],
+      optionalServices: [U.service, 'device_information'],
+    });
+    await connectTo(device);
+  } catch (e) {
+    setStatus('non connecté');
+    if (e && e.name === 'NotFoundError') log('sélection annulée');
+    else log('connexion : ' + (e && e.message ? e.message : e), 'e');
+  }
+}
+
+async function connectTo(device) {
+  try {
+    S.device = device;
+    S.device.addEventListener('gattserverdisconnected', onDisconnect);
+
+    setStatus('connexion…', 'busy');
+    S.server = await S.device.gatt.connect();
+    const svc = await S.server.getPrimaryService(U.service);
+
+    for (const [name, uuid] of Object.entries(U)) {
+      if (name === 'service') continue;
+      try { S.chars[name] = await svc.getCharacteristic(uuid); }
+      catch { log(`caractéristique ${name} absente`, 'e'); }
+    }
+
+    for (const n of ['state', 'telemetry', 'inputs', 'faults', 'resp']) {
+      if (!S.chars[n]) continue;
+      await S.chars[n].startNotifications();
+      S.chars[n].addEventListener('characteristicvaluechanged', onNotify);
+    }
+
+    setStatus(S.device.name || 'connecté', 'on');
+    el('btnConnect').textContent = 'Déconnecter';
+    log('connecté à ' + (S.device.name || '?'), 'k');
+
+    const info = await sendCmd(OP.GET_INFO);           // autorisé sans clé
+    if (info && info.status === 0) {
+      const proto = info.payload[0];
+      const fw = new TextDecoder().decode(info.payload.slice(1));
+      el('sysFw').textContent = `${fw} (protocole v${proto})`;
+      log(`firmware ${fw}, protocole v${proto}`);
+    }
+
+    S.key = loadKey();
+    if (S.key) { await authenticate(); }
+    else { el('pairHint').classList.remove('hidden'); }
+  } catch (e) {
+    setStatus('non connecté');
+    log('connexion : ' + (e && e.message ? e.message : e), 'e');
+  }
+}
+
+// Chrome peut se souvenir des appareils déjà autorisés pour cette origine, ce
+// qui évite de repasser par la fenêtre de sélection du navigateur. L'API est
+// absente sur Bluefy et sur Chrome bureau sans le drapeau
+// « enable-web-bluetooth-new-permissions-backend » : d'où le garde, et le
+// bouton n'apparaît que si un appareil connu est effectivement retrouvé.
+async function offerKnownDevice() {
+  if (!navigator.bluetooth || !navigator.bluetooth.getDevices) return;
+  try {
+    const known = (await navigator.bluetooth.getDevices())
+      .filter(d => (d.name || '').startsWith('tinyrail'));
+    if (!known.length) return;
+    const b = el('btnReconnect');
+    b.textContent = 'Reconnecter (' + known[0].name + ')';
+    b.classList.remove('hidden');
+    b.onclick = () => connectTo(known[0]);
+  } catch { /* permission refusée ou API indisponible : on garde le picker */ }
+}
+
+function onDisconnect() {
+  S.server = null; S.chars = {}; S.authed = false;
+  setStatus('non connecté');
+  el('btnConnect').textContent = 'Connecter';
+  log('déconnecté', 'e');
+}
+
+function onNotify(ev) {
+  const dv = ev.target.value, uuid = ev.target.uuid;
+  try {
+    if (uuid === U.state && dv.byteLength >= 9) {
+      S.state = decodeState(dv); renderChannels();
+    } else if (uuid === U.telemetry && dv.byteLength >= 20) {
+      S.telemetry = decodeTelemetry(dv); renderMetrics(); renderChannels();
+    } else if (uuid === U.inputs && dv.byteLength >= 16) {
+      renderInputs(decodeInputs(dv));
+    } else if (uuid === U.faults && dv.byteLength >= 2) {
+      S.faults = decodeFaults(dv); renderMetrics(); renderChannels();
+    } else if (uuid === U.resp && dv.byteLength >= 3) {
+      dispatchResp(dv);
+    }
+  } catch (e) { log('décodage : ' + e.message, 'e'); }
+}
+
+/* ── CMD / RESP ──────────────────────────────────────────────── */
+
+let pending = null;   // { op, resolve, timer }
+
+function dispatchResp(dv) {
+  const op = dv.getUint8(0), idx = dv.getUint8(1), status = dv.getUint8(2);
+  // Vue relative à dv, pas au buffer : une valeur BLE peut avoir un byteOffset.
+  const payload = new Uint8Array(dv.buffer, dv.byteOffset + 3, dv.byteLength - 3);
+  if (pending && pending.op === op) {
+    clearTimeout(pending.timer);
+    const done = pending.resolve; pending = null;
+    done({ op, idx, status, payload });
+  }
+  if (status !== 0) {
+    log(`${OP_NAME[op] || op} → ${STATUS[status] || status}`, 'e');
+  }
+}
+
+function sendCmd(op, idx = 0, payload = []) {
+  return new Promise(async (resolve) => {
+    if (!S.chars.cmd) { resolve(null); return; }
+    const frame = new Uint8Array([op, idx, ...payload]);
+    pending = { op, resolve, timer: setTimeout(() => {
+      if (pending && pending.op === op) { pending = null; resolve(null); }
+      log(`${OP_NAME[op] || op} : pas de réponse`, 'e');
+    }, 3000) };
+    try {
+      await S.chars.cmd.writeValue(frame);
+    } catch (e) {
+      clearTimeout(pending.timer); pending = null;
+      log('écriture : ' + e.message, 'e');
+      resolve(null);
+    }
+  });
+}
+
+/* ── Authentification ────────────────────────────────────────── */
+
+function keyStorageId() {
+  return 'tinyrail_key_' + (S.device && S.device.id ? S.device.id : 'default');
+}
+function loadKey() {
+  const hex = localStorage.getItem(keyStorageId());
+  return hex ? Uint8Array.from(hex.match(/../g).map(b => parseInt(b, 16))) : null;
+}
+function saveKey(key) {
+  localStorage.setItem(keyStorageId(),
+    [...key].map(b => b.toString(16).padStart(2, '0')).join(''));
+}
+
+async function hmacSha256(key, msg) {
+  const k = await crypto.subtle.importKey(
+    'raw', key, { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+  return new Uint8Array(await crypto.subtle.sign('HMAC', k, msg));
+}
+
+async function authenticate() {
+  if (!S.key || !S.chars.challenge || !S.chars.auth) return false;
+  try {
+    const nonce = new Uint8Array((await S.chars.challenge.readValue()).buffer);
+    const resp = await hmacSha256(S.key, nonce);
+    await S.chars.auth.writeValue(resp);
+
+    // Le firmware n'accuse pas réception : on le vérifie par une commande
+    // que la garde d'authentification refuserait.
+    const probe = await sendCmd(OP.GET_CH_CONFIG, 1);
+    S.authed = !!(probe && probe.status === 0);
+    if (S.authed) {
+      el('pairHint').classList.add('hidden');
+      setStatus((S.device.name || 'connecté') + ' · authentifié', 'on');
+      log('authentifié — commandes actives', 'k');
+      loadLabels();
+    } else {
+      log('authentification refusée (clé invalide ?)', 'e');
+    }
+    return S.authed;
+  } catch (e) {
+    log('authentification : ' + e.message, 'e');
+    return false;
+  }
+}
+
+async function pair() {
+  // ⚠️ Lire SHARED_KEY (32 o) échoue au MTU minimal : la valeur revient
+  // tronquée à 22 octets. GET_KEY renvoie la clé en deux moitiés de 16 o,
+  // dans des réponses de 19 octets, donc toujours lisibles.
+  const halves = [];
+  for (const half of [0, 1]) {
+    const r = await sendCmd(OP.GET_KEY, half);
+    if (!r || r.status !== 0) {
+      log('appairage refusé — la fenêtre de 30 s est-elle ouverte ? '
+          + '(appui 3 s sur BOOT)', 'e');
+      return;
+    }
+    halves.push(r.payload.slice(0, 16));
+  }
+  const key = new Uint8Array(32);
+  key.set(halves[0], 0); key.set(halves[1], 16);
+  if (key.every(b => b === 0)) { log('clé nulle — carte hors appairage', 'e'); return; }
+
+  S.key = key; saveKey(key);
+  log('clé récupérée et mémorisée sur cet appareil', 'k');
+  await authenticate();
+}
+
+/* ══════════════════════════════════════════════════════════════
+   Rendu
+   ══════════════════════════════════════════════════════════════ */
+
+function renderMetrics() {
+  const t = S.telemetry;
+  if (t) {
+    el('mVbus').textContent = t.vbus.toFixed(2) + ' V';
+    el('mTotal').textContent = t.total.toFixed(2) + ' A';
+    el('mTemp').textContent = t.temp === null ? '—' : t.temp.toFixed(1) + ' °C';
+  }
+  const f = S.faults;
+  if (f) {
+    const bits = [];
+    if (f.trips.length) bits.push('CH' + f.trips.join(','));
+    if (f.thermal) bits.push('therm.');
+    el('mFault').textContent = bits.length ? bits.join(' ') : 'aucun';
+    el('mFault').style.color = bits.length ? 'var(--err)' : '';
+  }
+}
+
+function buildChannels() {
+  const box = el('channels');
+  box.innerHTML = '';
+  for (let i = 0; i < 8; i++) {
+    const c = document.createElement('div');
+    c.className = 'ch'; c.id = 'ch' + i;
+    c.innerHTML = `
+      <div>
+        <div class="ch-name">CH${i + 1} <em id="lbl${i}"></em></div>
+        <div class="ch-meta" id="meta${i}">—</div>
+      </div>
+      <button class="sw" role="switch" aria-checked="false" id="sw${i}"
+              aria-label="Canal ${i + 1}"></button>
+      <input class="slider" type="range" min="0" max="100" value="100" id="br${i}"
+             aria-label="Luminosité canal ${i + 1}">`;
+    box.appendChild(c);
+
+    el('sw' + i).addEventListener('click', () => {
+      const on = el('sw' + i).getAttribute('aria-checked') === 'true';
+      setChannel(i + 1, !on, +el('br' + i).value);
+    });
+    // 'change' et non 'input' : une commande par relâchement, pas par pixel.
+    el('br' + i).addEventListener('change', () => {
+      setChannel(i + 1, true, +el('br' + i).value);
+    });
+  }
+  const sel = el('cfgCh');
+  sel.innerHTML = '';
+  for (let i = 1; i <= 8; i++) sel.add(new Option('CH' + i, i));
+}
+
+function renderChannels() {
+  if (!S.state) return;
+  S.state.forEach((ch, i) => {
+    const pct = Math.round(ch.brightness / 255 * 100);
+    el('sw' + i).setAttribute('aria-checked', String(ch.on));
+    el('ch' + i).classList.toggle('lit', ch.on);
+    if (document.activeElement !== el('br' + i)) el('br' + i).value = pct;
+
+    const tripped = S.faults && S.faults.trips.includes(i + 1);
+    el('ch' + i).classList.toggle('trip', !!tripped);
+
+    const amps = S.telemetry ? S.telemetry.amps[i].toFixed(3) + ' A' : '—';
+    el('meta' + i).innerHTML = (ch.on ? `${pct} % · ` : 'éteint · ') + amps
+      + (tripped ? ' · <span class="trip">surintensité</span>' : '');
+    if (S.labels[i + 1]) el('lbl' + i).textContent = S.labels[i + 1];
+  });
+}
+
+function renderInputs(list) {
+  const box = el('inputs');
+  if (box.childElementCount !== 4) {
+    box.innerHTML = '';
+    list.forEach((_, i) => {
+      const d = document.createElement('div');
+      d.className = 'an';
+      d.innerHTML =
+        `<div class="an-head">AN${i + 1} <b id="anv${i}">—</b>
+           <button class="ghost tiny" id="and${i}"
+                   aria-label="Détail entrée ${i + 1}">détail</button></div>
+         <select id="anm${i}" aria-label="Mode entrée ${i + 1}"></select>
+         <div class="an-detail" id="anx${i}"></div>`;
+      box.appendChild(d);
+      const sel = d.querySelector('select');
+      MODES.forEach((m, k) => sel.add(new Option(m, k)));
+      sel.addEventListener('change', async () => {
+        const r = await sendCmd(OP.SET_INPUT_MODE, i + 1, [+sel.value]);
+        if (r && r.status === 0) log(`AN${i + 1} → ${MODES[+sel.value]}`, 'k');
+      });
+      // GET_INPUT donne les trois mesures simultanées, que la trame temps réel
+      // ne transporte pas (elle n'envoie que la valeur du mode courant).
+      el('and' + i).addEventListener('click', () => showInputDetail(i + 1));
+    });
+  }
+  list.forEach((inp, i) => {
+    el('anv' + i).textContent = inp.text;
+    const sel = el('anm' + i);
+    if (document.activeElement !== sel) sel.value = String(inp.mode);
+  });
+}
+
+async function showInputDetail(n) {
+  const box = el('anx' + (n - 1));
+  const r = await sendCmd(OP.GET_INPUT, n);
+  if (!r || r.status !== 0) {
+    box.textContent = r ? (STATUS[r.status] || 'refusé') : 'pas de réponse';
+    return;
+  }
+  const dv = new DataView(r.payload.buffer, r.payload.byteOffset);
+  const cv = dv.getInt16(3, true), ohm = dv.getInt16(5, true), pct = dv.getInt16(7, true);
+  const f = (v, u, d = 0) => v === NAN16 ? '—' : (d ? (v / 100).toFixed(2) : v) + ' ' + u;
+  box.textContent = `${f(cv, 'V', 1)} · ${f(ohm, 'Ω')} · ${f(pct, '%')}`;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   Actions
+   ══════════════════════════════════════════════════════════════ */
+
+async function setChannel(ch, on, pct) {
+  if (!S.authed) { log('non authentifié — appairez d\'abord', 'e'); return; }
+  const raw = on ? Math.max(0, Math.min(255, Math.round(pct * 255 / 100))) : 0;
+  await sendCmd(OP.SET_CHANNEL, ch, [on ? 1 : 0, raw]);
+}
+
+async function loadLabels() {
+  for (let i = 1; i <= 8; i++) {
+    const r = await sendCmd(OP.GET_LABEL, i);
+    if (r && r.status === 0) S.labels[i] = new TextDecoder().decode(r.payload);
+  }
+  renderChannels();
+}
+
+async function loadConfig() {
+  const ch = +el('cfgCh').value;
+  const oc = await sendCmd(OP.GET_OVERCURRENT, ch);
+  if (oc && oc.status === 0) {
+    const dv = new DataView(oc.payload.buffer, oc.payload.byteOffset);
+    el('cfgOc').value = (dv.getUint16(0, true) / 1000).toFixed(1);
+    el('cfgDelay').value = (dv.getUint16(2, true) / 1000).toFixed(1);
+  }
+  const cfg = await sendCmd(OP.GET_CH_CONFIG, ch);
+  if (cfg && cfg.status === 0) {
+    // [auto_off u8, delay_s u16, auto_on u8, paired u8]
+    const dv = new DataView(cfg.payload.buffer, cfg.payload.byteOffset);
+    el('cfgTimer').value = dv.getUint16(1, true);
+    el('btnTimer').textContent = dv.getUint8(0) ? 'Réappliquer' : 'Activer';
+    el('cfgAutoOn').setAttribute('aria-checked', String(!!dv.getUint8(3)));
+    el('cfgPair').setAttribute('aria-checked', String(!!dv.getUint8(4)));
+  }
+  // Les paires sont fixes : 1-2, 3-4, 5-6, 7-8. L'opcode s'adresse au canal
+  // impair de la paire, d'où l'index normalisé à l'écriture.
+  const other = ch % 2 ? ch + 1 : ch - 1;
+  el('pairWith').textContent = `(CH${other})`;
+  const th = await sendCmd(OP.GET_THERMAL);
+  if (th && th.status === 0) {
+    const dv = new DataView(th.payload.buffer, th.payload.byteOffset);
+    el('cfgTos').value = dv.getInt16(0, true);
+    el('cfgThyst').value = dv.getInt16(2, true);
+  }
+  el('cfgLabel').value = S.labels[ch] || '';
+}
+
+const u16 = v => [v & 0xff, (v >> 8) & 0xff];
+
+function wire() {
+  el('btnConnect').addEventListener('click', () => {
+    if (S.server && S.server.connected) S.device.gatt.disconnect(); else connect();
+  });
+  el('btnPair').addEventListener('click', pair);
+
+  el('btnImport').addEventListener('click', async () => {
+    const hex = (prompt('Clé de 32 octets en hexadécimal (64 caractères) :') || '')
+      .replace(/[^0-9a-fA-F]/g, '');
+    if (hex.length !== 64) { log('clé invalide (64 caractères attendus)', 'e'); return; }
+    S.key = Uint8Array.from(hex.match(/../g).map(b => parseInt(b, 16)));
+    saveKey(S.key);
+    await authenticate();
+  });
+  el('btnExport').addEventListener('click', () => {
+    if (!S.key) { log('aucune clé mémorisée', 'e'); return; }
+    const hex = [...S.key].map(b => b.toString(16).padStart(2, '0')).join('');
+    prompt('Clé de cette carte — à reporter sur un autre téléphone :', hex);
+  });
+
+  el('cfgCh').addEventListener('change', loadConfig);
+  el('btnCfgLoad').addEventListener('click', loadConfig);
+  // Lecture à l'ouverture : sans cela, les réglages afficheraient des valeurs
+  // vides ou périmées tant que l'utilisateur n'a pas changé de canal.
+  el('secConfig').addEventListener('toggle', () => {
+    if (el('secConfig').open && S.authed) loadConfig();
+  });
+
+  el('btnLabel').addEventListener('click', async () => {
+    const ch = +el('cfgCh').value;
+    const bytes = new TextEncoder().encode(el('cfgLabel').value.slice(0, 32));
+    const r = await sendCmd(OP.SET_LABEL, ch, [...bytes]);
+    if (r && r.status === 0) { S.labels[ch] = el('cfgLabel').value; renderChannels();
+                               log(`CH${ch} renommé`, 'k'); }
+  });
+  el('btnOc').addEventListener('click', async () => {
+    const ma = Math.round(parseFloat(el('cfgOc').value) * 1000);
+    const r = await sendCmd(OP.SET_OC_THRESHOLD, +el('cfgCh').value, u16(ma));
+    if (r && r.status === 0) log(`seuil CH${el('cfgCh').value} → ${ma / 1000} A`, 'k');
+  });
+  el('btnDelay').addEventListener('click', async () => {
+    const ms = Math.round(parseFloat(el('cfgDelay').value) * 1000);
+    const r = await sendCmd(OP.SET_OC_DELAY, 0, u16(ms));
+    if (r && r.status === 0) log(`délai global → ${ms / 1000} s`, 'k');
+  });
+  el('btnTimer').addEventListener('click', async () => {
+    const s = Math.round(+el('cfgTimer').value);
+    const r = await sendCmd(OP.SET_AUTO_OFF, +el('cfgCh').value, [1, ...u16(s)]);
+    if (r && r.status === 0) log(`extinction auto CH${el('cfgCh').value} : ${s} s`, 'k');
+  });
+  el('btnTimerOff').addEventListener('click', async () => {
+    const s = Math.round(+el('cfgTimer').value) || 60;
+    const r = await sendCmd(OP.SET_AUTO_OFF, +el('cfgCh').value, [0, ...u16(s)]);
+    if (r && r.status === 0) { el('btnTimer').textContent = 'Activer';
+                               log(`extinction auto CH${el('cfgCh').value} désactivée`, 'k'); }
+  });
+  el('cfgAutoOn').addEventListener('click', async () => {
+    const b = el('cfgAutoOn');
+    const next = b.getAttribute('aria-checked') !== 'true';
+    const r = await sendCmd(OP.SET_AUTO_ON, +el('cfgCh').value, [next ? 1 : 0]);
+    if (r && r.status === 0) {
+      b.setAttribute('aria-checked', String(next));
+      log(`CH${el('cfgCh').value} : démarrage auto ${next ? 'activé' : 'désactivé'}`, 'k');
+    }
+  });
+  el('cfgPair').addEventListener('click', async () => {
+    const b = el('cfgPair');
+    const next = b.getAttribute('aria-checked') !== 'true';
+    const ch = +el('cfgCh').value;
+    const odd = ch % 2 ? ch : ch - 1;        // l'opcode attend le canal impair
+    const r = await sendCmd(OP.SET_PAIR, odd, [next ? 1 : 0]);
+    if (r && r.status === 0) {
+      b.setAttribute('aria-checked', String(next));
+      log(`paire CH${odd}-CH${odd + 1} ${next ? 'activée' : 'désactivée'}`, 'k');
+    }
+  });
+  el('btnThermal').addEventListener('click', async () => {
+    const os = Math.round(+el('cfgTos').value), hy = Math.round(+el('cfgThyst').value);
+    const r = await sendCmd(OP.SET_THERMAL, 0, [...u16(os), ...u16(hy)]);
+    if (r && r.status === 0) log(`seuils thermiques ${os} / ${hy} °C`, 'k');
+  });
+
+  el('btnAllOn').addEventListener('click', () => sendCmd(OP.SET_ALL, 0, [1]));
+  el('btnAllOff').addEventListener('click', () => sendCmd(OP.SET_ALL, 0, [0]));
+  el('btnRestart').addEventListener('click', () => {
+    if (confirm('Redémarrer le TinyRail ?')) sendCmd(OP.RESTART);
+  });
+  el('btnSafe').addEventListener('click', () => {
+    if (confirm('Redémarrer en mode sans échec ?')) sendCmd(OP.SAFE_MODE);
+  });
+}
+
+if (typeof document !== 'undefined') {
+  buildChannels();
+  wire();
+  if (!navigator.bluetooth) el('unsupported').classList.remove('hidden');
+  else offerKnownDevice();
+}
+
+// Exposé pour les tests hors navigateur (tools/webble/test-decoders.mjs).
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = { decodeState, decodeTelemetry, decodeInputs, decodeFaults, OP, U };
+}
+</script>
+</body>
+</html>
