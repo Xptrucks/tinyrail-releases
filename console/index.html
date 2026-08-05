@@ -126,6 +126,8 @@
      y serait illisible. */
   :root[data-theme=light] button.primary { color: #fff; }
   button.ghost { background: transparent; }
+  button.danger { color: rgb(var(--err)); border-color: rgb(var(--err) / .45); }
+  button.danger:hover:not(:disabled) { border-color: rgb(var(--err)); }
 
   /* Bascule de thème — bouton rond à icône, comme celui du site. */
   .icon-btn {
@@ -460,6 +462,15 @@
         <button class="ghost" id="btnRestart">Redémarrer</button>
         <button class="ghost" id="btnSafe">Mode sans échec</button>
       </div>
+      <p class="hint">
+        <b>Réinitialiser</b> efface tous les réglages — libellés, seuils, modes
+        d'entrée, liaisons, délestage — <b>et les identifiants Wi-Fi</b> : la
+        carte redémarrera sans réseau, à reprovisionner. La clé d'appairage
+        Bluetooth, elle, est conservée : vous gardez le contrôle depuis cette page.
+      </p>
+      <div class="row">
+        <button class="ghost danger" id="btnFactory">Réinitialiser les réglages</button>
+      </div>
     </div>
   </details>
 
@@ -505,7 +516,7 @@ const OP = {
   GET_THERMAL: 0x30, SET_THERMAL: 0x31,
   GET_LABEL: 0x40, SET_LABEL: 0x41,
   GET_INPUT: 0x50, SET_INPUT_MODE: 0x51, GET_LINK: 0x52, SET_LINK: 0x53,
-  GET_INFO: 0x60, RESTART: 0x61, SAFE_MODE: 0x62,
+  GET_INFO: 0x60, RESTART: 0x61, SAFE_MODE: 0x62, FACTORY_RESET: 0x63,
 };
 const OP_NAME = Object.fromEntries(Object.entries(OP).map(([k, v]) => [v, k]));
 
@@ -1232,6 +1243,20 @@ function wire() {
   });
   el('btnSafe').addEventListener('click', () => {
     if (confirm('Redémarrer en mode sans échec ?')) sendCmd(OP.SAFE_MODE);
+  });
+  // Action irréversible : on demande une saisie plutôt qu'un simple « OK »,
+  // qu'on valide sans lire.
+  el('btnFactory').addEventListener('click', async () => {
+    const saisie = prompt(
+      'Effacer TOUS les réglages et les identifiants Wi-Fi ?\n\n'
+      + 'La carte redémarrera sans réseau et devra être reprovisionnée.\n'
+      + 'La clé d\'appairage Bluetooth est conservée.\n\n'
+      + 'Tapez EFFACER pour confirmer :');
+    if (saisie !== 'EFFACER') { log('réinitialisation annulée'); return; }
+    const r = await sendCmd(OP.FACTORY_RESET);
+    if (r && r.status === 0) {
+      log('réinitialisation en cours — la carte redémarre sans Wi-Fi', 'e');
+    }
   });
 }
 
