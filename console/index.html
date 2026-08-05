@@ -277,6 +277,12 @@
     transition: width .4s ease, background .3s;
   }
   .an input[type=text] { width: 100%; margin-top: 8px; flex: none; }
+  .an-sender {
+    margin-top: 8px; padding-top: 8px; display: grid; gap: 8px;
+    border-top: 1px dashed rgb(var(--border));
+  }
+  .an-sender select, .an-sender input { width: 100%; flex: none; }
+  .an-sender .an-link-row input { flex: 1 1 0; }
   /* Liaison entrée → sortie, séparée du réglage de mesure par un filet. */
   .an-link {
     margin-top: 10px; padding-top: 10px;
@@ -584,7 +590,7 @@
 // Remplacé à la publication par tools/webble/publish.sh ou par le workflow de
 // release. Reste tel quel lorsqu'on sert le fichier directement : c'est ainsi
 // qu'on distingue une page de travail d'une page publiée.
-const CONSOLE_VERSION = '2026-08-05 · 2395607';
+const CONSOLE_VERSION = '2026-08-05 · e55fca2';
 
 const BASE = '12340000-1234-1234-1234-1234123400';   // + 2 hex
 const U = {
@@ -609,6 +615,7 @@ const OP = {
   GET_INPUT: 0x50, SET_INPUT_MODE: 0x51, GET_LINK: 0x52, SET_LINK: 0x53,
   GET_SHED: 0x54, SET_SHED: 0x55, GET_BATTERY: 0x56, SET_BATTERY: 0x57,
   GET_INPUT_META: 0x58, SET_INPUT_KIND: 0x59, SET_INPUT_LABEL: 0x5A,
+  GET_SENDER: 0x5B, SET_SENDER: 0x5C,
   GET_INFO: 0x60, RESTART: 0x61, SAFE_MODE: 0x62, FACTORY_RESET: 0x63,
 };
 const OP_NAME = Object.fromEntries(Object.entries(OP).map(([k, v]) => [v, k]));
@@ -630,6 +637,10 @@ const ACTIONS = ['Aucune action',
                  'Tension — au-dessus du seuil',
                  'Tension — en dessous du seuil'];
 const ACTION_NEEDS_THRESHOLD = i => i === 4 || i === 5;
+
+// Profils de sonde — les bornes qu'ils posent restent modifiables ensuite.
+const SENDERS = ['personnalisé', 'VDO 10-180 Ω', 'Euro 0-190 Ω',
+                 'US 240-33 Ω', 'GM 0-90 Ω'];
 
 // Ce que mesure l'entrée — même ordre que le select an{n}_kind du firmware.
 // Chaque type porte sa représentation : une jauge pour un réservoir n'a pas
@@ -976,48 +987,51 @@ function dispatchResp(dv) {
 // chargement (la section batterie en enchaîne 9, les libellés 12) écrasait
 // l'échange en cours. L'ancienne promesse ne se résolvait jamais et son minuteur
 // signalait « pas de réponse » sur une commande pourtant honorée.
-let cmdQueue = Promise.resolve();
+let gattQueue = Promise.resolve();
+
+// Toute opération GATT passe par ici — commandes, mais aussi lecture du nonce
+// et écriture de la réponse d'authentification. Les laisser hors de la file
+// suffisait à provoquer « GATT operation already in progress » dès qu'une
+// authentification croisait un chargement.
+function filerGatt(fn) {
+  const run = () => fn();
+  gattQueue = gattQueue.then(run, run);
+  return gattQueue;
+}
 
 function sendCmd(op, idx = 0, payload = []) {
   // ⚠️ Un opcode absent de OP vaut undefined, et Uint8Array le convertit
   // silencieusement en 0 : la carte répondait « opcode inconnu » sur op=0
-  // pendant que la console attendait une réponse d'opcode undefined. Trois
-  // minutes de journal illisible pour une constante oubliée.
+  // pendant que la console attendait une réponse d'opcode undefined.
   if (typeof op !== 'number') {
     log('opcode inconnu côté console — page à mettre à jour', 'e');
     return Promise.resolve(null);
   }
-  const run = () => new Promise(async (resolve) => {
-    if (!S.chars.cmd) { resolve(null); return; }
+  return filerGatt(async () => {
+    if (!S.chars.cmd) return null;
     const frame = new Uint8Array([op, idx, ...payload]);
-    pending = { op, resolve, timer: setTimeout(() => {
-      // Le message reste dans la garde : hors d'elle, il s'affichait même
-      // quand la réponse était arrivée.
-      if (pending && pending.op === op) {
-        pending = null;
-        log(`${OP_NAME[op] || op} : pas de réponse`, 'e');
-        resolve(null);
-      }
-    }, 3000) };
+    const reponse = new Promise(resolve => {
+      pending = { op, resolve, timer: setTimeout(() => {
+        // Le message reste dans la garde : hors d'elle, il s'affichait même
+        // quand la réponse était arrivée.
+        if (pending && pending.op === op) {
+          pending = null;
+          log(`${OP_NAME[op] || op} : pas de réponse`, 'e');
+          resolve(null);
+        }
+      }, 3000) };
+    });
     try {
+      // Attendue ici : la file ne rend la main qu'une fois l'écriture partie,
+      // sinon la commande suivante entre en collision avec celle-ci.
       await S.chars.cmd.writeValue(frame);
-      ecriture = true;
     } catch (e) {
-      ecriture = true;
       clearTimeout(pending.timer); pending = null;
       log('écriture : ' + e.message, 'e');
-      resolve(null);
+      return null;
     }
+    return reponse;
   });
-  // ⚠️ Sur expiration du délai, la promesse se résout alors que l'écriture
-  // BLE peut être encore en vol. Lancer la suivante donnerait « GATT operation
-  // already in progress » : on attend donc aussi la fin de l'écriture.
-  let ecriture = false;
-  const attendreEcriture = async () => {
-    for (let i = 0; i < 60 && !ecriture; i++) await new Promise(r => setTimeout(r, 50));
-  };
-  cmdQueue = cmdQueue.then(run, run).finally(attendreEcriture);
-  return cmdQueue;
 }
 
 /* ── Authentification ────────────────────────────────────────── */
@@ -1059,9 +1073,10 @@ async function hmacSha256(key, msg) {
 async function authenticate() {
   if (!S.key || !S.chars.challenge || !S.chars.auth) return false;
   try {
-    const nonce = new Uint8Array((await S.chars.challenge.readValue()).buffer);
+    const brut = await filerGatt(() => S.chars.challenge.readValue());
+    const nonce = new Uint8Array(brut.buffer);
     const resp = await hmacSha256(S.key, nonce);
-    await S.chars.auth.writeValue(resp);
+    await filerGatt(() => S.chars.auth.writeValue(resp));
 
     // Le firmware n'accuse pas réception : on le vérifie par une commande
     // que la garde d'authentification refuserait.
@@ -1073,7 +1088,7 @@ async function authenticate() {
       refreshEnabled();
       log('authentifié — commandes actives', 'k');
       // Ces lectures sont refusées sans authentification.
-      loadLabels().then(loadLinks).then(loadInputMeta);
+      loadLabels().then(loadLinks).then(loadInputMeta).then(loadSenders);
     } else {
       // ⚠️ Sans ce rappel du bandeau, une clé devenue invalide laissait
       // l'utilisateur devant un journal qui dit « non authentifié » et aucun
@@ -1230,6 +1245,15 @@ function renderInputs(list) {
                 aria-label="Nom de l'entrée ${i + 1}">
          <select id="ankind${i}" aria-label="Type de l'entrée ${i + 1}"></select>
          <select id="anm${i}" aria-label="Mode entrée ${i + 1}"></select>
+         <div class="an-sender hidden" id="ansend${i}">
+           <select id="ansprof${i}" aria-label="Profil de sonde ${i + 1}"></select>
+           <div class="an-link-row">
+             <input type="number" id="anre${i}" min="0" max="500" step="1"
+                    placeholder="vide Ω" aria-label="Résistance à vide ${i + 1}">
+             <input type="number" id="anrf${i}" min="0" max="500" step="1"
+                    placeholder="plein Ω" aria-label="Résistance à plein ${i + 1}">
+           </div>
+         </div>
          <div class="an-link">
            <select id="anact${i}" aria-label="Action de l'entrée ${i + 1}"></select>
            <div class="an-link-row">
@@ -1265,6 +1289,12 @@ function renderInputs(list) {
         }
       });
 
+      const prof = el('ansprof' + i);
+      SENDERS.forEach((nom, k) => prof.add(new Option(nom, k)));
+      prof.addEventListener('change', () => envoyerSonde(i + 1, true));
+      el('anre' + i).addEventListener('change', () => envoyerSonde(i + 1, false));
+      el('anrf' + i).addEventListener('change', () => envoyerSonde(i + 1, false));
+
       const act = el('anact' + i), tgt = el('antgt' + i);
       ACTIONS.forEach((a, k) => act.add(new Option(a, k)));
       tgt.add(new Option('Aucune sortie', 0));
@@ -1283,6 +1313,8 @@ function renderInputs(list) {
     // Un réservoir se lit d'un coup d'œil sur une jauge ; une tension ou un
     // contact n'en tirent rien. Le pourcentage vient de la courbe du firmware
     // (an{n}_level), donc du mode de sonde choisi.
+    el('ansend' + i).classList.toggle('hidden', inp.mode < 1 || inp.mode > 3);
+
     const jauge = kind.vue === 'jauge' && inp.pct !== null && inp.pct !== undefined;
     el('angauge' + i).classList.toggle('hidden', !jauge);
     if (jauge) {
@@ -1429,6 +1461,36 @@ async function sendBattery() {
 }
 
 // Nom et type de chaque entrée : ce qui décide de la représentation.
+// Un profil pré-remplit les bornes ; les modifier bascule en « personnalisé »,
+// puisque ce sont elles qui font foi dans le calcul du firmware.
+async function envoyerSonde(n, depuisProfil) {
+  const i = n - 1;
+  if (depuisProfil) {
+    const bornes = [null, [180, 10], [0, 190], [240, 33], [0, 90]][+el('ansprof' + i).value];
+    if (bornes) { el('anre' + i).value = bornes[0]; el('anrf' + i).value = bornes[1]; }
+  } else {
+    el('ansprof' + i).value = '0';        // personnalisé
+  }
+  const vide = Math.round(+el('anre' + i).value) || 0;
+  const plein = Math.round(+el('anrf' + i).value) || 0;
+  if (vide === plein) { log('sonde : vide et plein doivent différer', 'e'); return; }
+  const r = await sendCmd(OP.SET_SENDER, n, [+el('ansprof' + i).value,
+    vide & 0xff, (vide >> 8) & 0xff, plein & 0xff, (plein >> 8) & 0xff]);
+  if (r && r.status === 0) log(`AN${n} : sonde ${vide} Ω vide → ${plein} Ω plein`, 'k');
+}
+
+async function loadSenders() {
+  for (let n = 1; n <= 4; n++) {
+    const r = await sendCmd(OP.GET_SENDER, n);
+    if (!r || r.status !== 0 || r.payload.length < 5) continue;
+    const i = n - 1;
+    const dv = new DataView(r.payload.buffer, r.payload.byteOffset);
+    el('ansprof' + i).value = String(r.payload[0]);
+    el('anre' + i).value = dv.getUint16(1, true);
+    el('anrf' + i).value = dv.getUint16(3, true);
+  }
+}
+
 async function loadInputMeta() {
   for (let n = 1; n <= 4; n++) {
     const r = await sendCmd(OP.GET_INPUT_META, n);
