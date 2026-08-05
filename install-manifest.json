@@ -1,6 +1,6 @@
 {
   "name": "TinyRail ESP32 v2",
-  "version": "0.6.6",
+  "version": "0.7.0",
   "home_assistant_domain": "esphome",
   "builds": [
     {
