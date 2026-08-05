@@ -277,6 +277,16 @@
     font-size: 13.5px; color: rgb(var(--muted)); line-height: 1.55;
   }
   .notice b { color: rgb(var(--fg)); }
+  /* État d'attente : remplacé dès la première trame INPUTS reçue. */
+  .empty { margin: 0; font-size: 13px; color: rgb(var(--muted)); }
+
+  footer {
+    display: flex; justify-content: center; align-items: center; gap: 10px;
+    margin-top: 22px; font-size: 12.5px; color: rgb(var(--muted));
+  }
+  footer a { color: rgb(var(--muted)); text-decoration: none; padding: 6px 2px; }
+  footer a:hover { color: rgb(var(--neon)); }
+
   .hidden { display: none !important; }
   code {
     font: 12px ui-monospace, Menlo, monospace; background: rgb(var(--bg) / .6);
@@ -331,7 +341,11 @@
 
   <details id="secInputs" open>
     <summary>Entrées universelles</summary>
-    <div class="body"><div class="inputs" id="inputs"></div></div>
+    <div class="body">
+      <div class="inputs" id="inputs">
+        <p class="empty">Connectez la carte pour relever les entrées.</p>
+      </div>
+    </div>
   </details>
 
   <details id="secConfig">
@@ -404,6 +418,14 @@
     <summary>Journal</summary>
     <div class="body"><div id="log"></div></div>
   </details>
+
+  <footer>
+    <a href="https://tinyrail.xptrucks.fr" target="_blank" rel="noopener">
+      tinyrail.xptrucks.fr
+    </a>
+    <span aria-hidden="true">·</span>
+    <a href="../">Installer le firmware</a>
+  </footer>
 </div>
 
 <script>

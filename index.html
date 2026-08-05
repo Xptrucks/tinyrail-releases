@@ -70,6 +70,16 @@
       border-radius: 99px;
       margin-bottom: 1.5rem;
     }
+    .links { display: grid; gap: .6rem; margin: 1.4rem 0 1.2rem; text-align: left; }
+    .link-card {
+      display: flex; align-items: center; gap: .8rem;
+      padding: .8rem .9rem; border: 1px solid #e4e8ef; border-radius: 12px;
+      text-decoration: none; color: inherit; transition: .15s;
+    }
+    .link-card:hover { border-color: var(--brand); background: #f7faff; }
+    .link-icon { font-size: 1.4rem; line-height: 1; flex: none; }
+    .link-card strong { display: block; font-size: .9rem; color: var(--brand); }
+    .link-card > span:last-child { font-size: .78rem; color: #777; line-height: 1.45; }
   </style>
 </head>
 <body>
@@ -91,7 +101,27 @@
     </esp-web-install-button>
 
     <p class="note">
-      Navigateur requis : <strong>Chrome</strong> ou <strong>Edge</strong> (Web Serial API)<br>
+      Navigateur requis : <strong>Chrome</strong> ou <strong>Edge</strong> (Web Serial API)
+    </p>
+
+    <div class="links">
+      <a class="link-card" href="console/">
+        <span class="link-icon">📱</span>
+        <span>
+          <strong>Console Bluetooth</strong>
+          Piloter la carte depuis un téléphone, sans Wi-Fi ni Home Assistant
+        </span>
+      </a>
+      <a class="link-card" href="https://tinyrail.xptrucks.fr">
+        <span class="link-icon">🌐</span>
+        <span>
+          <strong>tinyrail.xptrucks.fr</strong>
+          Le site du produit : fonctionnement, sécurité, fiche technique
+        </span>
+      </a>
+    </div>
+
+    <p class="note">
       <a href="https://github.com/chpeps/tinyrail-releases/releases">Voir toutes les versions →</a>
     </p>
   </div>
