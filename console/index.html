@@ -277,6 +277,9 @@
     transition: width .4s ease, background .3s;
   }
   .an input[type=text] { width: 100%; margin-top: 8px; flex: none; }
+  .an-sub {
+    margin-top: 6px; font-size: 12px; color: rgb(var(--muted));
+  }
   .an-sender {
     margin-top: 8px; padding-top: 8px; display: grid; gap: 8px;
     border-top: 1px dashed rgb(var(--border));
@@ -451,8 +454,61 @@
     </div>
   </details>
 
+  <details id="secInputCfg">
+    <summary>Configuration des entrées</summary>
+    <div class="body">
+      <div class="row">
+        <label for="icfgSel">Entrée</label>
+        <select id="icfgSel"></select>
+        <button class="ghost" id="btnICfgLoad">Recharger</button>
+      </div>
+      <div class="row">
+        <label for="icfgLbl">Nom</label>
+        <input type="text" id="icfgLbl" maxlength="32" placeholder="Eau propre">
+        <button id="btnICfgLbl">Écrire</button>
+      </div>
+      <div class="row">
+        <label for="icfgKind">Type — décide de l'affichage</label>
+        <select id="icfgKind"></select>
+      </div>
+      <div class="row">
+        <label for="icfgMode">Mode de mesure</label>
+        <select id="icfgMode"></select>
+      </div>
+
+      <div id="icfgSender">
+        <p class="hint">
+          Conversion de la sonde. Le profil pose les deux bornes ; les modifier
+          bascule en <b>personnalisé</b>. La résistance à vide peut dépasser
+          celle à plein — c'est le cas des sondes américaines.
+        </p>
+        <div class="row">
+          <label for="icfgProf">Profil de sonde</label>
+          <select id="icfgProf"></select>
+        </div>
+        <div class="row">
+          <label for="icfgRe">Résistance vide / plein (Ω)</label>
+          <input type="number" id="icfgRe" min="0" max="500" step="1">
+          <input type="number" id="icfgRf" min="0" max="500" step="1">
+          <button id="btnICfgSender">Écrire</button>
+        </div>
+      </div>
+
+      <div class="row">
+        <label for="icfgAct">Action — pilote une sortie</label>
+        <select id="icfgAct"></select>
+      </div>
+      <div class="row">
+        <label for="icfgTgt">Sortie pilotée</label>
+        <select id="icfgTgt"></select>
+        <input type="number" id="icfgThr" min="0" max="30" step="0.1"
+               placeholder="seuil V">
+      </div>
+    </div>
+  </details>
+
   <details id="secConfig">
-    <summary>Configuration</summary>
+    <summary>Configuration des sorties</summary>
     <div class="body">
       <div class="row">
         <label for="cfgCh">Canal</label>
@@ -590,7 +646,7 @@
 // Remplacé à la publication par tools/webble/publish.sh ou par le workflow de
 // release. Reste tel quel lorsqu'on sert le fichier directement : c'est ainsi
 // qu'on distingue une page de travail d'une page publiée.
-const CONSOLE_VERSION = '2026-08-05 · e55fca2';
+const CONSOLE_VERSION = '2026-08-06 · 1595b0d';
 
 const BASE = '12340000-1234-1234-1234-1234123400';   // + 2 hex
 const U = {
@@ -727,7 +783,7 @@ const el = id => document.getElementById(id);
 const S = {                       // état de session
   device: null, server: null, chars: {}, key: null, authed: false,
   state: null, telemetry: null, faults: null, labels: {},
-  inputKinds: {}, inputLabels: {},   // type et nom de chaque entrée
+  inputKinds: {}, inputLabels: {}, inputModes: {},  // type, nom, mode
 };
 
 function log(msg, cls) {
@@ -1088,7 +1144,7 @@ async function authenticate() {
       refreshEnabled();
       log('authentifié — commandes actives', 'k');
       // Ces lectures sont refusées sans authentification.
-      loadLabels().then(loadLinks).then(loadInputMeta).then(loadSenders);
+      loadLabels().then(loadLinks).then(loadInputMeta);
     } else {
       // ⚠️ Sans ce rappel du bandeau, une clé devenue invalide laissait
       // l'utilisateur devant un journal qui dit « non authentifié » et aucun
@@ -1229,11 +1285,12 @@ function renderInputs(list) {
   const box = el('inputs');
   if (box.childElementCount !== 4) {
     box.innerHTML = '';
+    // Carte de lecture seule : les réglages vivent dans « Configuration des
+    // entrées », comme pour les sorties. Mêlés à l'affichage, ils rendaient la
+    // section illisible d'un coup d'œil.
     list.forEach((_, i) => {
       const d = document.createElement('div');
       d.className = 'an';
-      // Comme pour les canaux : le nom donné par l'utilisateur porte la carte,
-      // la référence figée passe en second.
       d.innerHTML =
         `<div class="an-title" id="anname${i}">Entrée ${i + 1}</div>
          <div class="an-head"><span class="an-id">AN${i + 1}</span>
@@ -1241,81 +1298,19 @@ function renderInputs(list) {
          <div class="an-gauge hidden" id="angauge${i}">
            <div class="an-gauge-fill" id="angfill${i}"></div>
          </div>
-         <input type="text" id="anlbl${i}" maxlength="32" placeholder="nom"
-                aria-label="Nom de l'entrée ${i + 1}">
-         <select id="ankind${i}" aria-label="Type de l'entrée ${i + 1}"></select>
-         <select id="anm${i}" aria-label="Mode entrée ${i + 1}"></select>
-         <div class="an-sender hidden" id="ansend${i}">
-           <select id="ansprof${i}" aria-label="Profil de sonde ${i + 1}"></select>
-           <div class="an-link-row">
-             <input type="number" id="anre${i}" min="0" max="500" step="1"
-                    placeholder="vide Ω" aria-label="Résistance à vide ${i + 1}">
-             <input type="number" id="anrf${i}" min="0" max="500" step="1"
-                    placeholder="plein Ω" aria-label="Résistance à plein ${i + 1}">
-           </div>
-         </div>
-         <div class="an-link">
-           <select id="anact${i}" aria-label="Action de l'entrée ${i + 1}"></select>
-           <div class="an-link-row">
-             <select id="antgt${i}" aria-label="Sortie pilotée par l'entrée ${i + 1}"></select>
-             <input type="number" id="anthr${i}" min="0" max="30" step="0.1"
-                    placeholder="seuil" aria-label="Seuil de l'entrée ${i + 1}">
-           </div>
-         </div>`;
+         <div class="an-sub" id="ansub${i}"></div>`;
       box.appendChild(d);
-
-      const sel = el('anm' + i);
-      MODES.forEach((m, k) => sel.add(new Option(m, k)));
-      sel.addEventListener('change', async () => {
-        const r = await sendCmd(OP.SET_INPUT_MODE, i + 1, [+sel.value]);
-        if (r && r.status === 0) log(`AN${i + 1} → ${MODES[+sel.value]}`, 'k');
-      });
-
-      const kind = el('ankind' + i);
-      KINDS.forEach((k, j) => kind.add(new Option(k.nom, j)));
-      kind.addEventListener('change', async () => {
-        const r = await sendCmd(OP.SET_INPUT_KIND, i + 1, [+kind.value]);
-        if (r && r.status === 0) {
-          S.inputKinds[i + 1] = +kind.value;
-          log(`AN${i + 1} : ${KINDS[+kind.value].nom}`, 'k');
-        }
-      });
-      el('anlbl' + i).addEventListener('change', async () => {
-        const octets = new TextEncoder().encode(el('anlbl' + i).value.slice(0, 32));
-        const r = await sendCmd(OP.SET_INPUT_LABEL, i + 1, [...octets]);
-        if (r && r.status === 0) {
-          el('anname' + i).textContent = el('anlbl' + i).value || `Entrée ${i + 1}`;
-          log(`AN${i + 1} renommée`, 'k');
-        }
-      });
-
-      const prof = el('ansprof' + i);
-      SENDERS.forEach((nom, k) => prof.add(new Option(nom, k)));
-      prof.addEventListener('change', () => envoyerSonde(i + 1, true));
-      el('anre' + i).addEventListener('change', () => envoyerSonde(i + 1, false));
-      el('anrf' + i).addEventListener('change', () => envoyerSonde(i + 1, false));
-
-      const act = el('anact' + i), tgt = el('antgt' + i);
-      ACTIONS.forEach((a, k) => act.add(new Option(a, k)));
-      tgt.add(new Option('Aucune sortie', 0));
-      for (let c = 1; c <= 8; c++) tgt.add(new Option('pilote CH' + c, c));
-      act.addEventListener('change', () => { refreshLinkRow(i); sendLink(i + 1); });
-      tgt.addEventListener('change', () => sendLink(i + 1));
-      el('anthr' + i).addEventListener('change', () => sendLink(i + 1));
-      refreshLinkRow(i);
     });
   }
   list.forEach((inp, i) => {
+    S.inputModes[i + 1] = inp.mode;
     const kind = KINDS[(S.inputKinds || {})[i + 1] || 0];
-    const sel = el('anm' + i);
-    if (document.activeElement !== sel) sel.value = String(inp.mode);
-
-    // Un réservoir se lit d'un coup d'œil sur une jauge ; une tension ou un
-    // contact n'en tirent rien. Le pourcentage vient de la courbe du firmware
-    // (an{n}_level), donc du mode de sonde choisi.
-    el('ansend' + i).classList.toggle('hidden', inp.mode < 1 || inp.mode > 3);
-
+    // Le nom est réappliqué à chaque rendu : les métadonnées peuvent arriver
+    // avant que les cartes n'existent, et la reconstruction les effacerait.
+    const nom = (S.inputLabels || {})[i + 1];
+    el('anname' + i).textContent = nom || `Entrée ${i + 1}`;
     const jauge = kind.vue === 'jauge' && inp.pct !== null && inp.pct !== undefined;
+
     el('angauge' + i).classList.toggle('hidden', !jauge);
     if (jauge) {
       const pct = Math.max(0, Math.min(100, inp.pct));
@@ -1328,31 +1323,160 @@ function renderInputs(list) {
     } else {
       el('anv' + i).textContent = inp.text;
     }
+
+    // Sous-titre : le type, la mesure brute quand la jauge la masque, et la
+    // sortie pilotée le cas échéant.
+    const bits = [kind.nom];
+    if (jauge && inp.text !== '—') bits.push(inp.text);
+    const pil = S.links && S.links[i + 1];
+    if (pil && pil.target) bits.push('pilote CH' + pil.target);
+    el('ansub' + i).textContent = bits.join(' · ');
   });
 }
 
-/* ── Liaison entrée → sortie ─────────────────────────────────── */
+/* ── Configuration des entrées ───────────────────────────────
+   Un seul panneau pour les quatre entrées, sur le modèle des sorties : le
+   sélecteur choisit laquelle on règle. */
 
-// Le seuil n'a de sens que pour les deux actions de tension ; la sortie n'en a
-// aucun tant qu'aucune action n'est choisie.
-function refreshLinkRow(i) {
-  const a = +el('anact' + i).value;
-  el('anthr' + i).classList.toggle('hidden', !ACTION_NEEDS_THRESHOLD(a));
-  el('antgt' + i).classList.toggle('hidden', a === 0);
+function buildInputConfig() {
+  const sel = el('icfgSel');
+  if (sel.options.length) return;
+  for (let n = 1; n <= 4; n++) sel.add(new Option('AN' + n, n));
+  KINDS.forEach((k, j) => el('icfgKind').add(new Option(k.nom, j)));
+  MODES.forEach((m, j) => el('icfgMode').add(new Option(m, j)));
+  SENDERS.forEach((p, j) => el('icfgProf').add(new Option(p, j)));
+  ACTIONS.forEach((a, j) => el('icfgAct').add(new Option(a, j)));
+  el('icfgTgt').add(new Option('Aucune sortie', 0));
+  for (let c = 1; c <= 8; c++) el('icfgTgt').add(new Option('pilote CH' + c, c));
+
+  const n = () => +el('icfgSel').value;
+  sel.addEventListener('change', loadInputConfig);
+  el('btnICfgLoad').addEventListener('click', loadInputConfig);
+
+  el('btnICfgLbl').addEventListener('click', async () => {
+    const octets = new TextEncoder().encode(el('icfgLbl').value.slice(0, 32));
+    const r = await sendCmd(OP.SET_INPUT_LABEL, n(), [...octets]);
+    if (r && r.status === 0) {
+      S.inputLabels[n()] = el('icfgLbl').value;
+      el('anname' + (n() - 1)).textContent = el('icfgLbl').value || `Entrée ${n()}`;
+      log(`AN${n()} renommée`, 'k');
+    }
+  });
+  el('icfgKind').addEventListener('change', async () => {
+    const r = await sendCmd(OP.SET_INPUT_KIND, n(), [+el('icfgKind').value]);
+    if (r && r.status === 0) {
+      S.inputKinds[n()] = +el('icfgKind').value;
+      log(`AN${n()} : ${KINDS[+el('icfgKind').value].nom}`, 'k');
+    }
+  });
+  el('icfgMode').addEventListener('change', async () => {
+    const r = await sendCmd(OP.SET_INPUT_MODE, n(), [+el('icfgMode').value]);
+    if (r && r.status === 0) {
+      majPanneauSonde(+el('icfgMode').value);
+      log(`AN${n()} → ${MODES[+el('icfgMode').value]}`, 'k');
+    }
+  });
+  el('icfgProf').addEventListener('change', () => {
+    const b = [null, [180, 10], [0, 190], [240, 33], [0, 90]][+el('icfgProf').value];
+    if (b) { el('icfgRe').value = b[0]; el('icfgRf').value = b[1]; }
+    envoyerSonde();
+  });
+  el('btnICfgSender').addEventListener('click', () => {
+    el('icfgProf').value = '0';        // saisie manuelle = personnalisé
+    envoyerSonde();
+  });
+  el('icfgAct').addEventListener('change', envoyerLiaison);
+  el('icfgTgt').addEventListener('change', envoyerLiaison);
+  el('icfgThr').addEventListener('change', envoyerLiaison);
 }
 
-async function sendLink(n) {
-  const i = n - 1;
-  const action = +el('anact' + i).value;
-  const target = +el('antgt' + i).value;
-  const cv = Math.round((parseFloat(el('anthr' + i).value) || 0) * 100);
-  const r = await sendCmd(OP.SET_LINK, n,
-                          [action, target, cv & 0xff, (cv >> 8) & 0xff]);
+// Les bornes n'ont de sens que pour les sondes résistives.
+function majPanneauSonde(mode) {
+  el('icfgSender').classList.toggle('hidden', mode < 1 || mode > 3);
+}
+
+async function envoyerSonde() {
+  const n = +el('icfgSel').value;
+  const vide = Math.round(+el('icfgRe').value) || 0;
+  const plein = Math.round(+el('icfgRf').value) || 0;
+  if (vide === plein) { log('sonde : vide et plein doivent différer', 'e'); return; }
+  const r = await sendCmd(OP.SET_SENDER, n, [+el('icfgProf').value,
+    vide & 0xff, (vide >> 8) & 0xff, plein & 0xff, (plein >> 8) & 0xff]);
+  if (r && r.status === 0) log(`AN${n} : sonde ${vide} Ω vide → ${plein} Ω plein`, 'k');
+}
+
+async function envoyerLiaison() {
+  const n = +el('icfgSel').value;
+  const action = +el('icfgAct').value;
+  const cible = +el('icfgTgt').value;
+  const cv = Math.round((parseFloat(el('icfgThr').value) || 0) * 100);
+  const r = await sendCmd(OP.SET_LINK, n, [action, cible, cv & 0xff, (cv >> 8) & 0xff]);
   if (r && r.status === 0) {
+    S.links[n] = action && cible ? { action, target: cible } : null;
+    el('icfgThr').classList.toggle('hidden', !ACTION_NEEDS_THRESHOLD(action));
     log(action === 0 ? `AN${n} : liaison désactivée`
-      : `AN${n} → ${ACTIONS[action]}${target ? ' · CH' + target : ''}`
-        + (ACTION_NEEDS_THRESHOLD(action) ? ` · ${(cv / 100).toFixed(1)} V` : ''), 'k');
+      : `AN${n} → ${ACTIONS[action]}${cible ? ' · CH' + cible : ''}`, 'k');
   }
+}
+
+async function loadInputConfig() {
+  if (!S.authed) return;
+  const n = +el('icfgSel').value;
+  const meta = await sendCmd(OP.GET_INPUT_META, n);
+  if (meta && meta.status === 0 && meta.payload.length) {
+    el('icfgKind').value = String(meta.payload[0]);
+    el('icfgLbl').value = new TextDecoder().decode(meta.payload.slice(1));
+  }
+  const snd = await sendCmd(OP.GET_SENDER, n);
+  if (snd && snd.status === 0 && snd.payload.length >= 5) {
+    const dv = new DataView(snd.payload.buffer, snd.payload.byteOffset);
+    el('icfgProf').value = String(snd.payload[0]);
+    el('icfgRe').value = dv.getUint16(1, true);
+    el('icfgRf').value = dv.getUint16(3, true);
+  }
+  const lnk = await sendCmd(OP.GET_LINK, n);
+  if (lnk && lnk.status === 0 && lnk.payload.length >= 4) {
+    const dv = new DataView(lnk.payload.buffer, lnk.payload.byteOffset);
+    el('icfgAct').value = String(lnk.payload[0]);
+    el('icfgTgt').value = String(lnk.payload[1]);
+    el('icfgThr').value = (dv.getUint16(2, true) / 100).toFixed(1);
+    el('icfgThr').classList.toggle('hidden', !ACTION_NEEDS_THRESHOLD(lnk.payload[0]));
+  }
+  const mode = S.inputModes[n];
+  if (mode !== undefined) { el('icfgMode').value = String(mode); majPanneauSonde(mode); }
+}
+
+// Noms et types des quatre entrées : l'affichage en dépend, on les lit d'emblée.
+async function loadInputMeta() {
+  for (let n = 1; n <= 4; n++) {
+    const r = await sendCmd(OP.GET_INPUT_META, n);
+    if (!r || r.status !== 0 || !r.payload.length) continue;
+    S.inputKinds[n] = r.payload[0];
+    const nom = new TextDecoder().decode(r.payload.slice(1));
+    S.inputLabels[n] = nom;
+    const t = el('anname' + (n - 1));
+    if (t) t.textContent = nom || `Entrée ${n}`;
+  }
+}
+
+async function loadLinks() {
+  S.links = {};
+  for (let n = 1; n <= 4; n++) {
+    const r = await sendCmd(OP.GET_LINK, n);
+    if (!r || r.status !== 0 || r.payload.length < 2) continue;
+    if (r.payload[0] !== 0 && r.payload[1] !== 0) {
+      S.links[n] = { action: r.payload[0], target: r.payload[1] };
+    }
+  }
+  renderChannels();
+}
+
+// Quelle entrée pilote ce canal, et de façon permanente ou non ?
+function pilotePour(ch) {
+  for (const [n, l] of Object.entries(S.links || {})) {
+    if (l && l.target === ch) return { entree: +n, action: l.action };
+  }
+  return null;
 }
 
 /* ── Protection batterie ─────────────────────────────────────── */
@@ -1458,79 +1582,6 @@ async function sendBattery() {
     log(cv === 0 ? `coupure générale désactivée, temporisation ${s} s`
                  : `coupure générale ${(cv / 100).toFixed(1)} V, temporisation ${s} s`, 'k');
   }
-}
-
-// Nom et type de chaque entrée : ce qui décide de la représentation.
-// Un profil pré-remplit les bornes ; les modifier bascule en « personnalisé »,
-// puisque ce sont elles qui font foi dans le calcul du firmware.
-async function envoyerSonde(n, depuisProfil) {
-  const i = n - 1;
-  if (depuisProfil) {
-    const bornes = [null, [180, 10], [0, 190], [240, 33], [0, 90]][+el('ansprof' + i).value];
-    if (bornes) { el('anre' + i).value = bornes[0]; el('anrf' + i).value = bornes[1]; }
-  } else {
-    el('ansprof' + i).value = '0';        // personnalisé
-  }
-  const vide = Math.round(+el('anre' + i).value) || 0;
-  const plein = Math.round(+el('anrf' + i).value) || 0;
-  if (vide === plein) { log('sonde : vide et plein doivent différer', 'e'); return; }
-  const r = await sendCmd(OP.SET_SENDER, n, [+el('ansprof' + i).value,
-    vide & 0xff, (vide >> 8) & 0xff, plein & 0xff, (plein >> 8) & 0xff]);
-  if (r && r.status === 0) log(`AN${n} : sonde ${vide} Ω vide → ${plein} Ω plein`, 'k');
-}
-
-async function loadSenders() {
-  for (let n = 1; n <= 4; n++) {
-    const r = await sendCmd(OP.GET_SENDER, n);
-    if (!r || r.status !== 0 || r.payload.length < 5) continue;
-    const i = n - 1;
-    const dv = new DataView(r.payload.buffer, r.payload.byteOffset);
-    el('ansprof' + i).value = String(r.payload[0]);
-    el('anre' + i).value = dv.getUint16(1, true);
-    el('anrf' + i).value = dv.getUint16(3, true);
-  }
-}
-
-async function loadInputMeta() {
-  for (let n = 1; n <= 4; n++) {
-    const r = await sendCmd(OP.GET_INPUT_META, n);
-    if (!r || r.status !== 0 || !r.payload.length) continue;
-    const i = n - 1;
-    S.inputKinds[n] = r.payload[0];
-    const nom = new TextDecoder().decode(r.payload.slice(1));
-    S.inputLabels[n] = nom;
-    if (el('ankind' + i)) el('ankind' + i).value = String(r.payload[0]);
-    if (el('anlbl' + i)) el('anlbl' + i).value = nom;
-    if (el('anname' + i)) el('anname' + i).textContent = nom || `Entrée ${n}`;
-  }
-}
-
-async function loadLinks() {
-  S.links = {};
-  for (let n = 1; n <= 4; n++) {
-    const r = await sendCmd(OP.GET_LINK, n);
-    if (!r || r.status !== 0) continue;
-    const i = n - 1;
-    const dv = new DataView(r.payload.buffer, r.payload.byteOffset);
-    el('anact' + i).value = String(r.payload[0]);
-    el('antgt' + i).value = String(r.payload[1]);
-    el('anthr' + i).value = (dv.getUint16(2, true) / 100).toFixed(1);
-    refreshLinkRow(i);
-    // Mémorisé pour signaler, sur la carte du canal, qu'il est asservi :
-    // sans cela une sortie « qui revient toute seule » reste inexplicable.
-    if (r.payload[0] !== 0 && r.payload[1] !== 0) {
-      S.links[n] = { action: r.payload[0], target: r.payload[1] };
-    }
-  }
-  renderChannels();
-}
-
-// Quelle entrée pilote ce canal, et de façon permanente ou non ?
-function pilotePour(ch) {
-  for (const [n, l] of Object.entries(S.links || {})) {
-    if (l.target === ch) return { entree: +n, action: l.action };
-  }
-  return null;
 }
 
 /* ══════════════════════════════════════════════════════════════
@@ -1666,6 +1717,9 @@ function wire() {
   el('secBattery').addEventListener('toggle', () => {
     if (el('secBattery').open && S.authed) loadBattery();
   });
+  el('secInputCfg').addEventListener('toggle', () => {
+    if (el('secInputCfg').open && S.authed) loadInputConfig();
+  });
   el('btnBattery').addEventListener('click', sendBattery);
   document.querySelectorAll('[data-preset]').forEach(b => {
     b.addEventListener('click', () => applyPreset(b.dataset.preset));
@@ -1760,6 +1814,7 @@ function versionLisible() {
 if (typeof document !== 'undefined') {
   buildChannels();
   buildShedRows();
+  buildInputConfig();
   wire();
   el('version').textContent = versionLisible();
   refreshEnabled();
