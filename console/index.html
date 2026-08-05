@@ -308,6 +308,26 @@
   footer a { color: rgb(var(--muted)); text-decoration: none; padding: 6px 2px; }
   footer a:hover { color: rgb(var(--neon)); }
 
+  /* ── États de liaison ────────────────────────────────────
+     off = pas de carte · ro = connectée, non authentifiée · rw = pilotable.
+     Rien ne doit laisser croire qu'on pilote une carte absente. */
+  .offline-only { border-left-color: rgb(var(--err)); }
+  body:not([data-link=off]) .offline-only { display: none; }
+
+  /* Les zones inertes s'estompent. Les commandes portent en plus l'attribut
+     disabled : l'opacité seule les laisserait annoncer comme actionnables. */
+  [data-link=off] .channels,
+  [data-link=off] #inputs,
+  [data-link=off] .strip { opacity: .45; }
+  [data-link=off] #secConfig, [data-link=off] #secBattery,
+  [data-link=off] #secSystem { opacity: .55; }
+  button:disabled, input:disabled, select:disabled { cursor: not-allowed; }
+  .sw:disabled { opacity: .5; }
+
+  /* Le sous-titre de l'en-tête porte l'état : c'est ce qu'on lit en premier. */
+  [data-link=off] h1 small { color: rgb(var(--err)); font-weight: 600; }
+  [data-link=ro] h1 small { color: rgb(var(--warn)); font-weight: 600; }
+
   .hidden { display: none !important; }
   code {
     font: 12px ui-monospace, Menlo, monospace; background: rgb(var(--bg) / .6);
@@ -333,6 +353,11 @@
     </button>
     <button class="primary" id="btnConnect">Connecter</button>
   </header>
+
+  <div class="notice offline-only" id="offlineNotice">
+    <b>Carte non connectée.</b> Les commandes sont inactives — touchez
+    <b>Connecter</b> et choisissez votre TinyRail dans la fenêtre du navigateur.
+  </div>
 
   <div class="notice hidden" id="unsupported">
     <b>Ce navigateur ne gère pas Web Bluetooth.</b><br>
@@ -507,7 +532,7 @@
 // Remplacé à la publication par tools/webble/publish.sh ou par le workflow de
 // release. Reste tel quel lorsqu'on sert le fichier directement : c'est ainsi
 // qu'on distingue une page de travail d'une page publiée.
-const CONSOLE_VERSION = '2026-08-05 · b7828c4';
+const CONSOLE_VERSION = '2026-08-05 · d64ee79';
 
 const BASE = '12340000-1234-1234-1234-1234123400';   // + 2 hex
 const U = {
@@ -632,6 +657,28 @@ function setStatus(text, cls) {
   el('dot').className = 'dot' + (cls ? ' ' + cls : '');
 }
 
+// Toujours actifs : sans eux on ne pourrait pas sortir de l'état courant.
+const TOUJOURS_ACTIFS = ['btnConnect', 'btnTheme'];
+// Actifs dès qu'une carte répond, même sans authentification : ce sont les
+// commandes qui permettent justement de s'authentifier.
+const ACTIFS_SI_CONNECTE = ['btnPair', 'btnImport', 'btnExport', 'btnReconnect'];
+
+// Un seul endroit décide de ce qui est manipulable, à partir de l'état réel du
+// lien. Sans cela, on garde des contrôles qui semblent actifs mais n'agissent
+// sur rien — et on croit piloter une carte absente.
+function refreshEnabled() {
+  const connecte = !!(S.server && S.server.connected);
+  const etat = !connecte ? 'off' : (S.authed ? 'rw' : 'ro');
+  document.body.dataset.link = etat;
+
+  document.querySelectorAll('.wrap button, .wrap input, .wrap select')
+    .forEach(e => {
+      if (TOUJOURS_ACTIFS.includes(e.id)) return;
+      if (ACTIFS_SI_CONNECTE.includes(e.id)) { e.disabled = !connecte; return; }
+      e.disabled = etat !== 'rw';
+    });
+}
+
 async function connect() {
   if (!navigator.bluetooth) { el('unsupported').classList.remove('hidden'); return; }
   try {
@@ -673,6 +720,7 @@ async function connectTo(device) {
 
     setStatus(S.device.name || 'connecté', 'on');
     el('btnConnect').textContent = 'Déconnecter';
+    refreshEnabled();
     log('connecté à ' + (S.device.name || '?'), 'k');
 
     const info = await sendCmd(OP.GET_INFO);           // autorisé sans clé
@@ -714,6 +762,7 @@ function onDisconnect() {
   S.server = null; S.chars = {}; S.authed = false;
   setStatus('non connecté');
   el('btnConnect').textContent = 'Connecter';
+  refreshEnabled();
   log('déconnecté', 'e');
 }
 
@@ -835,6 +884,7 @@ async function authenticate() {
     if (S.authed) {
       el('pairHint').classList.add('hidden');
       setStatus((S.device.name || 'connecté') + ' · authentifié', 'on');
+      refreshEnabled();
       log('authentifié — commandes actives', 'k');
       loadLabels().then(loadLinks);   // GET_LINK est refusé sans authentification
     } else {
@@ -842,6 +892,7 @@ async function authenticate() {
       // l'utilisateur devant un journal qui dit « non authentifié » et aucun
       // moyen visible de se réappairer.
       log('authentification refusée — clé invalide ou carte réinitialisée', 'e');
+      refreshEnabled();
       showPairHint('rejected');
     }
     return S.authed;
@@ -1382,6 +1433,7 @@ if (typeof document !== 'undefined') {
   buildShedRows();
   wire();
   el('version').textContent = versionLisible();
+  refreshEnabled();
   // Écrit aussi dans le journal : un testeur qui signale un problème n'a
   // qu'à recopier la première ligne.
   log('console ' + versionLisible());
