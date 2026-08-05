@@ -566,7 +566,7 @@
 // Remplacé à la publication par tools/webble/publish.sh ou par le workflow de
 // release. Reste tel quel lorsqu'on sert le fichier directement : c'est ainsi
 // qu'on distingue une page de travail d'une page publiée.
-const CONSOLE_VERSION = '2026-08-05 · 5811d15';
+const CONSOLE_VERSION = '2026-08-05 · d72f6cd';
 
 const BASE = '12340000-1234-1234-1234-1234123400';   // + 2 hex
 const U = {
@@ -786,17 +786,50 @@ async function connectTo(device) {
 // absente sur Bluefy et sur Chrome bureau sans le drapeau
 // « enable-web-bluetooth-new-permissions-backend » : d'où le garde, et le
 // bouton n'apparaît que si un appareil connu est effectivement retrouvé.
-async function offerKnownDevice() {
+// Reconnexion au chargement de la page, quand le navigateur se souvient d'une
+// carte déjà autorisée. Deux temps : on tente tout de suite, et si la carte
+// n'est pas là on guette son advertisement pour se connecter dès son retour.
+//
+// ⚠️ getDevices() ne liste que les appareils autorisés APRÈS l'activation du
+//    registre persistant : une carte appairée avant reste invisible ici tant
+//    qu'on ne l'a pas resélectionnée une fois.
+async function reconnexionAuDemarrage() {
   if (!navigator.bluetooth || !navigator.bluetooth.getDevices) return;
+  let connus = [];
   try {
-    const known = (await navigator.bluetooth.getDevices())
+    connus = (await navigator.bluetooth.getDevices())
       .filter(d => (d.name || '').startsWith('tinyrail'));
-    if (!known.length) return;
-    const b = el('btnReconnect');
-    b.textContent = 'Reconnecter (' + known[0].name + ')';
-    b.classList.remove('hidden');
-    b.onclick = () => connectTo(known[0]);
-  } catch { /* permission refusée ou API indisponible : on garde le picker */ }
+  } catch { return; }               // permission refusée : le sélecteur reste
+  if (!connus.length) return;
+
+  const device = connus[0];
+  const b = el('btnReconnect');     // repli manuel, toujours proposé
+  b.textContent = 'Reconnecter (' + device.name + ')';
+  b.classList.remove('hidden');
+  b.onclick = () => { annulerReconnexion(); connectTo(device); };
+
+  setStatus('reconnexion à ' + device.name + '…', 'busy');
+  log('carte connue : ' + device.name + ' — reconnexion');
+  if (await connectTo(device)) return;
+
+  // Absente pour l'instant : on l'attend au lieu de marteler connect().
+  if (typeof device.watchAdvertisements !== 'function') {
+    setStatus('non connecté');
+    return;
+  }
+  try {
+    const stop = new AbortController();
+    device.addEventListener('advertisementreceived', async () => {
+      stop.abort();                 // une seule tentative par réapparition
+      log('carte détectée — connexion', 'k');
+      if (!await connectTo(device)) setStatus('non connecté');
+    }, { once: true });
+    await device.watchAdvertisements({ signal: stop.signal });
+    setStatus('en attente de ' + device.name + '…', 'busy');
+    log('en attente du retour de la carte');
+  } catch {
+    setStatus('non connecté');
+  }
 }
 
 /* ── Reconnexion automatique ──────────────────────────────────
@@ -947,12 +980,28 @@ function sendCmd(op, idx = 0, payload = []) {
 
 /* ── Authentification ────────────────────────────────────────── */
 
+// ⚠️ Indexer la clé sur device.id était une erreur : cet identifiant dépend du
+// backend de permissions du navigateur, et activer le registre persistant le
+// change — la clé devenait introuvable alors qu'elle était là. Le nom porte le
+// suffixe MAC de la carte (name_add_mac_suffix) : il est unique et stable.
 function keyStorageId() {
-  return 'tinyrail_key_' + (S.device && S.device.id ? S.device.id : 'default');
+  const d = S.device;
+  return 'tinyrail_key_' + ((d && d.name) || (d && d.id) || 'default');
 }
+const hexVersOctets = h => Uint8Array.from(h.match(/../g).map(b => parseInt(b, 16)));
+
 function loadKey() {
-  const hex = localStorage.getItem(keyStorageId());
-  return hex ? Uint8Array.from(hex.match(/../g).map(b => parseInt(b, 16))) : null;
+  const parNom = localStorage.getItem(keyStorageId());
+  if (parNom) return hexVersOctets(parNom);
+  // Clé enregistrée avant le passage à l'indexation par nom : on la reprend.
+  const ancien = S.device && S.device.id
+    && localStorage.getItem('tinyrail_key_' + S.device.id);
+  if (ancien) {
+    localStorage.setItem(keyStorageId(), ancien);
+    log('clé d\'appairage reprise sous le nom de la carte');
+    return hexVersOctets(ancien);
+  }
+  return null;
 }
 function saveKey(key) {
   localStorage.setItem(keyStorageId(),
@@ -1544,7 +1593,7 @@ if (typeof document !== 'undefined') {
   // qu'à recopier la première ligne.
   log('console ' + versionLisible());
   if (!navigator.bluetooth) el('unsupported').classList.remove('hidden');
-  else offerKnownDevice();
+  else reconnexionAuDemarrage();
 }
 
 // Exposé pour les tests hors navigateur (tools/webble/test-decoders.mjs).
