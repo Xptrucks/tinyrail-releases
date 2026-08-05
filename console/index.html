@@ -20,6 +20,18 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="color-scheme" content="dark light">
 <title>TinyRail — console BLE</title>
+<script>
+  // Posé avant le rendu : sans cela, la page s'afficherait en sombre puis
+  // basculerait en clair sous les yeux de l'utilisateur.
+  (function () {
+    var saved = null;
+    try { saved = localStorage.getItem('tinyrail_theme'); } catch (e) { /* mode privé */ }
+    var dark = saved ? saved === 'dark'
+                     : !matchMedia('(prefers-color-scheme: light)').matches;
+    document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+    document.documentElement.style.colorScheme = dark ? 'dark' : 'light';
+  })();
+</script>
 <style>
   /* Jetons repris de tinyrail.xptrucks.fr (site_web/) pour que la console
      et le site se lisent comme un même produit. Valeurs en composantes RGB :
@@ -38,12 +50,13 @@
     --err: 255 77 94;
     --radius: 16px;
   }
-  @media (prefers-color-scheme: light) {
-    :root {
-      --bg: 247 249 252; --surface: 255 255 255; --fg: 15 23 42;
-      --muted: 71 85 105; --border: 213 222 235; --neon: 12 110 220;
-      --halo: 30 90 200; --halo-strength: .12;
-    }
+  /* Le thème est résolu par le script du <head>, qui pose data-theme d'après
+     le choix mémorisé ou la préférence du système. Pas de media query ici :
+     elle entrerait en conflit avec une bascule manuelle. */
+  :root[data-theme=light] {
+    --bg: 247 249 252; --surface: 255 255 255; --fg: 15 23 42;
+    --muted: 71 85 105; --border: 213 222 235; --neon: 12 110 220;
+    --halo: 30 90 200; --halo-strength: .12;
   }
   * { box-sizing: border-box; }
   body {
@@ -109,7 +122,21 @@
     background: rgb(var(--neon)); border-color: rgb(var(--neon)); color: #04101f;
     box-shadow: 0 0 22px rgb(var(--neon) / .45);
   }
+  /* En thème clair le néon est bien plus foncé (12 110 220) : un texte sombre
+     y serait illisible. */
+  :root[data-theme=light] button.primary { color: #fff; }
   button.ghost { background: transparent; }
+
+  /* Bascule de thème — bouton rond à icône, comme celui du site. */
+  .icon-btn {
+    width: 44px; height: 44px; padding: 0; flex: none;
+    display: grid; place-items: center; border-radius: 50%;
+  }
+  .icon-btn svg { width: 19px; height: 19px; stroke: rgb(var(--fg)); fill: none;
+                  stroke-width: 1.8; stroke-linecap: round; }
+  /* On montre la destination, pas l'état courant : soleil sur fond sombre
+     (« passer en clair »), lune sur fond clair — comme le bouton du site. */
+  :root[data-theme=dark] .moon, :root[data-theme=light] .sun { display: none; }
   :focus-visible { outline: 2px solid rgb(var(--neon)); outline-offset: 2px; }
 
   /* ── Bandeau de mesures ──────────────────────────────── */
@@ -264,6 +291,15 @@
     <span class="dot" id="dot"></span>
     <h1>TinyRail <small id="sub">non connecté</small></h1>
     <button class="ghost hidden" id="btnReconnect">Reconnecter</button>
+    <button class="icon-btn ghost" id="btnTheme" aria-label="Changer de thème">
+      <svg class="sun" viewBox="0 0 24 24" aria-hidden="true">
+        <circle cx="12" cy="12" r="4.2"/>
+        <path d="M12 2.4v2.2M12 19.4v2.2M4.2 12H2M22 12h-2.2M5.6 5.6 4 4M20 20l-1.6-1.6M18.4 5.6 20 4M4 20l1.6-1.6"/>
+      </svg>
+      <svg class="moon" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M20.5 14.6A8.6 8.6 0 1 1 9.4 3.5a6.9 6.9 0 0 0 11.1 11.1Z"/>
+      </svg>
+    </button>
     <button class="primary" id="btnConnect">Connecter</button>
   </header>
 
@@ -854,7 +890,28 @@ async function loadConfig() {
 
 const u16 = v => [v & 0xff, (v >> 8) & 0xff];
 
+/* ── Thème ───────────────────────────────────────────────────── */
+
+function setTheme(theme, remember) {
+  document.documentElement.dataset.theme = theme;
+  document.documentElement.style.colorScheme = theme;
+  if (remember) { try { localStorage.setItem('tinyrail_theme', theme); } catch (e) {} }
+}
+
+function wireTheme() {
+  el('btnTheme').addEventListener('click', () => {
+    setTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark', true);
+  });
+  // Tant que rien n'a été choisi ici, on continue de suivre le système.
+  matchMedia('(prefers-color-scheme: light)').addEventListener('change', ev => {
+    let saved = null;
+    try { saved = localStorage.getItem('tinyrail_theme'); } catch (e) {}
+    if (!saved) setTheme(ev.matches ? 'light' : 'dark', false);
+  });
+}
+
 function wire() {
+  wireTheme();
   el('btnConnect').addEventListener('click', () => {
     if (S.server && S.server.connected) S.device.gatt.disconnect(); else connect();
   });
