@@ -383,8 +383,8 @@
       <svg viewBox="0 0 24 24" aria-hidden="true" class="welcome-icon">
         <path d="M13 2 4.5 13.5H11l-1 8.5 8.5-11.5H12l1-8.5Z"/>
       </svg>
-      <h2>Aucune carte connectée</h2>
-      <p>
+      <h2 id="welcomeTitle">Aucune carte connectée</h2>
+      <p id="welcomeText">
         Cette page pilote un TinyRail en Bluetooth, sans Wi-Fi ni Home Assistant.
         Approchez-vous de la carte, puis choisissez-la dans la fenêtre du navigateur.
       </p>
@@ -566,7 +566,7 @@
 // Remplacé à la publication par tools/webble/publish.sh ou par le workflow de
 // release. Reste tel quel lorsqu'on sert le fichier directement : c'est ainsi
 // qu'on distingue une page de travail d'une page publiée.
-const CONSOLE_VERSION = '2026-08-05 · 8ed7dac';
+const CONSOLE_VERSION = '2026-08-05 · 5811d15';
 
 const BASE = '12340000-1234-1234-1234-1234123400';   // + 2 hex
 const U = {
@@ -723,7 +723,7 @@ async function connect() {
       filters: [{ services: [U.service] }, { namePrefix: 'tinyrail' }],
       optionalServices: [U.service, 'device_information'],
     });
-    await connectTo(device);
+    if (!await connectTo(device)) setStatus('non connecté');
   } catch (e) {
     setStatus('non connecté');
     if (e && e.name === 'NotFoundError') log('sélection annulée');
@@ -754,7 +754,11 @@ async function connectTo(device) {
 
     setStatus(S.device.name || 'connecté', 'on');
     el('btnConnect').textContent = 'Déconnecter';
+    S.reconnexionVoulue = true;   // désarmée seulement par le bouton Déconnecter
+    S.tentatives = 0;
+    clearTimeout(reconnexionTimer);
     refreshEnabled();
+    majAccueil();
     log('connecté à ' + (S.device.name || '?'), 'k');
 
     const info = await sendCmd(OP.GET_INFO);           // autorisé sans clé
@@ -768,9 +772,12 @@ async function connectTo(device) {
     S.key = loadKey();
     if (S.key) { await authenticate(); }
     else { showPairHint('none'); }
+    return true;
   } catch (e) {
-    setStatus('non connecté');
+    // Le statut est laissé à l'appelant : en reconnexion, c'est la boucle qui
+    // affiche le prochain essai plutôt qu'un « non connecté » trompeur.
     log('connexion : ' + (e && e.message ? e.message : e), 'e');
+    return false;
   }
 }
 
@@ -792,12 +799,66 @@ async function offerKnownDevice() {
   } catch { /* permission refusée ou API indisponible : on garde le picker */ }
 }
 
+/* ── Reconnexion automatique ──────────────────────────────────
+   Seule la reconnexion EN COURS DE SESSION est possible sans réglage
+   particulier : l'objet device garde sa permission tant que la page vit, donc
+   gatt.connect() n'a pas besoin du sélecteur. Retrouver l'appareil après un
+   rechargement demanderait getDevices(), derrière un drapeau Chrome — hors
+   de question pour un produit livré.
+
+   Ce qui est couvert : redémarrage de la carte (OTA, safe mode, retour aux
+   réglages d'usine), sortie de portée, coupure passagère. */
+const RECONNEXION_DELAIS = [1000, 2000, 4000, 8000, 15000];  // puis 15 s
+let reconnexionTimer = null;
+
+function annulerReconnexion() {
+  S.reconnexionVoulue = false;
+  S.tentatives = 0;
+  clearTimeout(reconnexionTimer);
+  reconnexionTimer = null;
+}
+
+function planifierReconnexion() {
+  if (!S.reconnexionVoulue || !S.device) return;
+  const delai = RECONNEXION_DELAIS[Math.min(S.tentatives, RECONNEXION_DELAIS.length - 1)];
+  S.tentatives++;
+  setStatus(`reconnexion dans ${Math.round(delai / 1000)} s…`, 'busy');
+  majAccueil();
+  reconnexionTimer = setTimeout(async () => {
+    if (!S.reconnexionVoulue) return;
+    setStatus(`reconnexion (essai ${S.tentatives})…`, 'busy');
+    // pas de sélecteur : la permission est acquise pour cette page
+    const ok = await connectTo(S.device);
+    if (!ok) planifierReconnexion();      // la carte n'est pas encore revenue
+  }, delai);
+}
+
 function onDisconnect() {
   S.server = null; S.chars = {}; S.authed = false;
-  setStatus('non connecté');
   el('btnConnect').textContent = 'Connecter';
   refreshEnabled();
-  log('déconnecté', 'e');
+  if (S.reconnexionVoulue) {
+    log('connexion perdue — reconnexion automatique', 'e');
+    planifierReconnexion();
+  } else {
+    setStatus('non connecté');
+    majAccueil();
+    log('déconnecté', 'e');
+  }
+}
+
+// L'écran d'accueil dit ce qui se passe : « aucune carte » et « on a perdu la
+// carte et on la cherche » ne demandent pas la même chose à l'utilisateur.
+function majAccueil() {
+  const perdue = S.reconnexionVoulue && !(S.server && S.server.connected);
+  el('welcomeTitle').textContent = perdue ? 'Connexion perdue' : 'Aucune carte connectée';
+  el('welcomeText').textContent = perdue
+    ? 'La carte ne répond plus — elle redémarre peut-être, ou elle est hors de '
+      + 'portée. La reconnexion se fait toute seule dès qu\'elle revient.'
+    : 'Cette page pilote un TinyRail en Bluetooth, sans Wi-Fi ni Home Assistant. '
+      + 'Approchez-vous de la carte, puis choisissez-la dans la fenêtre du navigateur.';
+  el('btnConnectHero').textContent = perdue ? 'Choisir une autre carte'
+                                            : 'Connecter une carte';
 }
 
 function onNotify(ev) {
@@ -1343,11 +1404,19 @@ function wireTheme() {
 function wire() {
   wireTheme();
   el('btnConnect').addEventListener('click', () => {
-    if (S.server && S.server.connected) S.device.gatt.disconnect(); else connect();
+    if (S.server && S.server.connected) {
+      annulerReconnexion();       // déconnexion demandée : ne pas la défaire
+      S.device.gatt.disconnect();
+    } else {
+      connect();
+    }
   });
   // Le bouton de l'écran d'accueil ne fait que connecter : il n'existe que
   // dans l'état où il n'y a rien à déconnecter.
-  el('btnConnectHero').addEventListener('click', connect);
+  el('btnConnectHero').addEventListener('click', () => {
+    annulerReconnexion();
+    connect();
+  });
   el('btnPair').addEventListener('click', pair);
 
   el('btnImport').addEventListener('click', async () => {
