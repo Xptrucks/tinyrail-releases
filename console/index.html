@@ -80,22 +80,26 @@
   .wrap { max-width: 720px; margin: 0 auto; padding: 14px 14px 48px; }
 
   /* ── En-tête ─────────────────────────────────────────── */
-  /* En-tête : barre en pilule translucide, comme la navigation du site. */
+  /* En-tête : barre en pilule translucide, comme la navigation du site.
+     Elle défile avec la page. En position collante, elle mangeait 62 px de
+     hauteur en permanence et recouvrait le haut de la section qu'on venait de
+     déplier — pour un état qui s'impose déjà de lui-même : dès que la liaison
+     tombe, #app disparaît au profit de l'écran d'accueil. */
   header {
     display: flex; align-items: center; gap: 10px;
     margin-bottom: 14px; padding: 8px 8px 8px 14px;
-    /* Opacité élevée : en position collante, un fond trop translucide laisse
-       lire le contenu qui défile dessous, même avec le flou. */
-    background: rgb(var(--surface) / .94);
+    background: rgb(var(--surface) / .8);
     border: 1px solid rgb(var(--border));
     border-radius: 999px;
     backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
     box-shadow: 0 6px 24px -12px rgb(0 0 0 / .8);
-    position: sticky; top: 6px; z-index: 5;
   }
   h1 {
     font-size: 17px; margin: 0; flex: 1 1 auto; min-width: 0;
     letter-spacing: -0.3px; font-weight: 700;
+    /* ⚠️ Sans overflow, une barre trop chargée réduit le titre à une boîte de
+       largeur nulle dont le texte déborde et se superpose au bouton voisin. */
+    overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
   }
   h1 small {
     display: block; font-weight: 400; font-size: 11.5px; color: rgb(var(--muted));
@@ -140,6 +144,13 @@
      (« passer en clair »), lune sur fond clair — comme le bouton du site. */
   :root[data-theme=dark] .moon, :root[data-theme=light] .sun { display: none; }
   :focus-visible { outline: 2px solid rgb(var(--neon)); outline-offset: 2px; }
+
+  /* Reconnexion : libellé sur grand écran, icône seule sur téléphone (voir le
+     bloc « Téléphone » plus bas). L'icône est donc masquée par défaut. */
+  #btnReconnect svg {
+    display: none; width: 19px; height: 19px; stroke: rgb(var(--fg));
+    fill: none; stroke-width: 1.8; stroke-linecap: round;
+  }
 
   /* ── Bandeau de mesures ──────────────────────────────── */
   .strip {
@@ -235,6 +246,9 @@
   }
   details[open] summary::after { transform: rotate(-135deg) translate(-2px, -2px); }
   .body { padding: 0 14px 16px; display: grid; gap: 14px; }
+  /* Sous-bloc replié dans une section : il doit respirer comme .body, sinon
+     ses lignes se collent au paragraphe d'aide qui les précède. */
+  #icfgSender { display: grid; gap: 14px; }
 
   .row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
   .row label {
@@ -246,6 +260,9 @@
     border: 1px solid rgb(var(--border)); border-radius: 12px; padding: 10px 12px;
     min-width: 0; flex: 0 1 116px; min-height: 44px;
   }
+  /* Un select doit montrer son option, pas la couper : « Réservoir eaux
+     grises » et « Contact — suit l'état » demandent près de 190 px. */
+  select { flex: 0 1 190px; }
   input[type=text] { flex: 1 1 170px; }
   input:focus, select:focus { border-color: rgb(var(--neon) / .8); outline: none; }
 
@@ -373,6 +390,57 @@
   [data-link=off] h1 small { color: rgb(var(--err)); font-weight: 600; }
   [data-link=ro] h1 small { color: rgb(var(--warn)); font-weight: 600; }
 
+  /* ── Téléphone ───────────────────────────────────────────
+     Sur ~390 px de large, une ligne « libellé · champ · bouton » ne tient pas :
+     les éléments se répartissaient en escalier, les deux bornes d'une même
+     mesure se retrouvaient sur deux lignes différentes, et un select de 116 px
+     tronquait ses propres options (« Tension 0-30 V »). On donne donc sa ligne
+     au libellé et toute la largeur restante aux commandes. */
+  @media (max-width: 560px) {
+    .row { gap: 8px 10px; }
+    .row > label { flex: 1 1 100%; }
+    /* Une ligne ne portant qu'un select le laisse s'étendre ; deux champs se
+       partagent la largeur au lieu de se replier l'un sous l'autre. */
+    .row > select { flex: 1 1 150px; }
+    .row > input[type=number] { flex: 1 1 110px; }
+    .row > input[type=text] { flex: 1 1 140px; }
+    .row > button { flex: 0 0 auto; }
+    /* Libellé et interrupteur restent côte à côte : renvoyer une pastille de
+       54 px seule sur sa ligne creuse la section pour rien. */
+    .row:has(> .sw) > label { flex: 1 1 auto; }
+    /* Idem pour le tableau de délestage : « CH3 Pompe à eau » tient à gauche. */
+    #shedRows .row > label { flex: 1 1 110px; }
+
+    /* En-tête : trois boutons plus le titre ne tiennent pas sur une ligne.
+       « Reconnecter » retombe sur sa seule icône — le nom de la carte reste
+       dans son title et dans le sous-titre d'état. */
+    header { gap: 8px; padding-left: 12px; }
+    #btnReconnect .lbl { display: none; }
+    #btnReconnect svg { display: block; }
+    #btnReconnect {
+      width: 44px; height: 44px; padding: 0; flex: none;
+      display: grid; place-items: center; border-radius: 50%;
+    }
+    #btnConnect { padding: 10px 13px; }
+    /* Le titre ne descend pas sous la largeur de « TinyRail » : c'est lui qui
+       porte l'état de la liaison, pas les boutons. */
+    h1 { min-width: 62px; }
+    .presets span { flex: 1 1 100%; }
+  }
+
+  /* Écrans très étroits (iPhone SE, 320 px) : à trois boutons, la barre ne
+     tient plus. On resserre le tout — ⚠️ pas de flex-wrap ici : en enveloppe,
+     le titre part à la ligne au lieu de se contracter, et l'en-tête collant
+     double de hauteur. */
+  @media (max-width: 400px) {
+    header { gap: 6px; padding: 8px 6px 8px 10px; }
+    header button { font-size: 13px; }
+    #btnConnect { padding: 10px 10px; }
+    h1 { font-size: 15px; min-width: 52px; }
+  }
+  /* iPhone SE : les 4 px qui manquent au titre pour ne pas s'élider. */
+  @media (max-width: 340px) { h1 { font-size: 14px; } }
+
   .hidden { display: none !important; }
   code {
     font: 12px ui-monospace, Menlo, monospace; background: rgb(var(--bg) / .6);
@@ -386,7 +454,12 @@
   <header>
     <span class="dot" id="dot"></span>
     <h1>TinyRail <small id="sub">non connecté</small></h1>
-    <button class="ghost hidden" id="btnReconnect">Reconnecter</button>
+    <button class="ghost hidden" id="btnReconnect">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M20 11a8 8 0 1 0-.7 4.3"/><path d="M20 4.5V11h-6.5"/>
+      </svg>
+      <span class="lbl" id="btnReconnectLbl">Reconnecter</span>
+    </button>
     <button class="icon-btn ghost" id="btnTheme" aria-label="Changer de thème">
       <svg class="sun" viewBox="0 0 24 24" aria-hidden="true">
         <circle cx="12" cy="12" r="4.2"/>
@@ -646,7 +719,7 @@
 // Remplacé à la publication par tools/webble/publish.sh ou par le workflow de
 // release. Reste tel quel lorsqu'on sert le fichier directement : c'est ainsi
 // qu'on distingue une page de travail d'une page publiée.
-const CONSOLE_VERSION = '2026-08-06 · 2527cfd';
+const CONSOLE_VERSION = 'v0.7.6';
 
 const BASE = '12340000-1234-1234-1234-1234123400';   // + 2 hex
 const U = {
@@ -865,6 +938,7 @@ async function connectTo(device) {
 
     setStatus(S.device.name || 'connecté', 'on');
     el('btnConnect').textContent = 'Déconnecter';
+    el('btnReconnect').classList.add('hidden');   // la carte est là
     S.reconnexionVoulue = true;   // désarmée seulement par le bouton Déconnecter
     S.tentatives = 0;
     clearTimeout(reconnexionTimer);
@@ -914,10 +988,7 @@ async function reconnexionAuDemarrage() {
   if (!connus.length) return;
 
   const device = connus[0];
-  const b = el('btnReconnect');     // repli manuel, toujours proposé
-  b.textContent = 'Reconnecter (' + device.name + ')';
-  b.classList.remove('hidden');
-  b.onclick = () => { annulerReconnexion(); connectTo(device); };
+  montrerReconnexion(device);       // repli manuel, tant que la carte manque
 
   setStatus('reconnexion à ' + device.name + '…', 'busy');
   log('carte connue : ' + device.name + ' — reconnexion');
@@ -962,6 +1033,19 @@ function annulerReconnexion() {
   reconnexionTimer = null;
 }
 
+/* Repli manuel de reconnexion. Il n'a de sens que carte absente : une fois
+   connecté, il ne servirait qu'à occuper la barre — sur téléphone, au point de
+   chasser le titre et l'état. Le nom de la carte vit dans l'infobulle, pas dans
+   le libellé, pour la même raison. */
+function montrerReconnexion(device) {
+  const b = el('btnReconnect');
+  el('btnReconnectLbl').textContent = 'Reconnecter';
+  b.title = 'Reconnecter (' + device.name + ')';
+  b.setAttribute('aria-label', b.title);
+  b.onclick = () => { annulerReconnexion(); connectTo(device); };
+  b.classList.remove('hidden');
+}
+
 function planifierReconnexion() {
   if (!S.reconnexionVoulue || !S.device) return;
   const delai = RECONNEXION_DELAIS[Math.min(S.tentatives, RECONNEXION_DELAIS.length - 1)];
@@ -984,6 +1068,7 @@ function onDisconnect() {
   refreshEnabled();
   if (S.reconnexionVoulue) {
     log('connexion perdue — reconnexion automatique', 'e');
+    if (S.device) montrerReconnexion(S.device);   // le repli redevient utile
     planifierReconnexion();
   } else {
     setStatus('non connecté');
