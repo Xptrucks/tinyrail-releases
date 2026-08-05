@@ -646,7 +646,7 @@
 // Remplacé à la publication par tools/webble/publish.sh ou par le workflow de
 // release. Reste tel quel lorsqu'on sert le fichier directement : c'est ainsi
 // qu'on distingue une page de travail d'une page publiée.
-const CONSOLE_VERSION = '2026-08-06 · 136017a';
+const CONSOLE_VERSION = '2026-08-06 · 2527cfd';
 
 const BASE = '12340000-1234-1234-1234-1234123400';   // + 2 hex
 const U = {
@@ -681,8 +681,9 @@ const STATUS = {
   0x03: 'index hors plage', 0x04: 'payload invalide', 0x05: 'réponse tronquée',
 };
 
-const MODES = ['Tension 0-30 V', 'Sonde 0-90 Ω', 'Sonde 10-180 Ω',
-               'Sonde 50-500 Ω', 'Contact sec'];
+// Une seule plage de sonde : la courbe se règle par les bornes, pas par le mode.
+const MODES = ['Tension 0-30 V', 'Sonde 0-500 Ω', 'Contact sec'];
+const MODE_CONTACT = 2, MODE_SONDE = 1;
 
 // Actions de liaison — l'index EST la valeur du protocole, et l'ordre suit
 // celui du select firmware (an{n}_link_mode). Les deux doivent rester alignés.
@@ -745,9 +746,9 @@ function decodeInputs(dv) {
     const contact = !!dv.getUint8(4 * i + 1);
     const raw = dv.getInt16(4 * i + 2, true);
     let text;
-    if (mode === 4)          text = contact ? 'fermé' : 'ouvert';
+    if (mode === MODE_CONTACT) text = contact ? 'fermé' : 'ouvert';
     else if (raw === NAN16)  text = '—';
-    else if (mode === 0)     text = (raw / 100).toFixed(2) + ' V';
+    else if (mode === 0)       text = (raw / 100).toFixed(2) + ' V';
     else                     text = raw + ' Ω';
     out.push({ mode, contact, raw, text });
   }
@@ -1063,9 +1064,12 @@ function filerGatt(fn) {
   return gattQueue;
 }
 
-// La file appartient à une connexion : elle repart à zéro à chaque transition.
+// ⚠️ Ne PAS réinitialiser gattQueue ici. Une opération GATT déjà lancée ne
+// s'annule pas : repartir d'une file vide fait démarrer la suivante PAR-DESSUS
+// celle qui est encore en vol, ce qui produit exactement le « GATT operation
+// already in progress » qu'on cherche à éviter. On laisse la chaîne s'écouler —
+// le garde de filerGatt rend inertes les opérations d'un lien mort.
 function purgerFileGatt() {
-  gattQueue = Promise.resolve();
   if (pending) { clearTimeout(pending.timer); pending = null; }
 }
 
@@ -1406,7 +1410,7 @@ function buildInputConfig() {
 
 // Les bornes n'ont de sens que pour les sondes résistives.
 function majPanneauSonde(mode) {
-  el('icfgSender').classList.toggle('hidden', mode < 1 || mode > 3);
+  el('icfgSender').classList.toggle('hidden', mode !== MODE_SONDE);
 }
 
 async function envoyerSonde() {
