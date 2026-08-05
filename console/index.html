@@ -443,7 +443,7 @@
       <div class="row"><button id="btnBattery">Écrire</button></div>
 
       <div class="presets">
-        <span>Exemples pour une batterie 12 V :</span>
+        <span>Point de départ 12 V — même seuil sur les 8 canaux, à échelonner ensuite :</span>
         <button class="ghost tiny" data-preset="lifepo4">LiFePO4</button>
         <button class="ghost tiny" data-preset="plomb">Plomb / AGM</button>
         <button class="ghost tiny" data-preset="off">Tout désactiver</button>
@@ -507,7 +507,7 @@
 // Remplacé à la publication par tools/webble/publish.sh ou par le workflow de
 // release. Reste tel quel lorsqu'on sert le fichier directement : c'est ainsi
 // qu'on distingue une page de travail d'une page publiée.
-const CONSOLE_VERSION = '2026-08-05 · 99bda07';
+const CONSOLE_VERSION = '2026-08-05 · b7828c4';
 
 const BASE = '12340000-1234-1234-1234-1234123400';   // + 2 hex
 const U = {
@@ -1045,25 +1045,28 @@ async function sendLink(n) {
 // Exemples de réglage. Les tensions ne se lisent pas de la même façon selon la
 // chimie : une LiFePO4 reste plate autour de 13 V puis s'effondre, alors qu'une
 // plomb décline régulièrement — d'où deux jeux distincts, et non un seul décalé.
+// Un préréglage donne le seuil qui convient à la CHIMIE, appliqué tel quel aux
+// huit canaux. Il n'invente pas quel circuit est vital : c'est à l'utilisateur
+// d'échelonner ensuite, en remontant les seuils du confort et en mettant 0 sur
+// ce qui doit tenir jusqu'au bout.
 const PRESETS = {
   lifepo4: {
-    cutoff: 11.5, delay: 20,
+    cutoff: 11.5, delay: 20, seuil: 12.5,
     // 13,0 V ≈ 50 % · 12,8 V ≈ 20 % · 12,5 V ≈ 10 % · 12,0 V quasi vide
-    seuils: [0, 12.8, 12.8, 12.5, 12.5, 12.2, 12.2, 0],
-    note: 'LiFePO4 12 V : CH2-3 lâchent vers 20 % de charge, CH4-5 vers 10 %, '
-        + 'CH6-7 juste avant la réserve. CH1 et CH8 ne sont jamais délestés — '
-        + 'réservez-les au vital. Coupure générale à 11,5 V, au-dessus du BMS.',
+    note: 'LiFePO4 12 V : 12,5 V sur les huit canaux, soit environ 10 % de '
+        + 'charge restante, et coupure générale à 11,5 V — au-dessus du seuil '
+        + 'du BMS. Remontez ensuite les canaux de confort (12,8 V ≈ 20 %) et '
+        + 'mettez 0 sur ce qui ne doit jamais être coupé.',
   },
   plomb: {
-    cutoff: 11.8, delay: 20,
+    cutoff: 11.8, delay: 20, seuil: 12.1,
     // 12,7 V pleine · 12,2 V ≈ 50 % · 11,8 V plancher à ne pas franchir
-    seuils: [0, 12.3, 12.3, 12.1, 12.1, 12.0, 12.0, 0],
-    note: 'Plomb / AGM 12 V : seuils plus hauts et plus étalés. Descendre sous '
-        + '11,8 V abîme la batterie de façon permanente, d\'où une coupure '
-        + 'générale à ce plancher.',
+    note: 'Plomb / AGM 12 V : 12,1 V sur les huit canaux et coupure générale à '
+        + '11,8 V, le plancher sous lequel la batterie s\'abîme de façon '
+        + 'permanente. Remontez les canaux de confort vers 12,3 V.',
   },
   off: {
-    cutoff: 0, delay: 20, seuils: [0, 0, 0, 0, 0, 0, 0, 0],
+    cutoff: 0, delay: 20, seuil: 0,
     note: 'Toute protection désactivée : plus aucune coupure automatique, la '
         + 'batterie peut être vidée jusqu\'à l\'arrêt du BMS.',
   },
@@ -1124,8 +1127,9 @@ async function applyPreset(name) {
   el('batCut').value = p.cutoff.toFixed(1);
   el('batDelay').value = p.delay;
   await sendBattery();
+  // Le même seuil pour les huit : l'échelonnement appartient à l'utilisateur.
   for (let c = 1; c <= 8; c++) {
-    el('shed' + c).value = p.seuils[c - 1].toFixed(1);
+    el('shed' + c).value = p.seuil.toFixed(1);
     await sendShed(c, 'apercu');
   }
 }
