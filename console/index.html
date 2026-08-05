@@ -286,6 +286,18 @@
   /* État d'attente : remplacé dès la première trame INPUTS reçue. */
   .empty { margin: 0; font-size: 13px; color: rgb(var(--muted)); }
 
+  .hint {
+    margin: 0; font-size: 12.5px; line-height: 1.55; color: rgb(var(--muted));
+  }
+  .hint b { color: rgb(var(--fg)); font-weight: 600; }
+  .presets {
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+    padding-top: 4px;
+  }
+  .presets span { font-size: 12.5px; color: rgb(var(--muted)); }
+  #shedRows { display: grid; gap: 10px; padding-top: 4px; }
+  #shedRows label em { font-style: normal; color: rgb(var(--fg)); }
+
   footer {
     display: flex; justify-content: center; align-items: center; gap: 10px;
     margin-top: 22px; font-size: 12.5px; color: rgb(var(--muted));
@@ -399,6 +411,37 @@
         <input type="number" id="cfgThyst" min="40" max="99" step="1">
         <button id="btnThermal">Écrire</button>
       </div>
+    </div>
+  </details>
+
+  <details id="secBattery">
+    <summary>Protection batterie</summary>
+    <div class="body">
+      <p class="hint">
+        Sous son seuil, une sortie s'éteint et <b>ne se rallume pas toute
+        seule</b> : il faut la rallumer à la main. Laissez <b>0</b> pour ce qui
+        doit tenir jusqu'au bout. La coupure générale, elle, éteint tout.
+      </p>
+
+      <div class="row">
+        <label for="batCut">Coupure générale (V) — 0 pour désactiver</label>
+        <input type="number" id="batCut" min="0" max="30" step="0.1">
+      </div>
+      <div class="row">
+        <label for="batDelay">Temporisation (s) — absorbe les appels de courant</label>
+        <input type="number" id="batDelay" min="2" max="300" step="1">
+      </div>
+      <div class="row"><button id="btnBattery">Écrire</button></div>
+
+      <div class="presets">
+        <span>Exemples pour une batterie 12 V :</span>
+        <button class="ghost tiny" data-preset="lifepo4">LiFePO4</button>
+        <button class="ghost tiny" data-preset="plomb">Plomb / AGM</button>
+        <button class="ghost tiny" data-preset="off">Tout désactiver</button>
+      </div>
+      <p class="hint" id="presetNote"></p>
+
+      <div id="shedRows"></div>
     </div>
   </details>
 
@@ -527,7 +570,16 @@ function decodeInputs(dv) {
 function decodeFaults(dv) {
   const mask = dv.getUint8(0), trips = [];
   for (let i = 0; i < 8; i++) if (mask & (1 << i)) trips.push(i + 1);
-  return { trips, thermal: !!(dv.getUint8(1) & 0x01) };
+  // Les octets 2-3 étaient réservés : le 2 porte le masque de délestage.
+  const shedMask = dv.byteLength > 2 ? dv.getUint8(2) : 0;
+  const shed = [];
+  for (let i = 0; i < 8; i++) if (shedMask & (1 << i)) shed.push(i + 1);
+  return {
+    trips,
+    thermal: !!(dv.getUint8(1) & 0x01),
+    cutoff: !!(dv.getUint8(1) & 0x02),
+    shed,
+  };
 }
 
 /* ══════════════════════════════════════════════════════════════
@@ -775,8 +827,10 @@ function renderMetrics() {
   const f = S.faults;
   if (f) {
     const bits = [];
+    if (f.cutoff) bits.push('BATTERIE');
     if (f.trips.length) bits.push('CH' + f.trips.join(','));
     if (f.thermal) bits.push('therm.');
+    if (f.shed.length) bits.push('délesté CH' + f.shed.join(','));
     el('mFault').textContent = bits.length ? bits.join(' ') : 'aucun';
     // ⚠️ Les jetons portent des composantes RGB (« 255 77 94 ») : il faut les
     // envelopper dans rgb(), sinon la couleur est silencieusement ignorée.
@@ -906,6 +960,98 @@ async function sendLink(n) {
   }
 }
 
+/* ── Protection batterie ─────────────────────────────────────── */
+
+// Exemples de réglage. Les tensions ne se lisent pas de la même façon selon la
+// chimie : une LiFePO4 reste plate autour de 13 V puis s'effondre, alors qu'une
+// plomb décline régulièrement — d'où deux jeux distincts, et non un seul décalé.
+const PRESETS = {
+  lifepo4: {
+    cutoff: 11.5, delay: 20,
+    // 13,0 V ≈ 50 % · 12,8 V ≈ 20 % · 12,5 V ≈ 10 % · 12,0 V quasi vide
+    seuils: [0, 12.8, 12.8, 12.5, 12.5, 12.2, 12.2, 0],
+    note: 'LiFePO4 12 V : CH2-3 lâchent vers 20 % de charge, CH4-5 vers 10 %, '
+        + 'CH6-7 juste avant la réserve. CH1 et CH8 ne sont jamais délestés — '
+        + 'réservez-les au vital. Coupure générale à 11,5 V, au-dessus du BMS.',
+  },
+  plomb: {
+    cutoff: 11.8, delay: 20,
+    // 12,7 V pleine · 12,2 V ≈ 50 % · 11,8 V plancher à ne pas franchir
+    seuils: [0, 12.3, 12.3, 12.1, 12.1, 12.0, 12.0, 0],
+    note: 'Plomb / AGM 12 V : seuils plus hauts et plus étalés. Descendre sous '
+        + '11,8 V abîme la batterie de façon permanente, d\'où une coupure '
+        + 'générale à ce plancher.',
+  },
+  off: {
+    cutoff: 0, delay: 20, seuils: [0, 0, 0, 0, 0, 0, 0, 0],
+    note: 'Toute protection désactivée : plus aucune coupure automatique, la '
+        + 'batterie peut être vidée jusqu\'à l\'arrêt du BMS.',
+  },
+};
+
+function buildShedRows() {
+  const box = el('shedRows');
+  if (box.childElementCount) return;
+  for (let c = 1; c <= 8; c++) {
+    const row = document.createElement('div');
+    row.className = 'row';
+    row.innerHTML = `<label for="shed${c}">CH${c} <em id="shedName${c}"></em></label>
+                     <input type="number" id="shed${c}" min="0" max="30" step="0.1"
+                            placeholder="0 = jamais">`;
+    box.appendChild(row);
+    el('shed' + c).addEventListener('change', () => sendShed(c));
+  }
+}
+
+async function sendShed(ch) {
+  const cv = Math.round((parseFloat(el('shed' + ch).value) || 0) * 100);
+  const r = await sendCmd(OP.SET_SHED, ch, [cv & 0xff, (cv >> 8) & 0xff]);
+  if (r && r.status === 0) {
+    log(cv === 0 ? `CH${ch} : jamais délesté`
+                 : `CH${ch} délesté sous ${(cv / 100).toFixed(1)} V`, 'k');
+  }
+}
+
+async function loadBattery() {
+  buildShedRows();
+  const b = await sendCmd(OP.GET_BATTERY);
+  if (b && b.status === 0) {
+    const dv = new DataView(b.payload.buffer, b.payload.byteOffset);
+    el('batCut').value = (dv.getUint16(0, true) / 100).toFixed(1);
+    el('batDelay').value = dv.getUint16(2, true);
+  }
+  for (let c = 1; c <= 8; c++) {
+    const r = await sendCmd(OP.GET_SHED, c);
+    if (!r || r.status !== 0) continue;
+    const dv = new DataView(r.payload.buffer, r.payload.byteOffset);
+    el('shed' + c).value = (dv.getUint16(0, true) / 100).toFixed(1);
+    el('shedName' + c).textContent = S.labels[c] || '';
+  }
+}
+
+async function applyPreset(name) {
+  const p = PRESETS[name];
+  el('presetNote').textContent = p.note;
+  el('batCut').value = p.cutoff.toFixed(1);
+  el('batDelay').value = p.delay;
+  await sendBattery();
+  for (let c = 1; c <= 8; c++) {
+    el('shed' + c).value = p.seuils[c - 1].toFixed(1);
+    await sendShed(c);
+  }
+}
+
+async function sendBattery() {
+  const cv = Math.round((parseFloat(el('batCut').value) || 0) * 100);
+  const s = Math.round(parseFloat(el('batDelay').value) || 20);
+  const r = await sendCmd(OP.SET_BATTERY, 0,
+                          [cv & 0xff, (cv >> 8) & 0xff, s & 0xff, (s >> 8) & 0xff]);
+  if (r && r.status === 0) {
+    log(cv === 0 ? `coupure générale désactivée, temporisation ${s} s`
+                 : `coupure générale ${(cv / 100).toFixed(1)} V, temporisation ${s} s`, 'k');
+  }
+}
+
 async function loadLinks() {
   for (let n = 1; n <= 4; n++) {
     const r = await sendCmd(OP.GET_LINK, n);
@@ -1016,6 +1162,13 @@ function wire() {
   // vides ou périmées tant que l'utilisateur n'a pas changé de canal.
   el('secConfig').addEventListener('toggle', () => {
     if (el('secConfig').open && S.authed) loadConfig();
+  });
+  el('secBattery').addEventListener('toggle', () => {
+    if (el('secBattery').open && S.authed) loadBattery();
+  });
+  el('btnBattery').addEventListener('click', sendBattery);
+  document.querySelectorAll('[data-preset]').forEach(b => {
+    b.addEventListener('click', () => applyPreset(b.dataset.preset));
   });
 
   el('btnLabel').addEventListener('click', async () => {
