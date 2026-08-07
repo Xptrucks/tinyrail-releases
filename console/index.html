@@ -594,6 +594,10 @@
         <button id="btnLabel">Écrire</button>
       </div>
       <div class="row">
+        <label for="cfgKind">Type — décide de l'affichage et de la gradation</label>
+        <select id="cfgKind"></select>
+      </div>
+      <div class="row">
         <label for="cfgOc">Seuil de surintensité (A)</label>
         <input type="number" id="cfgOc" min="0.5" max="10" step="0.5">
         <button id="btnOc">Écrire</button>
@@ -719,7 +723,7 @@
 // Remplacé à la publication par tools/webble/publish.sh ou par le workflow de
 // release. Reste tel quel lorsqu'on sert le fichier directement : c'est ainsi
 // qu'on distingue une page de travail d'une page publiée.
-const CONSOLE_VERSION = 'v0.7.8';
+const CONSOLE_VERSION = 'v0.8.0';
 
 const BASE = '12340000-1234-1234-1234-1234123400';   // + 2 hex
 const U = {
@@ -740,7 +744,7 @@ const OP = {
   GET_CH_CONFIG: 0x10, SET_AUTO_OFF: 0x11, SET_AUTO_ON: 0x12, SET_PAIR: 0x13,
   GET_OVERCURRENT: 0x20, SET_OC_THRESHOLD: 0x21, SET_OC_DELAY: 0x22,
   GET_THERMAL: 0x30, SET_THERMAL: 0x31,
-  GET_LABEL: 0x40, SET_LABEL: 0x41,
+  GET_LABEL: 0x40, SET_LABEL: 0x41, GET_CH_META: 0x42, SET_CH_KIND: 0x43,
   GET_INPUT: 0x50, SET_INPUT_MODE: 0x51, GET_LINK: 0x52, SET_LINK: 0x53,
   GET_SHED: 0x54, SET_SHED: 0x55, GET_BATTERY: 0x56, SET_BATTERY: 0x57,
   GET_INPUT_META: 0x58, SET_INPUT_KIND: 0x59, SET_INPUT_LABEL: 0x5A,
@@ -786,6 +790,26 @@ const KINDS = [
   { nom: 'Tension',              vue: 'valeur' },
   { nom: 'Contact',              vue: 'contact' },
   { nom: 'Température',          vue: 'valeur' },
+];
+
+// Ce qu'alimente la sortie — même ordre que le select ch{n}_kind du firmware.
+// `gradable` n'est pas un choix d'affichage : la carte ramène elle-même au
+// tout ou rien les types qui ne se gradent pas (kind_is_dimmable dans
+// packages/channel_kinds.h). Masquer le curseur évite de proposer un réglage
+// que la carte annulerait dans la foulée.
+const OUT_KINDS = [
+  { nom: 'Générique',            gradable: true },
+  { nom: 'Éclairage intérieur',  gradable: true },
+  { nom: 'Éclairage extérieur',  gradable: true },
+  { nom: 'Pompe à eau',          gradable: false },
+  { nom: 'Ventilation',          gradable: true },
+  { nom: 'Réfrigérateur',        gradable: false },
+  { nom: 'Chauffage',            gradable: false },
+  { nom: 'Chauffe-eau',          gradable: false },
+  { nom: 'Prise 12 V',           gradable: false },
+  { nom: 'Motorisation',         gradable: false },
+  { nom: 'Compresseur',          gradable: false },
+  { nom: 'Antenne / TV',         gradable: false },
 ];
 
 const NAN16 = -32768;   // sentinelle « capteur non publié » (to_i16)
@@ -856,7 +880,7 @@ function decodeFaults(dv) {
 const el = id => document.getElementById(id);
 const S = {                       // état de session
   device: null, server: null, chars: {}, key: null, authed: false,
-  state: null, telemetry: null, faults: null, labels: {},
+  state: null, telemetry: null, faults: null, labels: {}, chKinds: {},
   inputKinds: {}, inputLabels: {}, inputModes: {},  // type, nom, mode
 };
 
@@ -1247,7 +1271,7 @@ async function authenticate() {
       refreshEnabled();
       log('authentifié — commandes actives', 'k');
       // Ces lectures sont refusées sans authentification.
-      loadLabels().then(loadLinks).then(loadInputMeta);
+      loadChannelMeta().then(loadLinks).then(loadInputMeta);
     } else {
       // ⚠️ Sans ce rappel du bandeau, une clé devenue invalide laissait
       // l'utilisateur devant un journal qui dit « non authentifié » et aucun
@@ -1356,6 +1380,7 @@ function buildChannels() {
   const sel = el('cfgCh');
   sel.innerHTML = '';
   for (let i = 1; i <= 8; i++) sel.add(new Option('CH' + i, i));
+  OUT_KINDS.forEach((k, j) => el('cfgKind').add(new Option(k.nom, j)));
 }
 
 function renderChannels() {
@@ -1374,7 +1399,14 @@ function renderChannels() {
     // Les actions 1 et 2 imposent l'état en continu : le signaler évite de
     // chercher pourquoi la sortie « revient toute seule ».
     const asservi = pil && (pil.action === 1 || pil.action === 2);
-    el('meta' + i).innerHTML = '· ' + (ch.on ? `${pct} % · ` : 'éteint · ') + amps
+    const kind = OUT_KINDS[S.chKinds[i + 1] || 0];
+    // Curseur masqué sur une charge non gradable : la carte ramènerait la
+    // consigne à 100 % de toute façon. Le type reste dans le sous-titre pour
+    // que sa disparition s'explique d'elle-même.
+    el('br' + i).classList.toggle('hidden', !kind.gradable);
+    el('meta' + i).innerHTML = '· ' + (ch.on ? (kind.gradable ? `${pct} % · ` : 'allumé · ')
+                                             : 'éteint · ') + amps
+      + (S.chKinds[i + 1] ? ' · ' + kind.nom : '')
       + (tripped ? ' · <span class="trip">surintensité</span>' : '')
       + (pil ? ` · <span class="linked">${asservi ? 'asservi à' : 'commandé par'}`
              + ` AN${pil.entree}</span>` : '');
@@ -1693,6 +1725,10 @@ async function sendBattery() {
 
 async function setChannel(ch, on, pct) {
   if (!S.authed) { log('non authentifié — appairez d\'abord', 'e'); return; }
+  // Le curseur garde sa dernière valeur même masqué : sans cela, une sortie
+  // passée en « pompe » après avoir été gradée s'allumerait à 40 %, que la
+  // carte corrigerait aussitôt — un clignotement pour rien.
+  if (!OUT_KINDS[S.chKinds[ch] || 0].gradable) pct = 100;
   // Une sortie qui refuse de s'allumer sans explication est le pire des cas :
   // on cherche du côté de la commande alors que la protection l'interdit.
   if (S.faults && S.faults.cutoff) {
@@ -1711,10 +1747,15 @@ async function setChannel(ch, on, pct) {
   await sendCmd(OP.SET_CHANNEL, ch, [on ? 1 : 0, raw]);
 }
 
-async function loadLabels() {
+// Libellé ET type des huit sorties. GET_CH_META rapporte les deux d'un coup :
+// l'affichage dépend autant du second (curseur ou simple bouton) que du
+// premier, les lire séparément doublerait les allers-retours pour rien.
+async function loadChannelMeta() {
   for (let i = 1; i <= 8; i++) {
-    const r = await sendCmd(OP.GET_LABEL, i);
-    if (r && r.status === 0) S.labels[i] = new TextDecoder().decode(r.payload);
+    const r = await sendCmd(OP.GET_CH_META, i);
+    if (!r || r.status !== 0 || !r.payload.length) continue;
+    S.chKinds[i] = r.payload[0];
+    S.labels[i] = new TextDecoder().decode(r.payload.slice(1));
   }
   renderChannels();
 }
@@ -1752,6 +1793,13 @@ async function loadConfig() {
     const v = (dv.getUint16(0, true) / 100).toFixed(1);
     el('cfgShed').value = v;
     el('shed' + ch).value = v;
+  }
+  const meta = await sendCmd(OP.GET_CH_META, ch);
+  if (meta && meta.status === 0 && meta.payload.length) {
+    S.chKinds[ch] = meta.payload[0];
+    S.labels[ch] = new TextDecoder().decode(meta.payload.slice(1));
+    el('cfgKind').value = String(meta.payload[0]);
+    renderChannels();
   }
   el('cfgLabel').value = S.labels[ch] || '';
 }
@@ -1834,6 +1882,17 @@ function wire() {
     const r = await sendCmd(OP.SET_LABEL, ch, [...bytes]);
     if (r && r.status === 0) { S.labels[ch] = el('cfgLabel').value; renderChannels();
                                log(`CH${ch} renommé`, 'k'); }
+  });
+  el('cfgKind').addEventListener('change', async () => {
+    const ch = +el('cfgCh').value;
+    const k = +el('cfgKind').value;
+    const r = await sendCmd(OP.SET_CH_KIND, ch, [k]);
+    if (r && r.status === 0) {
+      S.chKinds[ch] = k;
+      renderChannels();
+      log(`CH${ch} : ${OUT_KINDS[k].nom}`
+          + (OUT_KINDS[k].gradable ? '' : ' — gradation désactivée'), 'k');
+    }
   });
   el('btnShed').addEventListener('click',
     () => sendShed(+el('cfgCh').value, 'config'));
