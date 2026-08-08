@@ -723,7 +723,7 @@
 // Remplacé à la publication par tools/webble/publish.sh ou par le workflow de
 // release. Reste tel quel lorsqu'on sert le fichier directement : c'est ainsi
 // qu'on distingue une page de travail d'une page publiée.
-const CONSOLE_VERSION = 'v0.8.0';
+const CONSOLE_VERSION = 'v0.9.0';
 
 const BASE = '12340000-1234-1234-1234-1234123400';   // + 2 hex
 const U = {
@@ -798,7 +798,7 @@ const KINDS = [
 // packages/channel_kinds.h). Masquer le curseur évite de proposer un réglage
 // que la carte annulerait dans la foulée.
 const OUT_KINDS = [
-  { nom: 'Générique',            gradable: true },
+  { nom: 'Générique',            gradable: false },
   { nom: 'Éclairage intérieur',  gradable: true },
   { nom: 'Éclairage extérieur',  gradable: true },
   { nom: 'Pompe à eau',          gradable: false },
@@ -810,6 +810,7 @@ const OUT_KINDS = [
   { nom: 'Motorisation',         gradable: false },
   { nom: 'Compresseur',          gradable: false },
   { nom: 'Antenne / TV',         gradable: false },
+  { nom: 'Sirène',               gradable: false },
 ];
 
 const NAN16 = -32768;   // sentinelle « capteur non publié » (to_i16)

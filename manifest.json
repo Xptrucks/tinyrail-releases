@@ -1,14 +1,14 @@
 {
   "name": "TinyRail ESP32 v2",
-  "version": "0.8.0",
+  "version": "0.9.0",
   "builds": [
     {
       "chipFamily": "ESP32-C3",
       "ota": {
         "path": "https://chpeps.github.io/tinyrail-releases/firmware.bin",
-        "md5": "9d4adbc3c1a2bae4a3d75542344d2dd3",
+        "md5": "4105d754a436cbf0954a6ff8a658e1a2",
         "summary": "Voir les notes de release sur GitHub",
-        "release_url": "https://github.com/chpeps/tinyrail-releases/releases/tag/v0.8.0"
+        "release_url": "https://github.com/chpeps/tinyrail-releases/releases/tag/v0.9.0"
       }
     }
   ]
