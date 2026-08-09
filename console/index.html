@@ -734,7 +734,7 @@
 // Remplacé à la publication par tools/webble/publish.sh ou par le workflow de
 // release. Reste tel quel lorsqu'on sert le fichier directement : c'est ainsi
 // qu'on distingue une page de travail d'une page publiée.
-const CONSOLE_VERSION = 'v0.9.2';
+const CONSOLE_VERSION = 'v0.10.0';
 
 const BASE = '12340000-1234-1234-1234-1234123400';   // + 2 hex
 const U = {
@@ -761,6 +761,11 @@ const OP = {
   GET_INPUT_META: 0x58, SET_INPUT_KIND: 0x59, SET_INPUT_LABEL: 0x5A,
   GET_SENDER: 0x5B, SET_SENDER: 0x5C,
   GET_INFO: 0x60, RESTART: 0x61, SAFE_MODE: 0x62, FACTORY_RESET: 0x63,
+  // Mise à jour du firmware. La console ne les émet pas — pousser 1,6 Mio
+  // depuis un navigateur n'a pas d'intérêt tant que l'app mobile le fait —
+  // mais ils doivent figurer ici : check-protocol.py compare les quatre
+  // implémentations, et un opcode manquant vaut `undefined`, donc 0.
+  OTA_BEGIN: 0x64, OTA_END: 0x65, OTA_ABORT: 0x66, OTA_STATUS: 0x67,
 };
 const OP_NAME = Object.fromEntries(Object.entries(OP).map(([k, v]) => [v, k]));
 
