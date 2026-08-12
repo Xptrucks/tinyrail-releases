@@ -734,7 +734,7 @@
 // Remplacé à la publication par tools/webble/publish.sh ou par le workflow de
 // release. Reste tel quel lorsqu'on sert le fichier directement : c'est ainsi
 // qu'on distingue une page de travail d'une page publiée.
-const CONSOLE_VERSION = 'v0.10.0';
+const CONSOLE_VERSION = 'v0.11.0';
 
 const BASE = '12340000-1234-1234-1234-1234123400';   // + 2 hex
 const U = {
@@ -766,6 +766,9 @@ const OP = {
   // mais ils doivent figurer ici : check-protocol.py compare les quatre
   // implémentations, et un opcode manquant vaut `undefined`, donc 0.
   OTA_BEGIN: 0x64, OTA_END: 0x65, OTA_ABORT: 0x66, OTA_STATUS: 0x67,
+  // Nom donné à la carte. ⚠️ Pas le nom BLE annoncé, qui porte le suffixe MAC
+  // et ne change jamais.
+  GET_BOARD_NAME: 0x68, SET_BOARD_NAME: 0x69,
 };
 const OP_NAME = Object.fromEntries(Object.entries(OP).map(([k, v]) => [v, k]));
 
