@@ -52,5 +52,11 @@ _flutter.loader.load({
     // Le voile de chargement ne tombe qu'ici : plus tôt, on montrerait un
     // cadre vide, que rien ne distingue d'un cadre cassé.
     document.body.classList.add('ready');
+    // ⚠️ Et on redemande la mise à l'échelle, car Flutter vient d'ajouter ses
+    // propres éléments à la page. Calculée au chargement, elle ne pouvait pas
+    // les connaître : la page débordait ensuite d'une vingtaine de pixels, et
+    // aucune retouche du CSS ne pouvait le rattraper puisque le coupable
+    // n'existait pas encore au moment du calcul.
+    window.dispatchEvent(new Event('resize'));
   },
 });

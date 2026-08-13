@@ -44,19 +44,42 @@
       align-items: center;
       justify-content: center;
       gap: 20px;
-      padding: 28px 16px;
-      overflow: hidden;
+      padding: 24px 16px;
+      overflow: auto;
+    }
+
+    /* La scène réserve la place que le châssis occupe **après** mise à
+       l'échelle. Sans elle, le `transform` ne changeant pas la place prise dans
+       le flux, la page défilerait sur du vide. */
+    .scene {
+      flex: 0 0 auto;
+      width: calc(414px * var(--k, 1));
+      height: calc(868px * var(--k, 1));
     }
 
     /* Le châssis : une plaque sombre, un liseré clair pour détacher l'écran du
-       fond, et une ombre portée qui pose l'objet sans l'imiter servilement. */
+       fond, et une ombre portée qui pose l'objet sans l'imiter servilement.
+       Ses dimensions sont **fixes**, 414 × 868 pour un écran utile de 390 × 844,
+       la taille d'un iPhone courant.
+
+       ⚠️ **Il est mis à l'échelle, il ne rétrécit pas, et il ne disparaît
+       jamais.** Deux versions ont échoué avant celle-ci, et pour des raisons
+       opposées. La première basculait en plein écran sous 620 px de haut, ce
+       qui arrive en permanence sur un portable dont la fenêtre n'est pas
+       maximisée : presque personne ne voyait le cadre. La deuxième laissait le
+       cadre rétrécir en gardant ses proportions, mais l'app se retrouvait alors
+       dans 235 px de large, plus étroit que n'importe quel téléphone réel —
+       elle montrait une mise en page qui n'existe sur aucun appareil, ce qui
+       est pire qu'inutile quand on fait juger une interface. L'écran garde donc
+       ses 390 × 844 logiques, et seul le rendu est réduit. */
     .phone {
       position: relative;
-      flex: 0 0 auto;
-      width: 390px;
-      height: min(844px, calc(100dvh - 128px));
+      width: 414px;
+      height: 868px;
       padding: 12px;
       border-radius: 52px;
+      transform: scale(var(--k, 1));
+      transform-origin: top left;
       background: linear-gradient(160deg, #2b323c 0%, var(--chassis) 40%, #171b21 100%);
       box-shadow:
         0 0 0 1px var(--trait),
@@ -99,6 +122,12 @@
 
     .legende {
       flex: 0 0 auto;
+      /* ⚠️ La marge par défaut d'un `<p>` vaut ici 20 px, et la page débordait
+         d'exactement cette hauteur à toutes les tailles. La réinitialisation en
+         tête de fichier ne touche que `box-sizing` : elle ne remet pas les
+         marges à zéro. Cherché deux fois du côté du calcul d'échelle avant de
+         regarder ce que le navigateur ajoutait tout seul. */
+      margin: 0;
       max-width: 420px;
       text-align: center;
       font-size: 13px;
@@ -117,21 +146,30 @@
 
     .legende a:hover { text-decoration: underline; }
 
-    /* Sur téléphone, ou dès que la fenêtre ne peut plus loger le cadre :
-       l'app prend tout, et la légende s'efface. Le pointeur grossier suffit à
-       reconnaître un écran tactile même large (tablette). */
-    @media (max-width: 520px), (max-height: 620px), (pointer: coarse) {
+    /* Sur un vrai téléphone : l'app prend tout, et la légende s'efface. Un
+       téléphone dessiné dans un téléphone volerait la moitié de la surface.
+
+       ⚠️ **La condition ne parle plus de taille.** Elle décrivait avant une
+       petite fenêtre autant qu'un téléphone, et un portable dont la fenêtre
+       n'est pas maximisée tombe sous 620 px de haut sans effort : le cadre
+       disparaissait chez presque tout le monde. Seul l'appareil compte
+       désormais, reconnu à ce qu'il n'a ni pointeur fin ni survol — un
+       portable à écran tactile garde sa souris, donc son cadre. */
+    @media (pointer: coarse) and (hover: none) {
       body {
         padding: 0;
         gap: 0;
         display: block;
         background: #05070a;
+        overflow: hidden;
       }
+      .scene { width: 100%; height: 100dvh; }
       .phone {
         width: 100%;
         height: 100dvh;
         padding: 0;
         border-radius: 0;
+        transform: none;
         background: none;
         box-shadow: none;
       }
@@ -141,8 +179,10 @@
   </style>
 </head>
 <body>
-  <div class="phone">
-    <div id="screen"></div>
+  <div class="scene">
+    <div class="phone">
+      <div id="screen"></div>
+    </div>
   </div>
 
   <p class="legende">
@@ -150,6 +190,53 @@
     Un navigateur n'a pas accès au Bluetooth de l'app : piloter une vraie carte demande
     l'application mobile.
   </p>
+
+  <script>
+    // Le facteur d'échelle du châssis. Il n'existe pas d'expression CSS qui
+    // dise « tiens dans la fenêtre en gardant tes proportions » sans changer
+    // les dimensions logiques de ce qu'elle contient : c'est tout l'intérêt du
+    // `transform`, et il lui faut un nombre.
+    //
+    // ⚠️ En cas d'échec, `--k` reste absent et le CSS retombe sur 1 : le cadre
+    // s'affiche à sa taille nominale et la page défile. Jamais d'écran vide.
+    (function () {
+      var HAUTEUR = 868;   // le châssis, cadre compris
+      var PLANCHER = 0.55; // en dessous, l'interface n'est plus jugeable
+      var racine = document.documentElement;
+
+      function borne(k) {
+        return Math.max(PLANCHER, Math.min(1, k));
+      }
+
+      function poser(k) {
+        racine.style.setProperty('--k', k);
+        return k;
+      }
+
+      // ⚠️ **Le débordement se mesure, il ne se calcule pas.** Trois formules
+      // ont été essayées — réserve fixe à 150 puis 200 px, puis hauteur réelle
+      // de la légende lue dans le DOM — et chacune se trompait d'un cheveu dans
+      // un sens ou dans l'autre : trop grande, elle rapetissait le cadre sans
+      // raison sur un grand écran ; trop petite, la page défilait de quelques
+      // pixels. Poser une valeur puis **regarder ce qui dépasse** donne la
+      // réponse juste sans rien supposer de la mise en page.
+      function ajuste() {
+        // ⚠️ Le plancher s'applique **dès la valeur de départ**. Posé seulement
+        // dans la boucle, il était sauté chaque fois que rien ne dépassait, et
+        // une petite fenêtre affichait un cadre de 167 px de large où plus rien
+        // n'était jugeable — l'inverse du but.
+        var k = poser(borne((window.innerHeight - 128) / HAUTEUR));
+        for (var i = 0; i < 3; i++) {
+          var trop = document.body.scrollHeight - window.innerHeight;
+          if (trop <= 0 || k <= PLANCHER) break;
+          k = poser(borne(k - trop / HAUTEUR));
+        }
+      }
+
+      ajuste();
+      window.addEventListener('resize', ajuste);
+    })();
+  </script>
 
   <script src="flutter_bootstrap.js" async></script>
 </body>
