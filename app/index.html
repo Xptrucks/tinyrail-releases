@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <base href="/tinyrail-releases/app/">
+
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="description" content="Démonstration de l'application TinyRail : un van simulé, aucun matériel n'est piloté.">
+  <meta name="theme-color" content="#0a0d12">
+
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="TinyRail">
+  <link rel="apple-touch-icon" href="icons/Icon-192.png">
+  <link rel="icon" type="image/png" href="favicon.png"/>
+
+  <title>TinyRail — démonstration</title>
+  <link rel="manifest" href="manifest.json">
+
+  <style>
+    /* ⚠️ Le cadre de téléphone n'existe **que** sur grand écran au pointeur
+       fin. Sur un téléphone, il serait un téléphone dessiné dans un téléphone,
+       et volerait la moitié de la surface utile : la requête média plus bas
+       le retire et rend l'app plein écran. */
+    :root {
+      color-scheme: dark;
+      --fond: #0a0d12;
+      --chassis: #21262e;
+      --trait: #323a45;
+      --texte: #8b95a3;
+      --accent: #4a8cf7;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100dvh;
+      background: radial-gradient(120% 90% at 50% 0%, #131922 0%, var(--fond) 60%);
+      color: var(--texte);
+      font: 400 14px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      padding: 28px 16px;
+      overflow: hidden;
+    }
+
+    /* Le châssis : une plaque sombre, un liseré clair pour détacher l'écran du
+       fond, et une ombre portée qui pose l'objet sans l'imiter servilement. */
+    .phone {
+      position: relative;
+      flex: 0 0 auto;
+      width: 390px;
+      height: min(844px, calc(100dvh - 128px));
+      padding: 12px;
+      border-radius: 52px;
+      background: linear-gradient(160deg, #2b323c 0%, var(--chassis) 40%, #171b21 100%);
+      box-shadow:
+        0 0 0 1px var(--trait),
+        0 30px 70px -20px rgba(0, 0, 0, .85),
+        0 2px 0 rgba(255, 255, 255, .06) inset;
+    }
+
+    /* ⚠️ **Pas d'encoche ni d'îlot de caméra**, essayés puis retirés : l'app
+       ne sait pas qu'elle est dans un téléphone dessiné et n'a donc aucune
+       zone sûre à respecter. L'îlot venait se poser sur le bandeau
+       « DÉMONSTRATION » et en mangeait la moitié. Un détail décoratif qui
+       cache du texte coûte plus qu'il ne rapporte. */
+
+    #screen {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      border-radius: 41px;
+      overflow: hidden;
+      background: #05070a;
+    }
+
+    /* Voile de chargement : le cadre est dessiné en quelques millisecondes,
+       l'app met plusieurs secondes. Sans ce voile, on regarderait un écran
+       noir sans savoir s'il charge ou s'il a échoué. */
+    #screen::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: #05070a url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='38' height='38' viewBox='0 0 38 38' stroke='%234a8cf7'%3E%3Cg fill='none' stroke-width='3'%3E%3Ccircle cx='19' cy='19' r='16' stroke-opacity='.25'/%3E%3Cpath d='M35 19a16 16 0 0 0-16-16'%3E%3CanimateTransform attributeName='transform' type='rotate' from='0 19 19' to='360 19 19' dur='.9s' repeatCount='indefinite'/%3E%3C/path%3E%3C/g%3E%3C/svg%3E") center no-repeat;
+      transition: opacity .4s ease;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    body.ready #screen::after {
+      opacity: 0;
+      visibility: hidden;
+    }
+
+    .legende {
+      flex: 0 0 auto;
+      max-width: 420px;
+      text-align: center;
+      font-size: 13px;
+      opacity: .85;
+    }
+
+    .legende strong {
+      color: #e6ebf2;
+      font-weight: 600;
+    }
+
+    .legende a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    .legende a:hover { text-decoration: underline; }
+
+    /* Sur téléphone, ou dès que la fenêtre ne peut plus loger le cadre :
+       l'app prend tout, et la légende s'efface. Le pointeur grossier suffit à
+       reconnaître un écran tactile même large (tablette). */
+    @media (max-width: 520px), (max-height: 620px), (pointer: coarse) {
+      body {
+        padding: 0;
+        gap: 0;
+        display: block;
+        background: #05070a;
+      }
+      .phone {
+        width: 100%;
+        height: 100dvh;
+        padding: 0;
+        border-radius: 0;
+        background: none;
+        box-shadow: none;
+      }
+      #screen { border-radius: 0; }
+      .legende { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="phone">
+    <div id="screen"></div>
+  </div>
+
+  <p class="legende">
+    <strong>Démonstration</strong> — un van simulé, deux cartes, aucun matériel n'est piloté.
+    Un navigateur n'a pas accès au Bluetooth de l'app : piloter une vraie carte demande
+    l'application mobile.
+  </p>
+
+  <script src="flutter_bootstrap.js" async></script>
+</body>
+</html>

@@ -1,0 +1,235 @@
+{
+  "_comment": [
+    "Protocole BLE TinyRail — SOURCE DE VÉRITÉ UNIQUE.",
+    "",
+    "Cinq implémentations en dérivent : packages/ble_protocol.h (firmware),",
+    "tools/ble/tinyrail_ble.py, tools/webble/index.html, et — dans le dépôt de",
+    "l'app mobile — lib/ble/ble_constants.dart et lib/demo/fake_board.dart.",
+    "",
+    "Ce fichier ne génère rien : chaque implémentation reste écrite dans son",
+    "idiome. C'est tools/check-protocol.py qui les compare toutes à ce fichier",
+    "et échoue au moindre écart. Un opcode absent d'un client ne provoque",
+    "aucune erreur visible — la console le convertissait silencieusement en 0,",
+    "et la carte répondait « opcode inconnu » sur op=0 pendant qu'on attendait",
+    "une réponse qui ne viendrait jamais.",
+    "",
+    "JSON et non YAML : lisible sans dépendance par Python, Dart, JS et C++.",
+    "",
+    "L'app mobile en garde une copie vendorisée, vérifiée par empreinte.",
+    "Toute modification ici doit être reportée dans cette copie."
+  ],
+
+  "version": 2,
+
+  "service_uuid": "12340000-1234-1234-1234-123412340000",
+  "uuid_base": "12340000-1234-1234-1234-1234123400",
+
+  "characteristics": {
+    "CHALLENGE":     { "suffix": "01", "props": "R",   "size": 16 },
+    "AUTH_RESPONSE": { "suffix": "02", "props": "W",   "size": 32 },
+    "SHARED_KEY":    { "suffix": "03", "props": "R",   "size": 32 },
+    "STATE":         { "suffix": "10", "props": "RN",  "size": 9 },
+    "TELEMETRY":     { "suffix": "11", "props": "RN",  "size": 20 },
+    "INPUTS":        { "suffix": "12", "props": "RN",  "size": 20, "min_size": 16 },
+    "FAULTS":        { "suffix": "13", "props": "RN",  "size": 4,  "min_size": 2 },
+    "CMD":           { "suffix": "20", "props": "W",   "max_size": 34 },
+    "RESP":          { "suffix": "21", "props": "RN" },
+    "OTA_STATUS":    { "suffix": "31", "props": "RN",  "size": 12 },
+    "OTA_DATA":      { "suffix": "30", "props": "WNR" }
+  },
+
+  "_ota_comment": [
+    "Mise à jour du firmware par BLE. Le contrôle passe par CMD (OTA_BEGIN,",
+    "OTA_END, OTA_ABORT, OTA_STATUS) ; les octets de l'image passent par la",
+    "caractéristique OTA_DATA, en écriture SANS réponse.",
+    "",
+    "Mesuré sur carte le 2026-08-09 — ces chiffres commandent toute la forme",
+    "du mécanisme, ne pas les redécouvrir :",
+    "  • une écriture AVEC réponse coûte 84 ms, quelle que soit sa taille ;",
+    "    l'image y passerait en plus de cinq minutes, flash non comprise ;",
+    "  • le lien sature vers 17 kio/s. À 60 paquets de 244 o par seconde la",
+    "    carte ne perd rien ; à 100 paquets, un tiers disparaît sans que",
+    "    l'écrivain en sache quoi que ce soit ;",
+    "  • des paquets de 512 o arrivent entiers depuis un Mac (MTU 515). La",
+    "    taille utile vaut MTU − 5 : 3 d'en-tête ATT, 2 de numéro de séquence.",
+    "    Un iPhone négocie plus petit — ne rien plafonner en dur.",
+    "",
+    "Format d'un paquet OTA_DATA : [seq u16, données…]. Le numéro repart de 0",
+    "à chaque OTA_BEGIN ; un trou signale des paquets perdus et interrompt le",
+    "transfert. La taille des données est libre — le client découpe selon SON",
+    "MTU, la carte ne compte que des octets.",
+    "",
+    "Contrôle de flux : la carte n'écrit en flash que des fenêtres complètes",
+    "de 4096 octets (un secteur), et n'accuse qu'aux frontières de fenêtre.",
+    "L'accusé porte le crédit — le nombre d'octets encore acceptés. Un client",
+    "qui dépasse son crédit fait échouer le transfert.",
+    "",
+    "OTA_STATUS (12 o) : [état u8, erreur u8, owner u16, écrits u32,",
+    "prochain_seq u16, crédit u16].",
+    "",
+    "Un firmware sans ces opcodes répond BAD_OPCODE : c'est ainsi qu'un client",
+    "reconnaît une carte qui ne sait pas se mettre à jour par BLE. C'est",
+    "pourquoi la version du protocole ne change pas — rien n'est rompu."
+  ],
+
+  "ota_states": [
+    { "id": 0, "en": "Idle",       "fr": "Au repos" },
+    { "id": 1, "en": "Preparing",  "fr": "Préparation de la partition" },
+    { "id": 2, "en": "Ready",      "fr": "Prête à recevoir" },
+    { "id": 3, "en": "Receiving",  "fr": "Réception" },
+    { "id": 4, "en": "Done",       "fr": "Terminée" },
+    { "id": 5, "en": "Failed",     "fr": "Échec" }
+  ],
+
+  "ota_errors": [
+    { "id": 0, "en": "None",           "fr": "Aucune" },
+    { "id": 1, "en": "Busy",           "fr": "Une mise à jour est déjà en cours" },
+    { "id": 2, "en": "Not ready",      "fr": "Aucun transfert ouvert pour ce client" },
+    { "id": 3, "en": "Bad size",       "fr": "Taille refusée par la partition" },
+    { "id": 4, "en": "Lost packets",   "fr": "Des paquets ont été perdus" },
+    { "id": 5, "en": "Credit exceeded", "fr": "Crédit dépassé" },
+    { "id": 6, "en": "Foreign image",  "fr": "Ce n'est pas un firmware de cette carte" },
+    { "id": 7, "en": "Flash error",    "fr": "La flash a refusé l'écriture" },
+    { "id": 8, "en": "Checksum",       "fr": "Empreinte fausse — image incomplète" },
+    { "id": 9, "en": "Aborted",        "fr": "Annulée" }
+  ],
+
+  "opcodes": {
+    "NOP": 0,
+    "SET_CHANNEL": 1,
+    "SET_ALL": 2,
+    "GET_KEY": 3,
+    "GET_CH_CONFIG": 16,
+    "SET_AUTO_OFF": 17,
+    "SET_AUTO_ON": 18,
+    "SET_PAIR": 19,
+    "GET_OVERCURRENT": 32,
+    "SET_OC_THRESHOLD": 33,
+    "SET_OC_DELAY": 34,
+    "GET_THERMAL": 48,
+    "SET_THERMAL": 49,
+    "GET_LABEL": 64,
+    "SET_LABEL": 65,
+    "GET_CH_META": 66,
+    "SET_CH_KIND": 67,
+    "GET_INPUT": 80,
+    "SET_INPUT_MODE": 81,
+    "GET_LINK": 82,
+    "SET_LINK": 83,
+    "GET_SHED": 84,
+    "SET_SHED": 85,
+    "GET_BATTERY": 86,
+    "SET_BATTERY": 87,
+    "GET_INPUT_META": 88,
+    "SET_INPUT_KIND": 89,
+    "SET_INPUT_LABEL": 90,
+    "GET_SENDER": 91,
+    "SET_SENDER": 92,
+    "GET_INFO": 96,
+    "RESTART": 97,
+    "SAFE_MODE": 98,
+    "FACTORY_RESET": 99,
+    "OTA_BEGIN": 100,
+    "OTA_END": 101,
+    "OTA_ABORT": 102,
+    "OTA_STATUS": 103,
+
+    "GET_BOARD_NAME": 104,
+    "SET_BOARD_NAME": 105
+  },
+
+  "_opcodes_not_dispatched": ["NOP"],
+
+  "status": {
+    "OK": 0,
+    "UNAUTHORIZED": 1,
+    "BAD_OPCODE": 2,
+    "BAD_INDEX": 3,
+    "BAD_PAYLOAD": 4,
+    "TRUNCATED": 5
+  },
+
+  "_output_kinds_comment": [
+    "L'index EST la valeur du protocole ET celle rangée en NVS : un décalage",
+    "ne renomme pas une icône, il désigne une autre charge. `dimmable` reflète",
+    "kind_is_dimmable() (packages/channel_kinds.h) — le firmware ramène au tout",
+    "ou rien les types qui ne s'y trouvent pas, donc un client qui afficherait",
+    "un curseur verrait sa consigne relevée à 100 % à la trame STATE suivante."
+  ],
+  "output_kinds": [
+    { "id": 0,  "en": "Generic",         "fr": "Générique",           "dimmable": false },
+    { "id": 1,  "en": "Interior light",  "fr": "Éclairage intérieur", "dimmable": true },
+    { "id": 2,  "en": "Exterior light",  "fr": "Éclairage extérieur", "dimmable": true },
+    { "id": 3,  "en": "Water pump",      "fr": "Pompe à eau",         "dimmable": false },
+    { "id": 4,  "en": "Fan",             "fr": "Ventilation",         "dimmable": true },
+    { "id": 5,  "en": "Fridge",          "fr": "Réfrigérateur",       "dimmable": false },
+    { "id": 6,  "en": "Heater",          "fr": "Chauffage",           "dimmable": false },
+    { "id": 7,  "en": "Water heater",    "fr": "Chauffe-eau",         "dimmable": false },
+    { "id": 8,  "en": "Socket",          "fr": "Prise 12 V",          "dimmable": false },
+    { "id": 9,  "en": "Motor",           "fr": "Motorisation",        "dimmable": false },
+    { "id": 10, "en": "Compressor",      "fr": "Compresseur",         "dimmable": false },
+    { "id": 11, "en": "Antenna / TV",    "fr": "Antenne / TV",        "dimmable": false },
+    { "id": 12, "en": "Siren",           "fr": "Sirène",              "dimmable": false },
+    { "id": 13, "en": "Valve",           "fr": "Électrovanne",        "dimmable": false }
+  ],
+
+  "input_kinds": [
+    { "id": 0, "en": "Generic",          "fr": "Générique",             "view": "value" },
+    { "id": 1, "en": "Fresh water tank", "fr": "Réservoir eau propre",  "view": "gauge" },
+    { "id": 2, "en": "Grey water tank",  "fr": "Réservoir eaux grises", "view": "gauge" },
+    { "id": 3, "en": "Black water tank", "fr": "Réservoir eaux noires", "view": "gauge" },
+    { "id": 4, "en": "Gas level",        "fr": "Niveau de gaz",         "view": "gauge" },
+    { "id": 5, "en": "Voltage",          "fr": "Tension",               "view": "value" },
+    { "id": 6, "en": "Contact",          "fr": "Contact",               "view": "contact" },
+    { "id": 7, "en": "Temperature",      "fr": "Température",           "view": "value" }
+  ],
+
+  "_input_modes_comment": [
+    "Trois modes seulement. Une seule plage de sonde : la courbe se règle par",
+    "les bornes (GET_SENDER / SET_SENDER), pas par le mode.",
+    "⚠️ Le commentaire de OP_SET_INPUT_MODE dans ble_protocol.h annonce encore",
+    "« 0-4 » : c'est un reste d'une version antérieure, README-ble-protocol.md",
+    "et les trois clients s'accordent sur 0-2."
+  ],
+  "input_modes": [
+    { "id": 0, "en": "Voltage 0-30 V", "fr": "Tension 0-30 V", "unit": "centivolts" },
+    { "id": 1, "en": "Sender 0-500 Ω", "fr": "Sonde 0-500 Ω",  "unit": "ohms" },
+    { "id": 2, "en": "Dry contact",    "fr": "Contact sec",    "unit": "boolean" }
+  ],
+
+  "_link_actions_comment": [
+    "L'index est stocké en NVS et transporté tel quel : les actions ne",
+    "s'ajoutent qu'en fin de liste. Les actions 1 et 2 réimposent l'état de la",
+    "sortie toutes les 200 ms — une commande manuelle y est reprise dans la",
+    "seconde, ce qu'un client doit signaler."
+  ],
+  "link_actions": [
+    { "id": 0, "en": "Disabled",                  "fr": "Aucune action",                  "overrides": false, "needs_threshold": false },
+    { "id": 1, "en": "Contact — follow",          "fr": "Contact — suit l'état",          "overrides": true,  "needs_threshold": false },
+    { "id": 2, "en": "Contact — follow inverted", "fr": "Contact — suit l'état inversé",  "overrides": true,  "needs_threshold": false },
+    { "id": 3, "en": "Contact — toggle",          "fr": "Contact — bascule",              "overrides": false, "needs_threshold": false },
+    { "id": 4, "en": "Voltage — above threshold", "fr": "Tension — au-dessus du seuil",   "overrides": false, "needs_threshold": true },
+    { "id": 5, "en": "Voltage — below threshold", "fr": "Tension — en dessous du seuil",  "overrides": false, "needs_threshold": true }
+  ],
+
+  "sender_profiles": [
+    { "id": 0, "en": "Custom",                    "fr": "personnalisé" },
+    { "id": 1, "en": "VDO 10-180 Ω (180 = full)", "fr": "VDO 10-180 Ω" },
+    { "id": 2, "en": "Euro 0-190 Ω (190 = full)", "fr": "Euro 0-190 Ω" },
+    { "id": 3, "en": "US 240-33 Ω (33 = full)",   "fr": "US 240-33 Ω" },
+    { "id": 4, "en": "GM 0-90 Ω (90 = full)",     "fr": "GM 0-90 Ω" }
+  ],
+
+  "constants": {
+    "channels": 8,
+    "inputs": 4,
+    "max_sessions": 3,
+    "label_max_bytes": 32,
+    "key_bytes": 32,
+    "nonce_bytes": 16,
+    "nan_i16": -32768,
+    "notify_interval_ms": 500,
+    "pairing_window_s": 30,
+    "ota_window_bytes": 4096
+  }
+}
