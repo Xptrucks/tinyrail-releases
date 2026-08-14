@@ -734,7 +734,7 @@
 // Remplacé à la publication par tools/webble/publish.sh ou par le workflow de
 // release. Reste tel quel lorsqu'on sert le fichier directement : c'est ainsi
 // qu'on distingue une page de travail d'une page publiée.
-const CONSOLE_VERSION = 'v0.11.0';
+const CONSOLE_VERSION = 'v0.12.0';
 
 const BASE = '12340000-1234-1234-1234-1234123400';   // + 2 hex
 const U = {
@@ -760,6 +760,9 @@ const OP = {
   GET_SHED: 0x54, SET_SHED: 0x55, GET_BATTERY: 0x56, SET_BATTERY: 0x57,
   GET_INPUT_META: 0x58, SET_INPUT_KIND: 0x59, SET_INPUT_LABEL: 0x5A,
   GET_SENDER: 0x5B, SET_SENDER: 0x5C,
+  // Bornes de conversion en tension et seuil du contact virtuel : le pendant
+  // de GET/SET_SENDER pour une entrée en mode tension.
+  GET_INPUT_SCALE: 0x5D, SET_INPUT_SCALE: 0x5E,
   GET_INFO: 0x60, RESTART: 0x61, SAFE_MODE: 0x62, FACTORY_RESET: 0x63,
   // Mise à jour du firmware. La console ne les émet pas — pousser 1,6 Mio
   // depuis un navigateur n'a pas d'intérêt tant que l'app mobile le fait —
@@ -769,6 +772,9 @@ const OP = {
   // Nom donné à la carte. ⚠️ Pas le nom BLE annoncé, qui porte le suffixe MAC
   // et ne change jamais.
   GET_BOARD_NAME: 0x68, SET_BOARD_NAME: 0x69,
+  // Seuils d'alerte d'une entrée. ⚠️ Seuils en DIXIÈMES d'unité ; l'unité est
+  // rendue par GET_INPUT_ALARM, elle dépend du mode ET de la courbe réglée.
+  GET_INPUT_ALARM: 0x6A, SET_INPUT_ALARM: 0x6B,
 };
 const OP_NAME = Object.fromEntries(Object.entries(OP).map(([k, v]) => [v, k]));
 
@@ -792,8 +798,16 @@ const ACTIONS = ['Aucune action',
 const ACTION_NEEDS_THRESHOLD = i => i === 4 || i === 5;
 
 // Profils de sonde — les bornes qu'ils posent restent modifiables ensuite.
+// Les quatre premiers posent les bornes en ohms (GET/SET_SENDER), les trois
+// derniers les bornes en volts (GET/SET_INPUT_SCALE).
 const SENDERS = ['personnalisé', 'VDO 10-180 Ω', 'Euro 0-190 Ω',
-                 'US 240-33 Ω', 'GM 0-90 Ω'];
+                 'US 240-33 Ω', 'GM 0-90 Ω',
+                 '0-5 V', '0,5-4,5 V', '0-10 V'];
+
+// Seuils d'alerte : sens, grandeur surveillée (rendue par la carte), gravité.
+const ALARM_DIRECTIONS = ['Désactivée', 'En dessous du seuil', 'Au-dessus du seuil'];
+const ALARM_METRICS = ['', '%', 'V', 'Ω'];
+const ALARM_LEVELS = ['normal', 'avertissement', 'critique'];
 
 // Ce que mesure l'entrée — même ordre que le select an{n}_kind du firmware.
 // Chaque type porte sa représentation : une jauge pour un réservoir n'a pas
@@ -809,6 +823,7 @@ const KINDS = [
   { nom: 'Tension',              vue: 'valeur' },
   { nom: 'Contact',              vue: 'contact' },
   { nom: 'Température',          vue: 'valeur' },
+  { nom: 'Batterie',             vue: 'valeur' },
 ];
 
 // Ce qu'alimente la sortie — même ordre que le select ch{n}_kind du firmware.
