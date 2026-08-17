@@ -135,7 +135,12 @@
     "OTA_STATUS": 103,
 
     "GET_BOARD_NAME": 104,
-    "SET_BOARD_NAME": 105
+    "SET_BOARD_NAME": 105,
+
+    "GET_INPUT_SCALE": 93,
+    "SET_INPUT_SCALE": 94,
+    "GET_INPUT_ALARM": 106,
+    "SET_INPUT_ALARM": 107
   },
 
   "_opcodes_not_dispatched": ["NOP"],
@@ -181,15 +186,20 @@
     { "id": 4, "en": "Gas level",        "fr": "Niveau de gaz",         "view": "gauge" },
     { "id": 5, "en": "Voltage",          "fr": "Tension",               "view": "value" },
     { "id": 6, "en": "Contact",          "fr": "Contact",               "view": "contact" },
-    { "id": 7, "en": "Temperature",      "fr": "Température",           "view": "value" }
+    { "id": 7, "en": "Temperature",      "fr": "Température",           "view": "value" },
+    { "id": 8, "en": "Battery",          "fr": "Batterie",              "view": "value" }
   ],
 
   "_input_modes_comment": [
     "Trois modes seulement. Une seule plage de sonde : la courbe se règle par",
     "les bornes (GET_SENDER / SET_SENDER), pas par le mode.",
-    "⚠️ Le commentaire de OP_SET_INPUT_MODE dans ble_protocol.h annonce encore",
-    "« 0-4 » : c'est un reste d'une version antérieure, README-ble-protocol.md",
-    "et les trois clients s'accordent sur 0-2."
+    "Le mode dit COMMENT la carte mesure (excitation, PGA) ; le type de",
+    "l'entrée (input_kinds) dit ce que la mesure REPRÉSENTE. En mode tension,",
+    "c'est le type qui décide : un réservoir montre un niveau (converti par",
+    "GET/SET_INPUT_SCALE), un contact montre un état, une batterie ses volts.",
+    "⚠️ Corrigé le 2026-08-13 : le commentaire de OP_SET_INPUT_MODE annonçait",
+    "« 0-4 » et la garde du firmware acceptait 3 et 4 en répondant OK, sans",
+    "rien changer. Les deux disent maintenant 0-2, comme les trois clients."
   ],
   "input_modes": [
     { "id": 0, "en": "Voltage 0-30 V", "fr": "Tension 0-30 V", "unit": "centivolts" },
@@ -217,7 +227,48 @@
     { "id": 1, "en": "VDO 10-180 Ω (180 = full)", "fr": "VDO 10-180 Ω" },
     { "id": 2, "en": "Euro 0-190 Ω (190 = full)", "fr": "Euro 0-190 Ω" },
     { "id": 3, "en": "US 240-33 Ω (33 = full)",   "fr": "US 240-33 Ω" },
-    { "id": 4, "en": "GM 0-90 Ω (90 = full)",     "fr": "GM 0-90 Ω" }
+    { "id": 4, "en": "GM 0-90 Ω (90 = full)",     "fr": "GM 0-90 Ω" },
+    { "id": 5, "en": "0-5 V (5 = full)",          "fr": "0-5 V" },
+    { "id": 6, "en": "0.5-4.5 V (4.5 = full)",    "fr": "0,5-4,5 V" },
+    { "id": 7, "en": "0-10 V (10 = full)",        "fr": "0-10 V" }
+  ],
+
+  "_sender_profiles_comment": [
+    "Les profils 1 à 4 écrivent les bornes RÉSISTIVES (GET/SET_SENDER), les",
+    "profils 5 à 7 les bornes en TENSION (GET/SET_INPUT_SCALE). Une seule",
+    "liste, l'unité est dans le libellé : ce sont deux façons de décrire la",
+    "même chose, la course d'une sonde entre vide et plein.",
+    "⚠️ La carte ne fournit pas le 5 V d'une sonde ratiométrique (VEXC vaut",
+    "2,495 V et n'existe qu'en mode excité) : le profil 0,5-4,5 V suppose une",
+    "alimentation extérieure."
+  ],
+
+  "_alarms_comment": [
+    "Seuils d'alerte par entrée. Le sens et les deux seuils se règlent",
+    "(SET_INPUT_ALARM) ; la grandeur et le niveau courant se lisent",
+    "(GET_INPUT_ALARM). Le niveau de chaque entrée voyage aussi en continu",
+    "dans l'octet 3 de la trame FAULTS, 2 bits par entrée.",
+    "⚠️ Seuils en DIXIÈMES d'unité : 500 Ω en centièmes déborderaient un u16.",
+    "⚠️ La grandeur dépend du mode ET de la courbe réglée : un client ne peut",
+    "pas la déduire seul, c'est pourquoi elle est transmise.",
+    "⚠️ Une alerte est signalée, jamais agie : aucune sortie n'est coupée.",
+    "Piloter une sortie depuis une entrée reste le rôle de SET_LINK."
+  ],
+  "alarm_directions": [
+    { "id": 0, "en": "Disabled",        "fr": "Désactivée" },
+    { "id": 1, "en": "Below threshold", "fr": "En dessous du seuil" },
+    { "id": 2, "en": "Above threshold", "fr": "Au-dessus du seuil" }
+  ],
+  "alarm_metrics": [
+    { "id": 0, "en": "None",    "fr": "Aucune",     "unit": null },
+    { "id": 1, "en": "Percent", "fr": "Pourcentage", "unit": "%" },
+    { "id": 2, "en": "Volt",    "fr": "Tension",     "unit": "V" },
+    { "id": 3, "en": "Ohm",     "fr": "Résistance",  "unit": "Ω" }
+  ],
+  "alarm_levels": [
+    { "id": 0, "en": "OK",       "fr": "Normal" },
+    { "id": 1, "en": "Warning",  "fr": "Avertissement" },
+    { "id": 2, "en": "Critical", "fr": "Critique" }
   ],
 
   "constants": {
@@ -230,6 +281,8 @@
     "nan_i16": -32768,
     "notify_interval_ms": 500,
     "pairing_window_s": 30,
-    "ota_window_bytes": 4096
+    "ota_window_bytes": 4096,
+    "alarm_threshold_max_tenths": 5000,
+    "input_scale_max_cv": 3000
   }
 }

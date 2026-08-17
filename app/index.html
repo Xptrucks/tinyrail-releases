@@ -100,6 +100,29 @@
       border-radius: 41px;
       overflow: hidden;
       background: #05070a;
+      /* ⚠️ `contain: paint` en plus de `overflow: hidden` : il fait aussi de
+         cet élément le bloc conteneur d'un éventuel descendant `fixed`, que
+         `overflow` seul ne retient pas. Flutter n'en pose pas aujourd'hui,
+         mais la scène montée ici ne nous appartient pas. */
+      contain: paint;
+    }
+
+    /* ⚠️ Firefox ne clippe pas une couche composée — le canvas WebGL de
+       CanvasKit — par le `border-radius` d'un ancêtre : l'app sortait carrée
+       par-dessus le châssis, coins compris. Rien n'était caché, mais
+       l'illusion du téléphone tombait.
+
+       On fait donc porter l'arrondi par les éléments que Flutter insère
+       lui-même : un canvas arrondi est clippé par sa propre boîte, sans
+       dépendre de son ancêtre. `inherit` évite de réécrire 41px à cinq
+       endroits — le jour où le rayon change, il n'y a qu'une valeur à toucher.
+
+       Sans effet là où le clipping fonctionnait déjà. */
+    #screen > flutter-view,
+    #screen flt-glass-pane,
+    #screen flt-scene-host,
+    #screen canvas {
+      border-radius: inherit;
     }
 
     /* Voile de chargement : le cadre est dessiné en quelques millisecondes,
