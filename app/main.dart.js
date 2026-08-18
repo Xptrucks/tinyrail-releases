@@ -132021,7 +132021,7 @@ var $async$tc=A.n(function(a,b){if(a===1)return A.o(b,r)
 for(;;)switch(s){case 0:n=A
 m=B.a6
 s=3
-return A.h(p.aCS("https://chpeps.github.io/tinyrail-releases/manifest.json"),$async$tc)
+return A.h(p.aCS("https://ota.tinyrail.xptrucks.fr/manifest.json"),$async$tc)
 case 3:o=n.bvz(m.hz(b))
 if(o==null)throw A.f(A.asW(B.YB,null))
 q=o
