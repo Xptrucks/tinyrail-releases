@@ -357,11 +357,16 @@
   #shedRows label em { font-style: normal; color: rgb(var(--fg)); }
 
   footer {
-    display: flex; justify-content: center; align-items: center; gap: 10px;
+    /* ⚠️ `wrap` : six entrées ne tiennent pas sur une ligne de téléphone, et
+       sans repli elles débordaient hors de l'écran au lieu de passer dessous. */
+    display: flex; flex-wrap: wrap;
+    justify-content: center; align-items: center; gap: 10px;
     margin-top: 22px; font-size: 12.5px; color: rgb(var(--muted));
   }
   footer a { color: rgb(var(--muted)); text-decoration: none; padding: 6px 2px; }
   footer a:hover { color: rgb(var(--neon)); }
+  /* La page où l'on est : présente, lisible, mais pas cliquable. */
+  footer .here { color: rgb(var(--fg)); padding: 6px 2px; }
 
   /* ── États de liaison ────────────────────────────────────
      off = pas de carte · ro = connectée, non authentifiée · rw = pilotable.
@@ -713,12 +718,28 @@
 
   </div><!-- #app -->
 
+  <!-- Les quatre surfaces web du produit se citent l'une l'autre, dans le même
+       ordre partout. Un utilisateur arrive par n'importe laquelle — un lien
+       reçu, un QR code sur la carte — et doit pouvoir atteindre les trois
+       autres sans savoir qu'elles existent. Celle où l'on se trouve est
+       présente mais inerte : la retirer déplacerait les autres d'une page à
+       l'autre.
+
+       ⚠️ Liens ABSOLUS, vers les domaines du produit, alors que cette page est
+       servie depuis deux origines. C'est voulu : un visiteur arrivé sur le
+       miroir GitHub repart vers l'adresse du produit au lieu d'y rester. -->
   <footer>
+    <span aria-current="page" class="here">Console</span>
+    <span aria-hidden="true">·</span>
+    <a href="https://demo.tinyrail.xptrucks.fr/">Démonstration</a>
+    <span aria-hidden="true">·</span>
+    <a href="https://flash.tinyrail.xptrucks.fr/">Installer la carte</a>
+    <span aria-hidden="true">·</span>
+    <a href="https://view.tinyrail.xptrucks.fr/">Installer le View</a>
+    <span aria-hidden="true">·</span>
     <a href="https://tinyrail.xptrucks.fr" target="_blank" rel="noopener">
       tinyrail.xptrucks.fr
     </a>
-    <span aria-hidden="true">·</span>
-    <a href="../">Installer le firmware</a>
     <span aria-hidden="true">·</span>
     <span id="version" title="Version de cette page">—</span>
   </footer>
@@ -734,7 +755,7 @@
 // Remplacé à la publication par tools/webble/publish.sh ou par le workflow de
 // release. Reste tel quel lorsqu'on sert le fichier directement : c'est ainsi
 // qu'on distingue une page de travail d'une page publiée.
-const CONSOLE_VERSION = 'v0.12.0';
+const CONSOLE_VERSION = '2026-08-18 · 4c65e1f';
 
 const BASE = '12340000-1234-1234-1234-1234123400';   // + 2 hex
 const U = {

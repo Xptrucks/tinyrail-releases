@@ -104,12 +104,37 @@
       Navigateur requis : <strong>Chrome</strong> ou <strong>Edge</strong> (Web Serial API)
     </p>
 
+    <!-- Les quatre surfaces web du produit se citent l'une l'autre, dans le
+         même ordre partout : console, démonstration, installer la carte,
+         installer le View, puis le site. Un utilisateur arrive par n'importe
+         laquelle — un lien reçu, un QR code sur la carte — et doit pouvoir
+         atteindre les autres sans savoir qu'elles existent.
+
+         ⚠️ Liens ABSOLUS, vers les domaines du produit, alors que cette page
+         est servie depuis deux origines. C'est voulu : un visiteur arrivé sur
+         le miroir GitHub repart vers l'adresse du produit au lieu d'y rester.
+         Des liens relatifs feraient l'inverse, et enfermeraient sur le miroir
+         quiconque y atterrit. -->
     <div class="links">
-      <a class="link-card" href="console/">
+      <a class="link-card" href="https://flash.tinyrail.xptrucks.fr/console/">
         <span class="link-icon">📱</span>
         <span>
           <strong>Console Bluetooth</strong>
           Piloter la carte depuis un téléphone, sans Wi-Fi ni Home Assistant
+        </span>
+      </a>
+      <a class="link-card" href="https://demo.tinyrail.xptrucks.fr/">
+        <span class="link-icon">▶️</span>
+        <span>
+          <strong>Démonstration</strong>
+          L'application, en ligne, sans carte : voir ce qu'elle affiche avant d'acheter
+        </span>
+      </a>
+      <a class="link-card" href="https://view.tinyrail.xptrucks.fr/">
+        <span class="link-icon">🖥️</span>
+        <span>
+          <strong>Installer le TinyRail View</strong>
+          L'afficheur e-paper : réservoirs et commandes, sans sortir son téléphone
         </span>
       </a>
       <a class="link-card" href="https://tinyrail.xptrucks.fr">
