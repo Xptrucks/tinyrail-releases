@@ -405,6 +405,47 @@
   }
   .masthead h1 .retour:hover { color: var(--accent); }
 
+  .garde {
+    margin: .9rem 0 0;
+    font-size: .86rem;
+    color: var(--ink-faint);
+  }
+
+  dialog#confirm-wipe {
+    max-width: 26rem;
+    border: 1px solid var(--rule);
+    border-radius: 10px;
+    background: var(--surface);
+    color: var(--ink);
+    padding: 1.2rem 1.3rem;
+    box-shadow: var(--shadow);
+  }
+  dialog#confirm-wipe::backdrop { background: rgba(0, 0, 0, .45); }
+  dialog#confirm-wipe h3 {
+    font-family: Archivo, system-ui, sans-serif;
+    font-size: 1.05rem;
+    margin: 0 0 .5rem;
+  }
+  dialog#confirm-wipe p { margin: 0 0 .6rem; color: var(--ink-soft); }
+  dialog#confirm-wipe .cw-avis { color: var(--ko); font-size: .88rem; }
+  .cw-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: .5rem;
+    margin-top: 1rem;
+  }
+  .cw-actions .danger {
+    font: inherit;
+    font-size: .9rem;
+    background: var(--ko);
+    color: #fff;
+    border: 0;
+    border-radius: 6px;
+    padding: .42rem .9rem;
+    cursor: pointer;
+  }
+  .cw-actions .danger:hover { filter: brightness(1.08); }
+
   .file .dl {
     font: inherit;
     font-size: .82rem;
@@ -581,7 +622,23 @@
       <button class="ghost" id="wipe">Tout effacer</button>
     </div>
     <textarea id="dump" readonly aria-label="Compte rendu en texte"></textarea>
+    <p class="garde">
+      Vos réponses sont gardées dans ce navigateur : vous pouvez fermer la page
+      et reprendre plus tard, au même endroit. Elles ne quittent pas votre
+      appareil, et ne suivent pas sur un autre.
+    </p>
   </section>
+
+  <dialog id="confirm-wipe" aria-labelledby="cw-titre">
+    <h3 id="cw-titre">Tout effacer ?</h3>
+    <p id="cw-quoi"></p>
+    <p class="cw-avis">Cela ne s'annule pas. Copiez le rapport d'abord si vous
+      voulez en garder une trace.</p>
+    <div class="cw-actions">
+      <button class="ghost" value="non" id="cw-non">Annuler</button>
+      <button class="danger" value="oui" id="cw-oui">Tout effacer</button>
+    </div>
+  </dialog>
 
   <footer>
     Un essai « non fait » n'est pas un échec : dites-le tel quel. Ce qui compte
@@ -993,13 +1050,51 @@
     dump.classList.toggle("shown");
   });
 
-  document.getElementById("wipe").addEventListener("click", () => {
+  // ⚠️ **Effacer demande confirmation.** Un clic effaçait tout sur-le-champ, et
+  // ce bouton voisine avec « Copier le rapport » au bas d'une session de
+  // quatre-vingt-dix minutes. Le dialogue dit ce qui va disparaître, compté,
+  // parce qu'« êtes-vous sûr » ne fait réfléchir personne.
+  const dlg = document.getElementById("confirm-wipe");
+
+  function compteReponses() {
+    const n = Object.values(state.marks).filter(Boolean).length;
+    const notes = Object.values(state.notes).filter(v => v && v.trim()).length;
+    const champs = Object.values(state.fields).filter(v => v && v.trim()).length;
+    return { n, notes, champs, total: n + notes + champs };
+  }
+
+  function efface() {
     state = { fields: {}, marks: {}, notes: {} };
     save();
     document.querySelectorAll("[data-key], [data-note]").forEach(el => { el.value = ""; });
     dump.value = "";
     dump.classList.remove("shown");
     paint();
+  }
+
+  document.getElementById("wipe").addEventListener("click", () => {
+    const c = compteReponses();
+    // Rien à perdre : ne pas faire cliquer deux fois pour rien.
+    if (c.total === 0) { efface(); return; }
+
+    const morceaux = [];
+    if (c.n) morceaux.push(c.n > 1 ? `${c.n} verdicts` : "1 verdict");
+    if (c.notes) morceaux.push(c.notes > 1 ? `${c.notes} notes` : "1 note");
+    if (c.champs) morceaux.push(c.champs > 1 ? `${c.champs} champs remplis` : "1 champ rempli");
+    const liste = morceaux.length > 1
+      ? morceaux.slice(0, -1).join(", ") + " et " + morceaux[morceaux.length - 1]
+      : morceaux[0];
+    document.getElementById("cw-quoi").textContent =
+      `Vous perdez ${liste}.`;
+
+    if (typeof dlg.showModal === "function") dlg.showModal();
+    else if (confirm(`Vous perdez ${liste}. Tout effacer ?`)) efface();
+  });
+
+  document.getElementById("cw-non").addEventListener("click", () => dlg.close("non"));
+  document.getElementById("cw-oui").addEventListener("click", () => {
+    efface();
+    dlg.close("oui");
   });
 
 
