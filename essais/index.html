@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Essais manuels TinyRail</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Source+Sans+3:ital,wght@0,400;0,600;1,400&display=swap">
+<style>
+  :root {
+    --ground: #F2F4F1;
+    --surface: #FFFFFF;
+    --surface-sunk: #E9ECE8;
+    --ink: #14181B;
+    --ink-soft: #56626A;
+    --ink-faint: #7C8790;
+    --rule: #DBE0DC;
+    --accent: #1F5F8B;
+    --accent-soft: #E4EEF5;
+    --copper: #9C6224;
+    --ok: #2E7D52;
+    --ok-soft: #E2F0E8;
+    --ko: #B93B31;
+    --ko-soft: #F8E5E3;
+    --wait: #97690F;
+    --wait-soft: #F6EDDA;
+
+    --step: clamp(0.9rem, 0.8rem + 0.4vw, 1.05rem);
+    --shadow: 0 1px 2px rgba(20, 24, 27, .06), 0 8px 24px -18px rgba(20, 24, 27, .5);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #0F1315;
+      --surface: #161B1E;
+      --surface-sunk: #1C2226;
+      --ink: #E6EBE9;
+      --ink-soft: #9AA6AC;
+      --ink-faint: #7A868C;
+      --rule: #262D31;
+      --accent: #7CBBE0;
+      --accent-soft: #16303F;
+      --copper: #D49A5C;
+      --ok: #62BB8C;
+      --ok-soft: #16301F;
+      --ko: #E77A6E;
+      --ko-soft: #341A18;
+      --wait: #D9AC4E;
+      --wait-soft: #2E2412;
+      --shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 10px 28px -20px rgba(0, 0, 0, .9);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --ground: #0F1315;
+    --surface: #161B1E;
+    --surface-sunk: #1C2226;
+    --ink: #E6EBE9;
+    --ink-soft: #9AA6AC;
+    --ink-faint: #7A868C;
+    --rule: #262D31;
+    --accent: #7CBBE0;
+    --accent-soft: #16303F;
+    --copper: #D49A5C;
+    --ok: #62BB8C;
+    --ok-soft: #16301F;
+    --ko: #E77A6E;
+    --ko-soft: #341A18;
+    --wait: #D9AC4E;
+    --wait-soft: #2E2412;
+    --shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 10px 28px -20px rgba(0, 0, 0, .9);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font-family: "Source Sans 3", system-ui, -apple-system, sans-serif;
+    font-size: var(--step);
+    line-height: 1.55;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  .wrap { max-width: 48rem; margin: 0 auto; padding: 2.4rem 1.1rem 5rem; }
+
+  h1 {
+    font-family: Archivo, system-ui, sans-serif;
+    font-size: 1.7rem;
+    font-weight: 700;
+    letter-spacing: -.02em;
+    margin: 0 0 .5rem;
+  }
+
+  .lede { color: var(--ink-soft); margin: 0 0 2rem; max-width: 38rem; }
+
+  h2 {
+    font-family: Archivo, system-ui, sans-serif;
+    font-size: .78rem;
+    font-weight: 600;
+    letter-spacing: .07em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin: 2.4rem 0 .9rem;
+  }
+
+  .card {
+    display: block;
+    text-decoration: none;
+    color: inherit;
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 10px;
+    padding: 1rem 1.1rem;
+    margin-bottom: .75rem;
+    box-shadow: var(--shadow);
+  }
+  a.card:hover { border-color: var(--accent); }
+
+  .card h3 {
+    font-family: Archivo, system-ui, sans-serif;
+    font-size: 1.02rem;
+    font-weight: 600;
+    margin: 0 0 .3rem;
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    flex-wrap: wrap;
+  }
+
+  .card p { margin: 0 0 .6rem; color: var(--ink-soft); }
+
+  .meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .3rem .9rem;
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: .74rem;
+    color: var(--ink-faint);
+  }
+
+  .tag {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: .68rem;
+    font-weight: 500;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    padding: .12rem .45rem;
+    border-radius: 4px;
+  }
+  .tag.pret { background: var(--ok-soft); color: var(--ok); }
+  .tag.attente { background: var(--wait-soft); color: var(--wait); }
+
+  .card.futur { opacity: .72; border-style: dashed; box-shadow: none; }
+
+  .note {
+    border-left: 2px solid var(--rule);
+    padding-left: .9rem;
+    color: var(--ink-soft);
+    font-size: .93rem;
+    margin: 1.4rem 0 0;
+  }
+  .note b { color: var(--ink); font-weight: 600; }
+
+  footer {
+    margin-top: 3rem;
+    padding-top: 1.2rem;
+    border-top: 1px solid var(--rule);
+    color: var(--ink-faint);
+    font-size: .82rem;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>Essais manuels</h1>
+  <p class="lede">
+    Ce que les tests automatisés ne peuvent pas prouver, parce qu'il faut une
+    carte, un téléphone et quelqu'un pour regarder. Chaque protocole se suit
+    dans l'ordre, garde vos réponses dans le navigateur, et produit un compte
+    rendu à recopier.
+  </p>
+
+  <h2>Protocoles</h2>
+
+  <a class="card" href="remplacement/">
+    <h3>Remplacer une carte en panne <span class="tag pret">prêt</span></h3>
+    <p>
+      Une carte lâche, vous en posez une neuve, et l'app doit la remettre dans
+      l'état de celle qu'elle remplace : mêmes libellés, mêmes seuils, mêmes
+      pages. Éprouve aussi l'écriture d'une configuration depuis un fichier et
+      l'installation d'un modèle d'installation.
+    </p>
+    <div class="meta">
+      <span>17 essais · 6 phases</span>
+      <span>2 cartes · 1 téléphone</span>
+      <span>~90 min</span>
+      <span>D-102</span>
+    </div>
+  </a>
+
+  <h2>À venir</h2>
+
+  <div class="card futur">
+    <h3>Alertes et notifications <span class="tag attente">à écrire</span></h3>
+    <p>
+      Une alerte décrit un état : elle ne s'annonce qu'une fois, s'acquitte
+      d'elle-même quand l'état cesse, et mène à la carte concernée. Rien de
+      tout cela ne se voit sans laisser le téléphone en poche pendant des
+      heures.
+    </p>
+    <div class="meta"><span>1 carte · 1 téléphone</span><span>D-101</span></div>
+  </div>
+
+  <div class="card futur">
+    <h3>Mise à jour par Bluetooth <span class="tag attente">à écrire</span></h3>
+    <p>
+      Le canal bêta n'a jamais servi pour de vrai, et le déroulé d'erreur d'une
+      mise à jour n'a été éprouvé qu'en test : aucune panne réelle n'a été
+      provoquée sur une carte, ni paquets perdus ni lien coupé en plein
+      transfert.
+    </p>
+    <div class="meta"><span>1 carte · 1 téléphone</span><span>D-087 · D-103</span></div>
+  </div>
+
+  <div class="card futur">
+    <h3>Entrées universelles <span class="tag attente">à écrire</span></h3>
+    <p>
+      Sonde de réservoir, batterie, contact sur seuil : les entrées savent
+      alerter depuis le 13 août, et rien n'en a jamais tourné sur une carte. La
+      démonstration les couvre entièrement, elle.
+    </p>
+    <div class="meta"><span>1 carte · sondes</span><span>D-095</span></div>
+  </div>
+
+  <p class="note">
+    <b>Pourquoi ces protocoles existent.</b> Trois mesures ne se recouvrent
+    pas : les tests automatisés prouvent la mécanique, la relecture des parcours
+    trouve les impasses, et seul le matériel dit si une vraie carte encaisse ce
+    qu'on lui envoie. La troisième n'a pas d'autre support qu'un document que
+    quelqu'un suit.
+  </p>
+
+  <footer>
+    TinyRail · Xptrucks — les fichiers d'essai se téléchargent depuis chaque
+    protocole. Aucun ne contient de clé d'appairage : celle-ci s'obtient par un
+    appui physique sur le bouton BOOT de la carte, et ne se transfère pas.
+  </footer>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,1028 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Essais de remplacement TinyRail</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Source+Sans+3:ital,wght@0,400;0,600;1,400&display=swap">
+
+<style>
+  :root {
+    --ground: #F2F4F1;
+    --surface: #FFFFFF;
+    --surface-sunk: #E9ECE8;
+    --ink: #14181B;
+    --ink-soft: #56626A;
+    --ink-faint: #7C8790;
+    --rule: #DBE0DC;
+    --accent: #1F5F8B;
+    --accent-soft: #E4EEF5;
+    --copper: #9C6224;
+    --ok: #2E7D52;
+    --ok-soft: #E2F0E8;
+    --ko: #B93B31;
+    --ko-soft: #F8E5E3;
+    --wait: #97690F;
+    --wait-soft: #F6EDDA;
+
+    --step: clamp(0.9rem, 0.8rem + 0.4vw, 1.05rem);
+    --shadow: 0 1px 2px rgba(20, 24, 27, .06), 0 8px 24px -18px rgba(20, 24, 27, .5);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #0F1315;
+      --surface: #161B1E;
+      --surface-sunk: #1C2226;
+      --ink: #E6EBE9;
+      --ink-soft: #9AA6AC;
+      --ink-faint: #7A868C;
+      --rule: #262D31;
+      --accent: #7CBBE0;
+      --accent-soft: #16303F;
+      --copper: #D49A5C;
+      --ok: #62BB8C;
+      --ok-soft: #16301F;
+      --ko: #E77A6E;
+      --ko-soft: #341A18;
+      --wait: #D9AC4E;
+      --wait-soft: #2E2412;
+      --shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 10px 28px -20px rgba(0, 0, 0, .9);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --ground: #0F1315;
+    --surface: #161B1E;
+    --surface-sunk: #1C2226;
+    --ink: #E6EBE9;
+    --ink-soft: #9AA6AC;
+    --ink-faint: #7A868C;
+    --rule: #262D31;
+    --accent: #7CBBE0;
+    --accent-soft: #16303F;
+    --copper: #D49A5C;
+    --ok: #62BB8C;
+    --ok-soft: #16301F;
+    --ko: #E77A6E;
+    --ko-soft: #341A18;
+    --wait: #D9AC4E;
+    --wait-soft: #2E2412;
+    --shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 10px 28px -20px rgba(0, 0, 0, .9);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font-family: "Source Sans 3", system-ui, -apple-system, sans-serif;
+    font-size: var(--step);
+    line-height: 1.55;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  .wrap {
+    max-width: 54rem;
+    margin: 0 auto;
+    padding: 0 1.1rem 5rem;
+  }
+
+  /* ── En-tête ───────────────────────────────────────────────────────────── */
+
+  .masthead {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    background: color-mix(in srgb, var(--ground) 92%, transparent);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .masthead-inner {
+    max-width: 54rem;
+    margin: 0 auto;
+    padding: .55rem 1.1rem .5rem;
+    display: flex;
+    align-items: baseline;
+    gap: .9rem;
+    flex-wrap: wrap;
+  }
+
+  .masthead h1 {
+    font-family: Archivo, system-ui, sans-serif;
+    font-size: 1rem;
+    font-weight: 600;
+    letter-spacing: -.01em;
+    margin: 0;
+    flex: 1 1 auto;
+  }
+
+  .tally {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: .8rem;
+    font-variant-numeric: tabular-nums;
+    color: var(--ink-soft);
+    display: flex;
+    gap: .75rem;
+  }
+  .tally b { color: var(--ink); font-weight: 500; }
+  .tally .bad { color: var(--ko); }
+
+  .gauge {
+    height: 3px;
+    background: var(--surface-sunk);
+  }
+  .gauge span {
+    display: block;
+    height: 100%;
+    width: 0;
+    background: var(--accent);
+    transition: width .25s ease;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .gauge span { transition: none; }
+  }
+
+  /* ── Titre ─────────────────────────────────────────────────────────────── */
+
+  header.intro { padding: 2.4rem 0 1.6rem; }
+
+  .eyebrow {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: .72rem;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--copper);
+    margin: 0 0 .7rem;
+  }
+
+  header.intro h2 {
+    font-family: Archivo, system-ui, sans-serif;
+    font-size: clamp(1.75rem, 1.3rem + 2.2vw, 2.6rem);
+    line-height: 1.08;
+    letter-spacing: -.02em;
+    font-weight: 700;
+    margin: 0 0 .8rem;
+    text-wrap: balance;
+  }
+
+  header.intro p {
+    max-width: 62ch;
+    margin: 0 0 .7rem;
+    color: var(--ink-soft);
+  }
+
+  /* ── Fiche d'identification ────────────────────────────────────────────── */
+
+  .ident {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 10px;
+    padding: 1rem 1.05rem 1.1rem;
+    box-shadow: var(--shadow);
+    display: grid;
+    gap: .8rem 1.1rem;
+    grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  }
+
+  .field { display: flex; flex-direction: column; gap: .28rem; }
+
+  .field label {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: .7rem;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+
+  input[type="text"], textarea {
+    font: inherit;
+    color: var(--ink);
+    background: var(--ground);
+    border: 1px solid var(--rule);
+    border-radius: 7px;
+    padding: .42rem .55rem;
+    width: 100%;
+  }
+  input[type="text"]:focus-visible, textarea:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+  }
+
+  /* ── Phases et essais ──────────────────────────────────────────────────── */
+
+  .phase { margin-top: 2.6rem; }
+
+  .phase > h3 {
+    font-family: Archivo, system-ui, sans-serif;
+    font-size: 1.15rem;
+    font-weight: 600;
+    letter-spacing: -.01em;
+    margin: 0 0 .25rem;
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+  }
+
+  .phase > h3::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: var(--rule);
+  }
+
+  .phase > .lede {
+    margin: 0 0 1.1rem;
+    color: var(--ink-soft);
+    max-width: 64ch;
+  }
+
+  .trial {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 10px;
+    margin-bottom: .9rem;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+
+  .trial[data-status="ok"] { border-color: color-mix(in srgb, var(--ok) 45%, var(--rule)); }
+  .trial[data-status="ko"] { border-color: color-mix(in srgb, var(--ko) 55%, var(--rule)); }
+
+  .trial-head {
+    display: flex;
+    gap: .8rem;
+    align-items: baseline;
+    padding: .9rem 1rem .2rem;
+  }
+
+  .num {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: .78rem;
+    font-variant-numeric: tabular-nums;
+    color: var(--ink-faint);
+    padding-top: .18rem;
+  }
+
+  .trial h4 {
+    font-family: Archivo, system-ui, sans-serif;
+    font-size: 1.02rem;
+    font-weight: 600;
+    margin: 0;
+    flex: 1;
+    text-wrap: balance;
+  }
+
+  .body { padding: .35rem 1rem 1rem 2.6rem; }
+
+  .hunt {
+    color: var(--ink-soft);
+    font-style: italic;
+    margin: 0 0 .7rem;
+  }
+
+  .label {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: .68rem;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin: .9rem 0 .3rem;
+  }
+
+  ol.steps, ul.checks { margin: 0; padding-left: 1.15rem; }
+  ol.steps li, ul.checks li { margin-bottom: .3rem; }
+  ol.steps { counter-reset: none; }
+
+  .expect {
+    background: var(--surface-sunk);
+    border-left: 2px solid var(--accent);
+    border-radius: 0 7px 7px 0;
+    padding: .6rem .8rem;
+    margin-top: .6rem;
+  }
+  .expect p { margin: 0; }
+  .expect p + p { margin-top: .4rem; }
+
+  .warn {
+    border-left: 2px solid var(--wait);
+    background: var(--wait-soft);
+    border-radius: 0 7px 7px 0;
+    padding: .55rem .8rem;
+    margin-top: .7rem;
+    color: var(--ink);
+  }
+  .warn p { margin: 0; }
+
+  code, kbd, .mono {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: .88em;
+  }
+  code {
+    background: var(--surface-sunk);
+    border-radius: 4px;
+    padding: .05em .32em;
+  }
+  .path { color: var(--copper); font-weight: 500; white-space: nowrap; }
+
+  /* ── Verdict ───────────────────────────────────────────────────────────── */
+
+  .verdict {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .5rem .45rem;
+    align-items: center;
+    padding: .7rem 1rem .9rem 2.6rem;
+    border-top: 1px solid var(--rule);
+    background: var(--surface);
+  }
+
+  .verdict .set { display: flex; gap: .3rem; }
+
+  button.mark {
+    font: 600 .82rem/1 "Source Sans 3", sans-serif;
+    color: var(--ink-soft);
+    background: var(--ground);
+    border: 1px solid var(--rule);
+    border-radius: 999px;
+    padding: .42rem .8rem;
+    cursor: pointer;
+  }
+  button.mark:hover { border-color: var(--ink-faint); }
+  button.mark:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  button.mark[aria-pressed="true"][data-mark="ok"] {
+    background: var(--ok-soft); border-color: var(--ok); color: var(--ok);
+  }
+  button.mark[aria-pressed="true"][data-mark="ko"] {
+    background: var(--ko-soft); border-color: var(--ko); color: var(--ko);
+  }
+  button.mark[aria-pressed="true"][data-mark="na"] {
+    background: var(--surface-sunk); border-color: var(--ink-faint); color: var(--ink-soft);
+  }
+
+  .verdict textarea {
+    flex: 1 1 16rem;
+    min-height: 2.3rem;
+    resize: vertical;
+    background: var(--surface);
+  }
+
+
+  /* ── Fichiers à charger ────────────────────────────────────────────────── */
+
+  .files { display: grid; gap: .55rem; margin-top: .9rem; }
+
+  .file {
+    display: flex;
+    align-items: center;
+    gap: .7rem;
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+    padding: .6rem .75rem;
+  }
+
+  .file .name {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: .82rem;
+    color: var(--ink);
+    flex: 1 1 auto;
+  }
+  .file .name small {
+    display: block;
+    font-family: "Source Sans 3", sans-serif;
+    font-size: .8rem;
+    color: var(--ink-soft);
+  }
+  .masthead h1 .retour {
+    color: var(--ink-faint);
+    text-decoration: none;
+  }
+  .masthead h1 .retour:hover { color: var(--accent); }
+
+  .file .dl {
+    font: inherit;
+    font-size: .82rem;
+    text-decoration: none;
+    background: var(--accent);
+    color: var(--surface);
+    border: 0;
+    border-radius: 6px;
+    padding: .34rem .7rem;
+    white-space: nowrap;
+  }
+  .file .dl:hover { filter: brightness(1.08); }
+
+  .file .size {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: .72rem;
+    color: var(--ink-faint);
+    font-variant-numeric: tabular-nums;
+  }
+  .file button {
+    font: 600 .8rem/1 "Source Sans 3", sans-serif;
+    background: var(--accent-soft);
+    color: var(--accent);
+    border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
+    border-radius: 999px;
+    padding: .4rem .8rem;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .file button:hover { filter: brightness(1.04); }
+  .file button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .file button.done { background: var(--ok-soft); color: var(--ok); border-color: var(--ok); }
+
+  /* ── Rapport ───────────────────────────────────────────────────────────── */
+
+  .report {
+    margin-top: 2.8rem;
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 10px;
+    padding: 1.1rem;
+    box-shadow: var(--shadow);
+  }
+  .report h3 {
+    font-family: Archivo, sans-serif;
+    font-size: 1.1rem;
+    margin: 0 0 .3rem;
+  }
+  .report p { margin: 0 0 .8rem; color: var(--ink-soft); }
+
+  .actions { display: flex; gap: .5rem; flex-wrap: wrap; }
+
+  button.primary, button.ghost {
+    font: 600 .88rem/1 "Source Sans 3", sans-serif;
+    border-radius: 7px;
+    padding: .6rem 1rem;
+    cursor: pointer;
+    border: 1px solid transparent;
+  }
+  button.primary { background: var(--accent); color: var(--surface); }
+  button.primary:hover { filter: brightness(1.08); }
+  button.ghost { background: transparent; color: var(--ink-soft); border-color: var(--rule); }
+  button.ghost:hover { color: var(--ink); border-color: var(--ink-faint); }
+  button.primary:focus-visible, button.ghost:focus-visible {
+    outline: 2px solid var(--accent); outline-offset: 2px;
+  }
+
+  #dump {
+    width: 100%;
+    min-height: 14rem;
+    margin-top: .9rem;
+    font-family: "IBM Plex Mono", monospace;
+    font-size: .78rem;
+    line-height: 1.5;
+    display: none;
+  }
+  #dump.shown { display: block; }
+
+  .said {
+    font-size: .84rem;
+    color: var(--ok);
+    margin-left: .4rem;
+    opacity: 0;
+    transition: opacity .2s;
+  }
+  .said.shown { opacity: 1; }
+
+  footer {
+    margin-top: 2.5rem;
+    padding-top: 1.2rem;
+    border-top: 1px solid var(--rule);
+    color: var(--ink-faint);
+    font-size: .84rem;
+  }
+
+  @media (max-width: 34rem) {
+    .body, .verdict { padding-left: 1rem; }
+  }
+</style>
+</head>
+<body>
+
+<div class="masthead">
+  <div class="masthead-inner">
+    <h1><a class="retour" href="../">Essais</a> · Remplacement</h1>
+    <div class="tally">
+      <span><b id="done">0</b>/<span id="total">0</span> faits</span>
+      <span class="bad" id="failbox" hidden><b id="fails">0</b> en échec</span>
+    </div>
+  </div>
+  <div class="gauge"><span id="bar"></span></div>
+</div>
+
+<div class="wrap">
+
+  <header class="intro">
+    <p class="eyebrow">TinyRail · essais sur matériel</p>
+    <h2>Remplacer une carte, et tout ce qui peut mal se passer autour</h2>
+    <p>
+      Rien de ce chantier n'a tourné sur du vrai matériel. Les essais sont dans
+      l'ordre : chacun s'appuie sur le précédent.
+    </p>
+  </header>
+
+  <section class="ident" aria-label="Identification de la session d'essai">
+    <div class="field">
+      <label for="who">Testeur</label>
+      <input type="text" id="who" data-key="who" autocomplete="name">
+    </div>
+    <div class="field">
+      <label for="when">Date</label>
+      <input type="text" id="when" data-key="when" placeholder="2026-08-21">
+    </div>
+    <div class="field">
+      <label for="app">Version de l'app</label>
+      <input type="text" id="app" data-key="app" placeholder="Réglages → À propos">
+    </div>
+    <div class="field">
+      <label for="cardA">Carte A</label>
+      <input type="text" id="cardA" data-key="cardA" placeholder="ed0dd4 · fw 0.13.0">
+    </div>
+    <div class="field">
+      <label for="cardB">Carte B</label>
+      <input type="text" id="cardB" data-key="cardB" placeholder="ab12cd · fw 0.13.0">
+    </div>
+    <div class="field">
+      <label for="phone">Téléphone</label>
+      <input type="text" id="phone" data-key="phone" placeholder="iPhone 14, iOS 26.6">
+    </div>
+  </section>
+
+  <section class="phase">
+    <h3>Les fichiers</h3>
+    <p class="lede">
+      Téléchargez chacun d'eux, puis chargez-le depuis l'app quand un essai le
+      demande. Ils remplacent la configuration de la carte visée.
+    </p>
+    <div class="files" id="files"></div>
+  </section>
+
+  <main id="trials"></main>
+
+  <section class="report">
+    <h3>Rapport</h3>
+    <p>
+      Tout est gardé dans ce navigateur au fur et à mesure : vous pouvez fermer
+      l'onglet et reprendre plus tard. Le bouton met le compte rendu dans le
+      presse-papiers, prêt à coller dans un message.
+    </p>
+    <div class="actions">
+      <button class="primary" id="copy">Copier le rapport</button>
+      <span class="said" id="said">Copié</span>
+      <button class="ghost" id="show">Voir le texte</button>
+      <button class="ghost" id="wipe">Tout effacer</button>
+    </div>
+    <textarea id="dump" readonly aria-label="Compte rendu en texte"></textarea>
+  </section>
+
+  <footer>
+    Un essai « non fait » n'est pas un échec : dites-le tel quel. Ce qui compte
+    est de savoir ce qui a été regardé, et ce qui ne l'a pas été.
+  </footer>
+</div>
+
+<script>
+
+  const FILES = [
+    { id: "modele", nom: "modele-van-essai.json", taille: "3.4 ko", quoi: "Deux cartes et leurs pages : la base de tous les essais." },
+    { id: "cellule", nom: "config-cellule.json", taille: "1.9 ko", quoi: "8 sorties, 4 entrées, sonde, seuils, appariement." },
+    { id: "soute", nom: "config-soute.json", taille: "0.7 ko", quoi: "3 sorties, 1 entrée. De quoi remettre la carte B d'aplomb." },
+    { id: "bornes", nom: "config-bornes.json", taille: "0.7 ko", quoi: "Valeurs aux limites admises, et un nom de sortie très long." },
+    { id: "refus", nom: "config-refus.json", taille: "0.4 ko", quoi: "Contient un type de charge inexistant : la carte doit refuser ce seul réglage." }
+  ];
+
+  const TRIALS = [
+    {
+      phase: "Base de test",
+      lede: "À faire avant tout le reste, sur une installation neuve pour ne pas toucher à votre van.",
+      id: "installation",
+      title: "Installation d'essai, deux cartes appairées",
+      hunt: "",
+      steps: [
+        "Créez une installation nommée <b>Test remplacement</b>.",
+        "Appairez les cartes A et B dedans."
+      ],
+      expect: [
+        "Les deux cartes répondent et sont rattachées à cette installation."
+      ]
+    },
+    {
+      id: "import-modele",
+      title: "Installer le modèle, Cellule sur A et Soute sur B",
+      hunt: "Premier essai d'import : il pose la configuration des deux cartes et les pages d'un coup.",
+      steps: [
+        "<span class='path'>… → Configuration → Installer un modèle</span>, choisissez <code>modele-van-essai.json</code>.",
+        "Associez <b>Cellule</b> à la carte A, <b>Soute</b> à la carte B.",
+        "Laissez « Reprendre aussi les noms des cartes » décoché.",
+        "Installez."
+      ],
+      expect: [
+        "L'écran nomme des rôles, pas des identifiants Bluetooth.",
+        "Deux pages apparaissent, <b>Séjour</b> et <b>Soute</b>, avec un bouton « tout éteindre » qui vise les deux cartes.",
+        "Les sorties de A s'appellent « Plafonnier salon », « Pompe à eau »… celles de B « Compresseur », « Treuil »."
+      ]
+    },
+    {
+      id: "controle-base",
+      title: "Contrôler la base sur les cartes",
+      hunt: "Le rapport d'écriture ne prouve que l'acceptation des commandes ; seule la relecture prouve les réglages.",
+      steps: [
+        "Sur A : <span class='path'>Configuration des sorties</span>, puis <span class='path'>des entrées</span>, puis <span class='path'>Système</span>.",
+        "Sur B : les mêmes écrans."
+      ],
+      expect: [
+        "Sur A : CH3 en extinction auto après 120 s, CH5 et CH6 appariés, seuil CH3 à 5 A, coupure batterie 11,50 V, thermique 85/70 °C.",
+        "Sur A, entrées : AN1 et AN2 en sonde résistive, AN3 en tension avec seuils, AN4 en contact lié à CH1.",
+        "Sur B : trois sorties nommées, seuil du treuil à 10 A."
+      ]
+    },
+
+    {
+      phase: "Import de configuration",
+      lede: "",
+      id: "bornes",
+      title: "Appliquer les valeurs limites sur B",
+      hunt: "On cherche ce que le firmware refuse aux bornes de ce qu'il accepte.",
+      steps: [
+        "Sur B : <span class='path'>… → Appliquer une configuration</span>, choisissez <code>config-bornes.json</code>.",
+        "Lisez la confirmation, validez.",
+        "Relisez la configuration de B."
+      ],
+      expect: [
+        "La confirmation dit d'où vient le fichier, de quand il date, et que cela ne s'annule pas.",
+        "Seuils écrits : 0,5 A et 10 A, délai 10 s, thermique 100/50 °C, extinction auto 3600 s.",
+        "Le nom de sortie très long est accepté, ou refusé proprement avec sa raison."
+      ]
+    },
+    {
+      id: "refus",
+      title: "Appliquer une configuration que la carte refuse",
+      hunt: "Le rapport d'échec doit se lire et se recopier : c'est ce qui permet de reprendre les réglages à la main.",
+      steps: [
+        "Sur B : appliquez <code>config-refus.json</code>."
+      ],
+      expect: [
+        "Le plafonnier passe, la pompe à eau non.",
+        "La liste « À régler à la main » nomme le réglage (<b>type de charge sur Pompe à eau</b>) et donne la raison.",
+        "Photographiez cet écran : est-il suffisant pour refaire le réglage vous-même ?"
+      ]
+    },
+    {
+      id: "remise-soute",
+      title: "Remettre B d'aplomb",
+      hunt: "",
+      steps: [
+        "Sur B : appliquez <code>config-soute.json</code>."
+      ],
+      expect: ["B retrouve ses trois sorties nommées."]
+    },
+
+    {
+      phase: "Remplacement",
+      lede: "La carte A est vivante : c'est le meilleur cas, sa configuration se lit à l'instant.",
+      id: "remplacement",
+      title: "Remplacer A par B",
+      hunt: "On cherche ce qui ne suit pas : une tuile restée sur l'ancienne carte, un groupe amputé.",
+      steps: [
+        "Ouvrez A, <span class='path'>… → Remplacer cette carte</span>.",
+        "<b>Relever maintenant</b>, puis Continuer.",
+        "Choisissez B.",
+        "Cochez la remise à zéro de l'ancienne carte, puis lancez."
+      ],
+      expect: [
+        "B apparaît sous <b>Cartes déjà appairées</b>, sans passer par le scan.",
+        "La progression compte les étapes (« 23 sur 46 »).",
+        "À la fin : les tuiles de la page Séjour commandent B, le bouton « tout éteindre » vise toujours trois sorties, A a disparu de la liste."
+      ],
+      warn: "Chronométrez l'écriture. C'est la première fois qu'une vraie carte encaisse une quarantaine d'écritures à la suite."
+    },
+    {
+      id: "verif-b",
+      title: "Vérifier B, réglage par réglage",
+      hunt: "",
+      steps: [
+        "Relisez sur B les trois écrans de configuration, et comparez à ce que portait A (essai 03)."
+      ],
+      expect: [
+        "Tout ce que portait A se retrouve sur B, nom de carte compris.",
+        "Allumez une sortie : le courant mesuré correspond à la charge."
+      ]
+    },
+    {
+      id: "ancienne",
+      title: "Ce qu'est devenue A",
+      hunt: "Deux cartes portant les mêmes libellés au scan seraient indiscernables.",
+      steps: [
+        "Réappairez A (appui 3 s sur BOOT) et regardez ses réglages."
+      ],
+      expect: ["A est revenue d'usine : plus de noms de sorties ni de seuils."]
+    },
+    {
+      id: "ha",
+      title: "Home Assistant, si vous l'utilisez",
+      hunt: "Limite connue : on juge si l'app la dit assez clairement.",
+      steps: ["Cherchez les entités de A, puis celles de B."],
+      expect: [
+        "B est un appareil nouveau ; les entités de A sont indisponibles.",
+        "Les automatisations qui citaient A sont à reprendre."
+      ]
+    },
+
+    {
+      phase: "Quand ça se passe mal",
+      lede: "Provoquez les pannes franchement. Rechargez le modèle (essai 02) si la base a été défaite.",
+      id: "coupure",
+      title: "Couper l'alimentation en pleine écriture",
+      hunt: "Sans garde, l'app enverrait les quarante commandes restantes dans le vide.",
+      steps: [
+        "Lancez un remplacement, dans l'autre sens si besoin.",
+        "Pendant l'écriture, <b>coupez l'alimentation de la carte cible</b>.",
+        "Rebranchez, laissez-la revenir, touchez « Réessayer le reste »."
+      ],
+      expect: [
+        "L'écriture s'arrête vite, elle ne s'obstine pas.",
+        "Le rapport nomme chaque réglage manquant et sa raison.",
+        "La reprise n'écrit que ce qui manquait."
+      ],
+      warn: "Notez le délai entre la coupure et la réaction de l'écran."
+    },
+    {
+      id: "app-tuee",
+      title: "Tuer l'app pendant le remplacement",
+      hunt: "Un van à moitié rebranché ne se voit pas.",
+      steps: [
+        "Lancez un remplacement, puis <b>balayez l'app</b> pendant l'écriture.",
+        "Rouvrez l'app, regardez vos pages."
+      ],
+      expect: [
+        "Aucune page ne mélange les deux cartes.",
+        "L'app termine seule, sans rien demander."
+      ]
+    },
+    {
+      id: "carte-morte",
+      title: "Remplacer une carte qui ne répond plus",
+      hunt: "Le vrai cas d'usage : tout doit tenir sans que la carte remplacée dise un mot.",
+      steps: [
+        "Débranchez complètement une carte, attendez qu'elle passe hors de portée.",
+        "Ouvrez-la, <span class='path'>… → Remplacer cette carte</span>, allez au bout."
+      ],
+      expect: [
+        "L'entrée du menu est utilisable alors que la carte est muette.",
+        "Le résumé affiche la date du dernier relevé, sans proposer d'en refaire un.",
+        "Le remplacement se fait avec ce relevé."
+      ]
+    },
+
+    {
+      phase: "Sauvegarde",
+      lede: "",
+      id: "proposition",
+      title: "La proposition de sauvegarde",
+      hunt: "Une proposition qui revient sans raison finit par se chasser sans se lire.",
+      steps: [
+        "Changez un réglage sur une carte, allez sur <span class='path'>Appareils</span>.",
+        "Répondez <b>Plus tard</b>.",
+        "Fermez l'app, rouvrez-la, retournez sur Appareils.",
+        "Changez encore un réglage, retournez sur Appareils."
+      ],
+      expect: [
+        "Elle apparaît à l'étape 1 et dit pourquoi cela compte.",
+        "Elle ne revient pas après « Plus tard », même à la réouverture.",
+        "Elle revient après la nouvelle modification, et seulement là."
+      ]
+    },
+    {
+      id: "export-modele",
+      title: "Sortir un modèle et le reposer sans une carte",
+      hunt: "Ce qui n'est associé à rien doit disparaître des pages.",
+      steps: [
+        "<span class='path'>… → Configuration → Exporter en modèle</span>.",
+        "<span class='path'>Installer un modèle</span> avec ce fichier : associez un rôle, laissez l'autre sur <b>Pas installé</b>."
+      ],
+      expect: [
+        "L'écran annonce, avant d'installer, que ce qui n'est associé à rien ne sera pas installé.",
+        "Après : aucune tuile pour le rôle laissé de côté, et le bouton de groupe ne garde que les sorties installées."
+      ]
+    },
+
+    {
+      phase: "Jugement",
+      lede: "Ces deux entrées se remplissent en toutes lettres.",
+      id: "hesitations",
+      title: "Ce qui a demandé de réfléchir",
+      hunt: "Une étape qu'on relit deux fois est un défaut, au même titre qu'une panne.",
+      steps: ["Où avez-vous hésité, cherché un bouton, relu une phrase ?"],
+      expect: ["Notez chaque hésitation, même celle qui vous paraît bête."]
+    },
+    {
+      id: "confiance",
+      title: "Le feriez-vous sur le van d'un client ?",
+      hunt: "",
+      steps: ["Répondez, et dites ce qui manque pour que ce soit oui."],
+      expect: ["« Oui mais je vérifierais tout derrière » est une réponse utile."]
+    }
+  ];
+
+  const KEY = "tinyrail-essais-remplacement-v1";
+  let state = { fields: {}, marks: {}, notes: {} };
+
+  try {
+    const saved = localStorage.getItem(KEY);
+    if (saved) state = Object.assign(state, JSON.parse(saved));
+  } catch (e) { /* stockage indisponible : la page reste utilisable, sans mémoire */ }
+
+  function save() {
+    try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {}
+  }
+
+  const host = document.getElementById("trials");
+  let currentPhase = null;
+  let phaseBox = null;
+
+  TRIALS.forEach((t, i) => {
+    if (t.phase) {
+      const sec = document.createElement("section");
+      sec.className = "phase";
+      const h = document.createElement("h3");
+      h.textContent = t.phase;
+      sec.append(h);
+      if (t.lede) {
+        const p = document.createElement("p");
+        p.className = "lede";
+        p.textContent = t.lede;
+        sec.append(p);
+      }
+      host.append(sec);
+      phaseBox = sec;
+    }
+
+    const card = document.createElement("article");
+    card.className = "trial";
+    card.dataset.status = state.marks[t.id] || "";
+
+    const steps = t.steps.map(s => `<li>${s}</li>`).join("");
+    const expects = t.expect.map(s => `<p>${s}</p>`).join("");
+
+    card.innerHTML = `
+      <div class="trial-head">
+        <span class="num">${String(i + 1).padStart(2, "0")}</span>
+        <h4>${t.title}</h4>
+      </div>
+      <div class="body">
+        ${t.hunt ? `<p class="hunt">${t.hunt}</p>` : ""}
+        <p class="label">Ce que vous faites</p>
+        <ol class="steps">${steps}</ol>
+        <p class="label">Ce qui doit se passer</p>
+        <div class="expect">${expects}</div>
+        ${t.warn ? `<div class="warn"><p>${t.warn}</p></div>` : ""}
+      </div>
+      <div class="verdict">
+        <div class="set" role="group" aria-label="Verdict de l'essai ${i + 1}">
+          <button class="mark" data-mark="ok" data-id="${t.id}" aria-pressed="false">Conforme</button>
+          <button class="mark" data-mark="ko" data-id="${t.id}" aria-pressed="false">En échec</button>
+          <button class="mark" data-mark="na" data-id="${t.id}" aria-pressed="false">Non fait</button>
+        </div>
+        <textarea data-note="${t.id}" placeholder="Ce que vous avez vu, mesuré, ou trouvé étrange"></textarea>
+      </div>`;
+
+    host.append(card);
+  });
+
+  document.getElementById("total").textContent = TRIALS.length;
+
+  // Restitution de l'état
+  document.querySelectorAll("[data-key]").forEach(input => {
+    const k = input.dataset.key;
+    if (state.fields[k]) input.value = state.fields[k];
+    input.addEventListener("input", () => {
+      state.fields[k] = input.value;
+      save();
+    });
+  });
+
+  document.querySelectorAll("[data-note]").forEach(area => {
+    const id = area.dataset.note;
+    if (state.notes[id]) area.value = state.notes[id];
+    area.addEventListener("input", () => {
+      state.notes[id] = area.value;
+      save();
+    });
+  });
+
+  function paint() {
+    let done = 0, fails = 0;
+    TRIALS.forEach(t => {
+      const m = state.marks[t.id];
+      if (m) done++;
+      if (m === "ko") fails++;
+      const card = document.querySelector(`[data-mark][data-id="${t.id}"]`).closest(".trial");
+      card.dataset.status = m || "";
+      card.querySelectorAll("[data-mark]").forEach(b => {
+        b.setAttribute("aria-pressed", String(b.dataset.mark === m));
+      });
+    });
+    document.getElementById("done").textContent = done;
+    document.getElementById("fails").textContent = fails;
+    document.getElementById("failbox").hidden = fails === 0;
+    document.getElementById("bar").style.width = (done / TRIALS.length * 100) + "%";
+  }
+
+  document.addEventListener("click", e => {
+    const b = e.target.closest("[data-mark]");
+    if (!b) return;
+    const id = b.dataset.id;
+    state.marks[id] = state.marks[id] === b.dataset.mark ? "" : b.dataset.mark;
+    save();
+    paint();
+  });
+
+  function report() {
+    const f = state.fields;
+    const lignes = [
+      "# Essais de remplacement TinyRail",
+      "",
+      `Testeur : ${f.who || "?"}`,
+      `Date : ${f.when || "?"}`,
+      `App : ${f.app || "?"} · Téléphone : ${f.phone || "?"}`,
+      `Carte A : ${f.cardA || "?"}`,
+      `Carte B : ${f.cardB || "?"}`,
+      ""
+    ];
+    let done = 0, fails = 0;
+    TRIALS.forEach((t, i) => {
+      const m = state.marks[t.id];
+      if (m) done++;
+      if (m === "ko") fails++;
+      const mot = m === "ok" ? "CONFORME" : m === "ko" ? "EN ECHEC" : m === "na" ? "NON FAIT" : "SANS REPONSE";
+      lignes.push(`${String(i + 1).padStart(2, "0")}. [${mot}] ${t.title}`);
+      const note = (state.notes[t.id] || "").trim();
+      if (note) lignes.push(`    ${note.replace(/\n/g, "\n    ")}`);
+    });
+    lignes.push("", `${done}/${TRIALS.length} essais renseignés, ${fails} en échec.`);
+    return lignes.join("\n");
+  }
+
+  const dump = document.getElementById("dump");
+  const said = document.getElementById("said");
+
+  document.getElementById("copy").addEventListener("click", async () => {
+    const texte = report();
+    dump.value = texte;
+    try {
+      await navigator.clipboard.writeText(texte);
+      said.classList.add("shown");
+      setTimeout(() => said.classList.remove("shown"), 1600);
+    } catch (e) {
+      // Presse-papiers refusé : on montre le texte, à sélectionner à la main.
+      dump.classList.add("shown");
+      dump.select();
+    }
+  });
+
+  document.getElementById("show").addEventListener("click", () => {
+    dump.value = report();
+    dump.classList.toggle("shown");
+  });
+
+  document.getElementById("wipe").addEventListener("click", () => {
+    state = { fields: {}, marks: {}, notes: {} };
+    save();
+    document.querySelectorAll("[data-key], [data-note]").forEach(el => { el.value = ""; });
+    dump.value = "";
+    dump.classList.remove("shown");
+    paint();
+  });
+
+
+  // ── Les fichiers à charger ───────────────────────────────────────────────
+  //
+  // Un lien, pas un bouton : la page est servie à côté de ses fichiers, et le
+  // navigateur les enregistre lui-même. C'est ce que le visualiseur d'artifact
+  // ne permettait pas, d'où la copie d'avant.
+  const filesHost = document.getElementById("files");
+  FILES.forEach(f => {
+    const row = document.createElement("div");
+    row.className = "file";
+    row.innerHTML = `
+      <span class="name">${f.nom}<small>${f.quoi}</small></span>
+      <span class="size">${f.taille}</span>
+      <a class="dl" href="fixtures/${f.nom}" download>Télécharger</a>`;
+    filesHost.append(row);
+  });
+
+
+  paint();
+</script>
+
+</body></html>
+</body>
+</html>
