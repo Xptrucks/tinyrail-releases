@@ -1,0 +1,1228 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Essais des cartes virtuelles TinyRail</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Source+Sans+3:ital,wght@0,400;0,600;1,400&display=swap">
+
+<style>
+  :root {
+    --ground: #F2F4F1;
+    --surface: #FFFFFF;
+    --surface-sunk: #E9ECE8;
+    --ink: #14181B;
+    --ink-soft: #56626A;
+    --ink-faint: #7C8790;
+    --rule: #DBE0DC;
+    --accent: #1F5F8B;
+    --accent-soft: #E4EEF5;
+    --copper: #9C6224;
+    --ok: #2E7D52;
+    --ok-soft: #E2F0E8;
+    --ko: #B93B31;
+    --ko-soft: #F8E5E3;
+    --wait: #97690F;
+    --wait-soft: #F6EDDA;
+
+    --step: clamp(0.9rem, 0.8rem + 0.4vw, 1.05rem);
+    --shadow: 0 1px 2px rgba(20, 24, 27, .06), 0 8px 24px -18px rgba(20, 24, 27, .5);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #0F1315;
+      --surface: #161B1E;
+      --surface-sunk: #1C2226;
+      --ink: #E6EBE9;
+      --ink-soft: #9AA6AC;
+      --ink-faint: #7A868C;
+      --rule: #262D31;
+      --accent: #7CBBE0;
+      --accent-soft: #16303F;
+      --copper: #D49A5C;
+      --ok: #62BB8C;
+      --ok-soft: #16301F;
+      --ko: #E77A6E;
+      --ko-soft: #341A18;
+      --wait: #D9AC4E;
+      --wait-soft: #2E2412;
+      --shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 10px 28px -20px rgba(0, 0, 0, .9);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --ground: #0F1315;
+    --surface: #161B1E;
+    --surface-sunk: #1C2226;
+    --ink: #E6EBE9;
+    --ink-soft: #9AA6AC;
+    --ink-faint: #7A868C;
+    --rule: #262D31;
+    --accent: #7CBBE0;
+    --accent-soft: #16303F;
+    --copper: #D49A5C;
+    --ok: #62BB8C;
+    --ok-soft: #16301F;
+    --ko: #E77A6E;
+    --ko-soft: #341A18;
+    --wait: #D9AC4E;
+    --wait-soft: #2E2412;
+    --shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 10px 28px -20px rgba(0, 0, 0, .9);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font-family: "Source Sans 3", system-ui, -apple-system, sans-serif;
+    font-size: var(--step);
+    line-height: 1.55;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  .wrap {
+    max-width: 54rem;
+    margin: 0 auto;
+    padding: 0 1.1rem 5rem;
+  }
+
+  /* ── En-tête ───────────────────────────────────────────────────────────── */
+
+  .masthead {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    background: color-mix(in srgb, var(--ground) 92%, transparent);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .masthead-inner {
+    max-width: 54rem;
+    margin: 0 auto;
+    padding: .55rem 1.1rem .5rem;
+    display: flex;
+    align-items: baseline;
+    gap: .9rem;
+    flex-wrap: wrap;
+  }
+
+  .masthead h1 {
+    font-family: Archivo, system-ui, sans-serif;
+    font-size: 1rem;
+    font-weight: 600;
+    letter-spacing: -.01em;
+    margin: 0;
+    flex: 1 1 auto;
+  }
+
+  .tally {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: .8rem;
+    font-variant-numeric: tabular-nums;
+    color: var(--ink-soft);
+    display: flex;
+    gap: .75rem;
+  }
+  .tally b { color: var(--ink); font-weight: 500; }
+  .tally .bad { color: var(--ko); }
+
+  .gauge {
+    height: 3px;
+    background: var(--surface-sunk);
+  }
+  .gauge span {
+    display: block;
+    height: 100%;
+    width: 0;
+    background: var(--accent);
+    transition: width .25s ease;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .gauge span { transition: none; }
+  }
+
+  /* ── Titre ─────────────────────────────────────────────────────────────── */
+
+  header.intro { padding: 2.4rem 0 1.6rem; }
+
+  .eyebrow {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: .72rem;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--copper);
+    margin: 0 0 .7rem;
+  }
+
+  header.intro h2 {
+    font-family: Archivo, system-ui, sans-serif;
+    font-size: clamp(1.75rem, 1.3rem + 2.2vw, 2.6rem);
+    line-height: 1.08;
+    letter-spacing: -.02em;
+    font-weight: 700;
+    margin: 0 0 .8rem;
+    text-wrap: balance;
+  }
+
+  header.intro p {
+    max-width: 62ch;
+    margin: 0 0 .7rem;
+    color: var(--ink-soft);
+  }
+
+  /* ── Fiche d'identification ────────────────────────────────────────────── */
+
+  .ident {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 10px;
+    padding: 1rem 1.05rem 1.1rem;
+    box-shadow: var(--shadow);
+    display: grid;
+    gap: .8rem 1.1rem;
+    grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  }
+
+  .field { display: flex; flex-direction: column; gap: .28rem; }
+
+  .field label {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: .7rem;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+
+  input[type="text"], textarea {
+    font: inherit;
+    color: var(--ink);
+    background: var(--ground);
+    border: 1px solid var(--rule);
+    border-radius: 7px;
+    padding: .42rem .55rem;
+    width: 100%;
+  }
+  input[type="text"]:focus-visible, textarea:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+  }
+
+  /* ── Phases et essais ──────────────────────────────────────────────────── */
+
+  .phase { margin-top: 2.6rem; }
+
+  .phase > h3 {
+    font-family: Archivo, system-ui, sans-serif;
+    font-size: 1.15rem;
+    font-weight: 600;
+    letter-spacing: -.01em;
+    margin: 0 0 .25rem;
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+  }
+
+  .phase > h3::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: var(--rule);
+  }
+
+  .phase > .lede {
+    margin: 0 0 1.1rem;
+    color: var(--ink-soft);
+    max-width: 64ch;
+  }
+
+  .trial {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 10px;
+    margin-bottom: .9rem;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+
+  .trial[data-status="ok"] { border-color: color-mix(in srgb, var(--ok) 45%, var(--rule)); }
+  .trial[data-status="ko"] { border-color: color-mix(in srgb, var(--ko) 55%, var(--rule)); }
+
+  .trial-head {
+    display: flex;
+    gap: .8rem;
+    align-items: baseline;
+    padding: .9rem 1rem .2rem;
+  }
+
+  .num {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: .78rem;
+    font-variant-numeric: tabular-nums;
+    color: var(--ink-faint);
+    padding-top: .18rem;
+  }
+
+  .trial h4 {
+    font-family: Archivo, system-ui, sans-serif;
+    font-size: 1.02rem;
+    font-weight: 600;
+    margin: 0;
+    flex: 1;
+    text-wrap: balance;
+  }
+
+  .body { padding: .35rem 1rem 1rem 2.6rem; }
+
+  .hunt {
+    color: var(--ink-soft);
+    font-style: italic;
+    margin: 0 0 .7rem;
+  }
+
+  .label {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: .68rem;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin: .9rem 0 .3rem;
+  }
+
+  ol.steps, ul.checks { margin: 0; padding-left: 1.15rem; }
+  ol.steps li, ul.checks li { margin-bottom: .3rem; }
+  ol.steps { counter-reset: none; }
+
+  .expect {
+    background: var(--surface-sunk);
+    border-left: 2px solid var(--accent);
+    border-radius: 0 7px 7px 0;
+    padding: .6rem .8rem;
+    margin-top: .6rem;
+  }
+  .expect p { margin: 0; }
+  .expect p + p { margin-top: .4rem; }
+
+  .warn {
+    border-left: 2px solid var(--wait);
+    background: var(--wait-soft);
+    border-radius: 0 7px 7px 0;
+    padding: .55rem .8rem;
+    margin-top: .7rem;
+    color: var(--ink);
+  }
+  .warn p { margin: 0; }
+
+  code, kbd, .mono {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: .88em;
+  }
+  code {
+    background: var(--surface-sunk);
+    border-radius: 4px;
+    padding: .05em .32em;
+  }
+  .path { color: var(--copper); font-weight: 500; white-space: nowrap; }
+
+  /* ── Verdict ───────────────────────────────────────────────────────────── */
+
+  .verdict {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .5rem .45rem;
+    align-items: center;
+    padding: .7rem 1rem .9rem 2.6rem;
+    border-top: 1px solid var(--rule);
+    background: var(--surface);
+  }
+
+  .verdict .set { display: flex; gap: .3rem; }
+
+  button.mark {
+    font: 600 .82rem/1 "Source Sans 3", sans-serif;
+    color: var(--ink-soft);
+    background: var(--ground);
+    border: 1px solid var(--rule);
+    border-radius: 999px;
+    padding: .42rem .8rem;
+    cursor: pointer;
+  }
+  button.mark:hover { border-color: var(--ink-faint); }
+  button.mark:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  button.mark[aria-pressed="true"][data-mark="ok"] {
+    background: var(--ok-soft); border-color: var(--ok); color: var(--ok);
+  }
+  button.mark[aria-pressed="true"][data-mark="ko"] {
+    background: var(--ko-soft); border-color: var(--ko); color: var(--ko);
+  }
+  button.mark[aria-pressed="true"][data-mark="na"] {
+    background: var(--surface-sunk); border-color: var(--ink-faint); color: var(--ink-soft);
+  }
+
+  .verdict textarea {
+    flex: 1 1 16rem;
+    min-height: 2.3rem;
+    resize: vertical;
+    background: var(--surface);
+  }
+
+
+  /* ── Fichiers à charger ────────────────────────────────────────────────── */
+
+  .files { display: grid; gap: .55rem; margin-top: .9rem; }
+
+  .file {
+    display: flex;
+    align-items: center;
+    gap: .7rem;
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+    padding: .6rem .75rem;
+  }
+
+  .file .name {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: .82rem;
+    color: var(--ink);
+    flex: 1 1 auto;
+  }
+  .file .name small {
+    display: block;
+    font-family: "Source Sans 3", sans-serif;
+    font-size: .8rem;
+    color: var(--ink-soft);
+  }
+  .masthead h1 .retour {
+    color: var(--ink-faint);
+    text-decoration: none;
+  }
+  .masthead h1 .retour:hover { color: var(--accent); }
+
+  .garde {
+    margin: .9rem 0 0;
+    font-size: .86rem;
+    color: var(--ink-faint);
+  }
+
+  dialog#confirm-wipe {
+    max-width: 26rem;
+    border: 1px solid var(--rule);
+    border-radius: 10px;
+    background: var(--surface);
+    color: var(--ink);
+    padding: 1.2rem 1.3rem;
+    box-shadow: var(--shadow);
+  }
+  dialog#confirm-wipe::backdrop { background: rgba(0, 0, 0, .45); }
+  dialog#confirm-wipe h3 {
+    font-family: Archivo, system-ui, sans-serif;
+    font-size: 1.05rem;
+    margin: 0 0 .5rem;
+  }
+  dialog#confirm-wipe p { margin: 0 0 .6rem; color: var(--ink-soft); }
+  dialog#confirm-wipe .cw-avis { color: var(--ko); font-size: .88rem; }
+  .cw-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: .5rem;
+    margin-top: 1rem;
+  }
+  .cw-actions .danger {
+    font: inherit;
+    font-size: .9rem;
+    background: var(--ko);
+    color: #fff;
+    border: 0;
+    border-radius: 6px;
+    padding: .42rem .9rem;
+    cursor: pointer;
+  }
+  .cw-actions .danger:hover { filter: brightness(1.08); }
+
+  .file .dl {
+    font: inherit;
+    font-size: .82rem;
+    text-decoration: none;
+    background: var(--accent);
+    color: var(--surface);
+    border: 0;
+    border-radius: 6px;
+    padding: .34rem .7rem;
+    white-space: nowrap;
+  }
+  .file .dl:hover { filter: brightness(1.08); }
+
+  .file .size {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: .72rem;
+    color: var(--ink-faint);
+    font-variant-numeric: tabular-nums;
+  }
+  .file button {
+    font: 600 .8rem/1 "Source Sans 3", sans-serif;
+    background: var(--accent-soft);
+    color: var(--accent);
+    border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
+    border-radius: 999px;
+    padding: .4rem .8rem;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .file button:hover { filter: brightness(1.04); }
+  .file button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .file button.done { background: var(--ok-soft); color: var(--ok); border-color: var(--ok); }
+
+  /* ── Rapport ───────────────────────────────────────────────────────────── */
+
+  .report {
+    margin-top: 2.8rem;
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 10px;
+    padding: 1.1rem;
+    box-shadow: var(--shadow);
+  }
+  .report h3 {
+    font-family: Archivo, sans-serif;
+    font-size: 1.1rem;
+    margin: 0 0 .3rem;
+  }
+  .report p { margin: 0 0 .8rem; color: var(--ink-soft); }
+
+  .actions { display: flex; gap: .5rem; flex-wrap: wrap; }
+
+  button.primary, button.ghost {
+    font: 600 .88rem/1 "Source Sans 3", sans-serif;
+    border-radius: 7px;
+    padding: .6rem 1rem;
+    cursor: pointer;
+    border: 1px solid transparent;
+  }
+  button.primary { background: var(--accent); color: var(--surface); }
+  button.primary:hover { filter: brightness(1.08); }
+  button.ghost { background: transparent; color: var(--ink-soft); border-color: var(--rule); }
+  button.ghost:hover { color: var(--ink); border-color: var(--ink-faint); }
+  button.primary:focus-visible, button.ghost:focus-visible {
+    outline: 2px solid var(--accent); outline-offset: 2px;
+  }
+
+  #dump {
+    width: 100%;
+    min-height: 14rem;
+    margin-top: .9rem;
+    font-family: "IBM Plex Mono", monospace;
+    font-size: .78rem;
+    line-height: 1.5;
+    display: none;
+  }
+  #dump.shown { display: block; }
+
+  .said {
+    font-size: .84rem;
+    color: var(--ok);
+    margin-left: .4rem;
+    opacity: 0;
+    transition: opacity .2s;
+  }
+  .said.shown { opacity: 1; }
+
+  footer {
+    margin-top: 2.5rem;
+    padding-top: 1.2rem;
+    border-top: 1px solid var(--rule);
+    color: var(--ink-faint);
+    font-size: .84rem;
+  }
+
+  @media (max-width: 34rem) {
+    .body, .verdict { padding-left: 1rem; }
+  }
+</style>
+</head>
+<body>
+
+<div class="masthead">
+  <div class="masthead-inner">
+    <h1><a class="retour" href="../">Essais</a> · Cartes virtuelles</h1>
+    <div class="tally">
+      <span><b id="done">0</b>/<span id="total">0</span> faits</span>
+      <span class="bad" id="failbox" hidden><b id="fails">0</b> en échec</span>
+    </div>
+  </div>
+  <div class="gauge"><span id="bar"></span></div>
+</div>
+
+<div class="wrap">
+
+  <header class="intro">
+    <p class="eyebrow">TinyRail · essais sans matériel</p>
+    <h2>Des cartes qui n'existent pas, traitées comme du matériel</h2>
+    <p>
+      Une carte virtuelle est annoncée dans le scan ordinaire, adoptée,
+      appairée, configurée, posée sur des pages et rattachée à une installation
+      par le code du produit, dans les vrais magasins. Ce protocole cherche les
+      endroits où l'app s'en aperçoit, et ceux où elle ne devrait pas.
+      Les essais sont dans l'ordre : chacun s'appuie sur le précédent.
+    </p>
+  </header>
+
+  <section class="ident" aria-label="Identification de la session d'essai">
+    <div class="field">
+      <label for="who">Testeur</label>
+      <input type="text" id="who" data-key="who" autocomplete="name">
+    </div>
+    <div class="field">
+      <label for="when">Date</label>
+      <input type="text" id="when" data-key="when" placeholder="2026-08-24">
+    </div>
+    <div class="field">
+      <label for="app">Version de l'app</label>
+      <input type="text" id="app" data-key="app" placeholder="Réglages → À propos">
+    </div>
+    <div class="field">
+      <label for="phone">Téléphone</label>
+      <input type="text" id="phone" data-key="phone" placeholder="iPhone 14, iOS 26.6">
+    </div>
+    <div class="field">
+      <label for="lieu">Installation d'essai</label>
+      <input type="text" id="lieu" data-key="lieu" placeholder="Banc">
+    </div>
+    <div class="field">
+      <label for="cartes">Cartes créées</label>
+      <input type="text" id="cartes" data-key="cartes" placeholder="SIM01 usine, SIM02 cellule…">
+    </div>
+  </section>
+
+  <section class="phase">
+    <h3>Avant de commencer</h3>
+    <p class="lede">
+      Rien à télécharger, rien à brancher : tout se crée depuis l'app. Il faut
+      une trentaine de minutes sans être dérangé, et de quoi chronométrer.
+    </p>
+    <div class="warn" style="margin:1rem 0 0">
+      <p>
+        <b>Ce que vous faites ici écrit dans les vraies données de l'app</b> :
+        clés d'appairage, noms de sorties mémorisés, tuiles, installations. Ce
+        n'est pas le mode démonstration, qui n'écrit nulle part. Créez une
+        <b>installation d'essai</b> et n'utilisez pas celle de votre van.
+      </p>
+    </div>
+  </section>
+
+  <main id="trials"></main>
+
+  <section class="report">
+    <h3>Rapport</h3>
+    <p>
+      Tout est gardé dans ce navigateur au fur et à mesure : vous pouvez fermer
+      l'onglet et reprendre plus tard. Le bouton met le compte rendu dans le
+      presse-papiers, prêt à coller dans un message.
+    </p>
+    <div class="actions">
+      <button class="primary" id="copy">Copier le rapport</button>
+      <span class="said" id="said">Copié</span>
+      <button class="ghost" id="show">Voir le texte</button>
+      <button class="ghost" id="wipe">Tout effacer</button>
+    </div>
+    <textarea id="dump" readonly aria-label="Compte rendu en texte"></textarea>
+    <p class="garde">
+      Vos réponses sont gardées dans ce navigateur : vous pouvez fermer la page
+      et reprendre plus tard, au même endroit. Elles ne quittent pas votre
+      appareil, et ne suivent pas sur un autre.
+    </p>
+  </section>
+
+  <dialog id="confirm-wipe" aria-labelledby="cw-titre">
+    <h3 id="cw-titre">Tout effacer ?</h3>
+    <p id="cw-quoi"></p>
+    <p class="cw-avis">Cela ne s'annule pas. Copiez le rapport d'abord si vous
+      voulez en garder une trace.</p>
+    <div class="cw-actions">
+      <button class="ghost" value="non" id="cw-non">Annuler</button>
+      <button class="danger" value="oui" id="cw-oui">Tout effacer</button>
+    </div>
+  </dialog>
+
+  <footer>
+    Un essai « non fait » n'est pas un échec : dites-le tel quel. Et un essai
+    concluant ici ne vaut pas pour du matériel : la carte simulée répond en
+    quelques millisecondes là où une vraie met des secondes, et rien de la radio
+    n'est en jeu.
+  </footer>
+</div>
+
+<script>
+
+  const TRIALS = [
+    {
+      phase: "Le banc",
+      lede: "Créer des cartes, et vérifier qu'elles arrivent là où arrivent les vraies.",
+      id: "banc-allumage",
+      title: "Allumer le banc, créer une carte sortie d'usine",
+      hunt: "L'entrée vit sous « Développement » parce que ce qu'on y fait écrit dans les vraies données de l'app, et non dans un bac à sable.",
+      steps: [
+        "<span class='path'>Réglages → Développement → Cartes virtuelles</span>.",
+        "Lisez l'écran avant de toucher quoi que ce soit : dit-il ce que ces cartes sont, et ce qu'elles ne prouvent pas ?",
+        "Touchez <b>Sortie d'usine</b> dans « Ajouter une carte »."
+      ],
+      expect: [
+        "Un message annonce la carte créée et où la retrouver.",
+        "Elle s'appelle <code>tinyrail-v2-SIM01</code> : le format du produit, impossible à prendre pour du matériel.",
+        "L'interrupteur « Annoncer les cartes virtuelles » s'est allumé tout seul : créer une carte sans l'allumer ne montrerait rien.",
+        "De retour dans Réglages, la ligne dit « Actives · 1 carte »."
+      ],
+      warn: "Une carte virtuelle laisse des traces réelles : clé, libellés mémorisés, tuiles, installation. Créez une installation d'essai et laissez votre van tranquille."
+    },
+    {
+      id: "scan-bt-eteint",
+      title: "La voir arriver, Bluetooth éteint",
+      hunt: "C'est le seul moment où l'on s'en sert vraiment : dans un train, sans matériel. Le scan réel attend que la radio soit prête ; ces annonces ne passent pas par là.",
+      steps: [
+        "<b>Coupez le Bluetooth du téléphone.</b>",
+        "Ouvrez <span class='path'>Appareils</span> et laissez la recherche tourner.",
+        "Comptez les secondes avant que la carte apparaisse."
+      ],
+      expect: [
+        "SIM01 est listée sous « À portée, non appairées », malgré le Bluetooth éteint.",
+        "Sa puissance reçue est fixe (−55 dBm) et ne danse pas : il n'y a pas de radio derrière.",
+        "Aucun message ne réclame d'allumer le Bluetooth pour cette carte.",
+        "<b>À noter :</b> combien de secondes avant qu'elle apparaisse."
+      ]
+    },
+    {
+      id: "mode-avion",
+      title: "Mode avion, puis relance de l'app",
+      hunt: "Une carte qui disparaît au premier changement d'état radio ne servirait à rien en déplacement.",
+      steps: [
+        "Passez le téléphone en mode avion.",
+        "Quittez l'app pour de bon (sélecteur d'applications), puis relancez-la."
+      ],
+      expect: [
+        "La carte est toujours annoncée.",
+        "Elle se reconnecte seule, sans qu'on la touche, comme une carte à portée."
+      ]
+    },
+
+    {
+      phase: "Adopter une carte",
+      lede: "L'appairage est la seule protection du produit : le banc doit le faire respecter, pas le contourner.",
+      id: "appairage-refus",
+      title: "Appairer sans avoir appuyé sur BOOT",
+      hunt: "Si une carte neuve acceptait la clé sans BOOT, le banc mentirait sur ce qui protège le produit, et un défaut d'appairage passerait ici sans se voir.",
+      steps: [
+        "Depuis <span class='path'>Appareils</span>, ouvrez SIM01 et touchez <b>Appairer</b> sans rien faire d'autre."
+      ],
+      expect: [
+        "L'appairage est refusé, et le message demande si la fenêtre de 30 s est ouverte.",
+        "La consultation continue de fonctionner : on lit la carte, on ne la commande pas.",
+        "Les écrans de réglage disent qu'il faut appairer, ils ne s'ouvrent pas à moitié."
+      ]
+    },
+    {
+      id: "appairage-boot",
+      title: "Appuyer sur BOOT, puis appairer dans les trente secondes",
+      hunt: "La fenêtre de 30 s existe aussi ici : c'est le comportement du firmware, pas une politesse de l'app.",
+      steps: [
+        "<span class='path'>Réglages → Cartes virtuelles</span>, menu « … » de SIM01, <b>Appuyer sur BOOT (3 s)</b>.",
+        "Revenez dans <span class='path'>Appareils</span> et appairez <b>dans les trente secondes</b>.",
+        "Recommencez ensuite l'appairage <b>sans</b> BOOT, ou plus de trente secondes après."
+      ],
+      expect: [
+        "Le banc annonce la fenêtre ouverte pour 30 s.",
+        "L'appairage passe, et les commandes deviennent disponibles.",
+        "Le second essai, hors fenêtre, est refusé comme le premier."
+      ]
+    },
+    {
+      id: "installation",
+      title: "Une installation d'essai, et la carte dedans",
+      hunt: "Une carte virtuelle doit entrer dans une installation par le chemin normal, sans écran ni cas à part.",
+      steps: [
+        "Créez une installation nommée <b>Banc</b>.",
+        "Rattachez-y SIM01."
+      ],
+      expect: [
+        "L'en-tête d'Appareils porte le nom de l'installation regardée.",
+        "SIM01 figure dans la première section, celle de l'installation.",
+        "Rien à l'écran ne signale que cette carte est simulée, hormis son nom."
+      ]
+    },
+
+    {
+      phase: "Configurer une carte sortie d'usine",
+      lede: "Le gabarit d'usine existe pour cela : c'est le parcours de configuration entier, du premier nom au dernier seuil.",
+      id: "usine-releve",
+      title: "Ce qu'une carte neuve annonce",
+      hunt: "Ces valeurs sont relevées dans le firmware, pas inventées : vraisemblables au lieu d'exactes, elles feraient éprouver un premier démarrage qui n'existe pas.",
+      steps: [
+        "Ouvrez <span class='path'>Configuration des sorties</span>, puis <span class='path'>des entrées</span>."
+      ],
+      expect: [
+        "Les sorties s'appellent <code>Channel 1</code> à <code>Channel 8</code>, toutes de type <b>Générique</b>.",
+        "Les entrées s'appellent <code>Input 1</code> à <code>Input 4</code>, toutes en tension 0-30 V.",
+        "Aucun seuil d'alerte n'est posé, et rien n'est allumé."
+      ]
+    },
+    {
+      id: "ecriture-complete",
+      title: "Renommer et typer les huit sorties",
+      hunt: "C'est le parcours d'écriture entier : vrais opcodes, vraie file d'attente, vraies confirmations. Ce que l'app envoie ici, elle l'enverra à une carte.",
+      steps: [
+        "Nommez les huit sorties comme vous le feriez dans un van.",
+        "Donnez à chacune son type de charge.",
+        "Chronométrez du premier réglage au dernier."
+      ],
+      expect: [
+        "Chaque réglage est confirmé par la carte : l'écran n'affiche jamais une valeur que la carte n'a pas acceptée.",
+        "Aucun réglage ne revient en arrière tout seul quelques secondes plus tard.",
+        "<b>À noter :</b> le temps total, et s'il y a eu un moment d'attente sans explication."
+      ],
+      warn: "La carte simulée répond en une vingtaine de millisecondes là où une vraie met des secondes. Ce temps mesure l'app, pas le produit."
+    },
+    {
+      id: "sorties-fines",
+      title: "Gradation, appariement, extinction automatique, surintensité",
+      hunt: "Ce sont les réglages qu'on pose une fois et qu'on n'ose plus toucher : ils doivent se relire aussi bien qu'ils s'écrivent.",
+      steps: [
+        "Rendez une sortie gradable et réglez-la à mi-course.",
+        "Appariez CH3 et CH4.",
+        "Posez une extinction automatique sur une sortie, et un seuil de surintensité sur une autre."
+      ],
+      expect: [
+        "Les paires proposées sont figées : 1-2, 3-4, 5-6, 7-8, et les deux sorties commutent ensemble.",
+        "La sortie gradée garde sa consigne, et le courant lu suit la gradation.",
+        "L'extinction automatique se voit à l'écran avant de se produire, et se produit."
+      ]
+    },
+    {
+      id: "entrees-seuils",
+      title: "Une entrée qui alerte",
+      hunt: "Les entrées savent alerter depuis le 13 août et rien n'en a jamais tourné, ni sur carte ni sous les yeux de quiconque. C'est le premier regard.",
+      steps: [
+        "Mettez AN1 en <b>Réservoir eau propre</b> et donnez-lui un nom.",
+        "Relevez le niveau affiché, puis posez un seuil d'<b>avertissement au-dessus</b> de ce niveau.",
+        "Descendez ensuite le critique au-dessus du niveau à son tour."
+      ],
+      expect: [
+        "L'alerte se lève d'elle-même, sans rien rafraîchir à la main.",
+        "Elle apparaît une seule fois dans Alertes, sous le nom que vous avez donné à l'entrée et non sous « AN1 ».",
+        "Un appui dessus mène à la carte concernée.",
+        "Elle s'acquitte toute seule quand vous remettez le seuil sous le niveau : une alerte décrit un état."
+      ]
+    },
+    {
+      id: "entrees-refus",
+      title: "Un réglage que la carte doit refuser",
+      hunt: "Un critique inatteignable est un piège silencieux : la carte le refuse, et l'app doit le dire au lieu de l'afficher comme accepté.",
+      steps: [
+        "Sur une entrée réglée « alerte en dessous », posez un critique <b>supérieur</b> à l'avertissement.",
+        "Essayez ensuite un seuil largement hors des bornes admises."
+      ],
+      expect: [
+        "Le refus est annoncé, en clair, et dit ce qui ne va pas.",
+        "L'écran revient à la valeur précédente : rien n'est écrit à moitié.",
+        "L'alerte en cours, s'il y en avait une, n'a pas changé de niveau au passage."
+      ]
+    },
+    {
+      id: "relecture",
+      title: "Relire au lieu de croire le rapport d'écriture",
+      hunt: "Un rapport d'écriture prouve que les commandes ont été acceptées ; seule la relecture prouve les réglages.",
+      steps: [
+        "Éteignez l'interrupteur du banc, rallumez-le, laissez la session se rouvrir.",
+        "Rouvrez les écrans de configuration des sorties et des entrées."
+      ],
+      expect: [
+        "Tous les noms, types, seuils et appariements sont ceux que vous avez posés.",
+        "Rien n'est revenu au gabarit d'usine."
+      ]
+    },
+
+    {
+      phase: "Plusieurs cartes, et des pages",
+      lede: "Le multi-cartes n'a jamais été regardé à l'œil : deux cartes de plus, et des pages qui les mêlent.",
+      id: "multi-cartes",
+      title: "Ajouter une cellule et une soute",
+      hunt: "Trois cartes dans une installation, c'est le van d'un client. Deux, c'est un cas particulier qui cache les défauts de tri.",
+      steps: [
+        "Créez <b>Cellule équipée</b> et <b>Soute équipée</b>.",
+        "Appairez chacune (BOOT depuis le banc), puis rattachez-les à l'installation Banc."
+      ],
+      expect: [
+        "SIM02 et SIM03 apparaissent au scan, sans avoir à rien relancer.",
+        "Leurs sorties portent des noms français : éclairages, pompe à eau, treuil, feux de travail.",
+        "L'installation compte trois cartes, chacune avec son propre état.",
+        "Les valeurs mesurées diffèrent d'une carte à l'autre : deux cartes ne mesurent pas la même chose."
+      ]
+    },
+    {
+      id: "page-mixte",
+      title: "Une page qui mêle deux cartes",
+      hunt: "Une page est faite pour l'usage, pas pour le câblage : les sorties de deux cartes doivent s'y côtoyer sans qu'on sache laquelle est laquelle.",
+      steps: [
+        "Créez une page, posez-y des sorties de la cellule <b>et</b> de la soute, plus une entrée réservoir.",
+        "Sortez du mode édition par <b>Terminer</b>."
+      ],
+      expect: [
+        "Le sélecteur de tuiles propose les trois cartes, nommées par ce que vous leur avez donné.",
+        "Les tuiles répondent, quelle que soit leur carte d'origine.",
+        "Le bouton « Terminer » est atteignable sans dérouler toute la page."
+      ]
+    },
+    {
+      id: "page-hors-session",
+      title: "Composer une page en piochant dans une carte hors session",
+      hunt: "C'est le défaut qui a déclenché tout le chantier : une carte simulée n'entrait jamais dans le magasin, donc le sélecteur de tuiles ne la proposait pas. Un test le verrouille, personne ne l'a jamais regardé.",
+      steps: [
+        "Éteignez l'interrupteur <b>Annoncer les cartes virtuelles</b> : les trois cartes s'en vont.",
+        "Revenez sur une page, <span class='path'>… → Nouvelle page</span>, puis <b>Ajouter une tuile</b>."
+      ],
+      expect: [
+        "Les trois cartes sont <b>toujours proposées</b>, avec les noms de leurs sorties.",
+        "Une tuile posée s'affiche hors de portée, sans valeur, et non sous un nom d'attente ou « inconnue ».",
+        "Rallumez le banc : les tuiles reprennent vie sans qu'on refasse la page."
+      ]
+    },
+    {
+      id: "bouton-groupe",
+      title: "Un bouton « tout éteindre » sur trois cartes",
+      hunt: "Le bouton de groupe est ce qu'on touche en partant : il doit viser toutes les cartes, y compris celle qui ne répond pas.",
+      steps: [
+        "Posez un bouton « tout éteindre » et choisissez des sorties sur les trois cartes.",
+        "Allumez plusieurs sorties un peu partout, puis touchez le bouton."
+      ],
+      expect: [
+        "Le compte annoncé correspond aux sorties choisies, toutes cartes confondues.",
+        "Tout s'éteint, et l'écran attend la confirmation des cartes.",
+        "Avec une carte éteinte au banc, le bouton dit ce qui n'a pas pu être éteint au lieu de faire semblant."
+      ]
+    },
+
+    {
+      phase: "Ce qui survit, ce qui tombe",
+      lede: "Une carte virtuelle doit se comporter comme du matériel qu'on redémarre, qu'on remet à zéro et qu'on débranche.",
+      id: "redemarrage",
+      title: "Tuer l'app et la relancer",
+      hunt: "Ce qu'on règle survit au redémarrage, clé d'appairage comprise : sans cela, l'app échouerait à s'authentifier contre une carte qu'elle croit connaître.",
+      steps: [
+        "Quittez l'app pour de bon depuis le sélecteur, puis relancez-la.",
+        "Chronométrez jusqu'à ce que les trois cartes soient connectées."
+      ],
+      expect: [
+        "Les trois cartes se reconnectent seules, sans réappairage.",
+        "Toute la configuration est là, et les pages aussi.",
+        "<b>À noter :</b> le temps jusqu'aux trois cartes connectées."
+      ]
+    },
+    {
+      id: "banc-eteint-en-session",
+      title: "Couper le banc alors qu'une session est ouverte",
+      hunt: "Une carte qui cesse d'être annoncée tout en restant pilotable serait un lien vers une carte qui n'existe nulle part.",
+      steps: [
+        "Ouvrez une carte, laissez son écran affiché.",
+        "Depuis un autre appareil ou en revenant en arrière, éteignez l'interrupteur du banc."
+      ],
+      expect: [
+        "Le lien tombe, et l'app le voit tomber.",
+        "L'écran de la carte le dit au lieu de garder des valeurs figées.",
+        "Une alerte « Carte hors de portée » est levée, puis résolue au rallumage."
+      ]
+    },
+    {
+      id: "usine",
+      title: "Réglages d'usine sur une carte configurée",
+      hunt: "Une remise à zéro rend une carte neuve mais garde sa clé : l'app doit rester appairée, et cesser d'afficher les réglages qu'on vient d'effacer.",
+      steps: [
+        "Sur SIM01, menu « … » → <b>Réglages d'usine</b>.",
+        "Revenez sur la carte et rouvrez ses écrans de configuration."
+      ],
+      expect: [
+        "La carte est revenue à <code>Channel 1</code> à <code>Channel 8</code>, sans seuils.",
+        "L'app est toujours appairée : aucune demande de BOOT.",
+        "L'écran ne montre plus les anciens réglages : la session est repartie sur la carte neuve.",
+        "Les tuiles qui la visaient sont toujours là, sous les noms d'usine."
+      ]
+    },
+    {
+      id: "retirer-absente",
+      title: "Retirer une carte du banc, et la retrouver absente",
+      hunt: "Une carte appairée hors de portée doit se voir : c'est quand une carte manque qu'il faut la reconnaître.",
+      steps: [
+        "Sur SIM02, menu « … » → <b>Retirer</b>, et lisez ce que le dialogue annonce.",
+        "Ouvrez <span class='path'>Appareils</span>."
+      ],
+      expect: [
+        "SIM02 apparaît dans l'installation, annoncée <b>absente</b>, sous le nom que vous lui aviez donné et non sous son identifiant.",
+        "Elle ne porte aucun bouton : il n'y a rien à faire depuis l'app pour une carte hors de portée.",
+        "La recherche continue de s'annoncer : l'écran ne semble pas figé.",
+        "Ses tuiles et son rattachement sont intacts, exactement comme une carte débranchée."
+      ]
+    },
+    {
+      id: "oublier",
+      title: "Oublier la carte pour de bon",
+      hunt: "Retirer du banc n'efface rien : c'est le chemin normal d'oubli qui doit nettoyer, et rien d'autre.",
+      steps: [
+        "Sur la carte absente, passez par <b>Oublier cette carte</b>."
+      ],
+      expect: [
+        "Elle disparaît de l'installation et de la liste des absentes.",
+        "Ses tuiles disparaissent des pages, ou disent clairement qu'elles ne visent plus rien.",
+        "Recréer une carte du même gabarit donne une carte neuve, non appairée : la clé est bien partie."
+      ]
+    },
+
+    {
+      phase: "Les limites du banc",
+      lede: "Ce qui suit ne se coche pas : cela s'écrit.",
+      id: "limites",
+      title: "Ce qui ne ressemble pas à du matériel",
+      hunt: "Un banc trop confortable donne confiance à tort. Rien de la radio n'est éprouvé ici : portée, MTU, permissions, coupures franches, mise à jour réelle.",
+      steps: [
+        "Notez tout ce qui vous a paru trop rapide, trop propre, ou trop sûr par rapport à une vraie carte."
+      ],
+      expect: [
+        "Chaque écart relevé est une chose à revérifier sur matériel avant d'y croire."
+      ]
+    },
+
+    {
+      phase: "Jugement",
+      lede: "Ces deux entrées se remplissent en toutes lettres.",
+      id: "hesitations",
+      title: "Ce qui a demandé de réfléchir",
+      hunt: "Une étape qu'on relit deux fois est un défaut, au même titre qu'une panne.",
+      steps: ["Où avez-vous hésité, cherché un bouton, relu une phrase ?"],
+      expect: ["Notez chaque hésitation, même celle qui vous paraît bête."]
+    },
+    {
+      id: "confiance",
+      title: "Qu'iriez-vous quand même vérifier sur une vraie carte ?",
+      hunt: "",
+      steps: ["Répondez, et dites ce qui vous manquerait pour ne pas avoir à le refaire."],
+      expect: ["« Tout, par principe » est une réponse utile ; dites alors dans quel ordre."]
+    }
+  ];
+
+  const KEY = "tinyrail-essais-cartes-virtuelles-v1";
+  let state = { fields: {}, marks: {}, notes: {} };
+
+  try {
+    const saved = localStorage.getItem(KEY);
+    if (saved) state = Object.assign(state, JSON.parse(saved));
+  } catch (e) { /* stockage indisponible : la page reste utilisable, sans mémoire */ }
+
+  function save() {
+    try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {}
+  }
+
+  const host = document.getElementById("trials");
+  let currentPhase = null;
+  let phaseBox = null;
+
+  TRIALS.forEach((t, i) => {
+    if (t.phase) {
+      const sec = document.createElement("section");
+      sec.className = "phase";
+      const h = document.createElement("h3");
+      h.textContent = t.phase;
+      sec.append(h);
+      if (t.lede) {
+        const p = document.createElement("p");
+        p.className = "lede";
+        p.textContent = t.lede;
+        sec.append(p);
+      }
+      host.append(sec);
+      phaseBox = sec;
+    }
+
+    const card = document.createElement("article");
+    card.className = "trial";
+    card.dataset.status = state.marks[t.id] || "";
+
+    const steps = t.steps.map(s => `<li>${s}</li>`).join("");
+    const expects = t.expect.map(s => `<p>${s}</p>`).join("");
+
+    card.innerHTML = `
+      <div class="trial-head">
+        <span class="num">${String(i + 1).padStart(2, "0")}</span>
+        <h4>${t.title}</h4>
+      </div>
+      <div class="body">
+        ${t.hunt ? `<p class="hunt">${t.hunt}</p>` : ""}
+        <p class="label">Ce que vous faites</p>
+        <ol class="steps">${steps}</ol>
+        <p class="label">Ce qui doit se passer</p>
+        <div class="expect">${expects}</div>
+        ${t.warn ? `<div class="warn"><p>${t.warn}</p></div>` : ""}
+      </div>
+      <div class="verdict">
+        <div class="set" role="group" aria-label="Verdict de l'essai ${i + 1}">
+          <button class="mark" data-mark="ok" data-id="${t.id}" aria-pressed="false">Conforme</button>
+          <button class="mark" data-mark="ko" data-id="${t.id}" aria-pressed="false">En échec</button>
+          <button class="mark" data-mark="na" data-id="${t.id}" aria-pressed="false">Non fait</button>
+        </div>
+        <textarea data-note="${t.id}" placeholder="Ce que vous avez vu, mesuré, ou trouvé étrange"></textarea>
+      </div>`;
+
+    host.append(card);
+  });
+
+  document.getElementById("total").textContent = TRIALS.length;
+
+  // Restitution de l'état
+  document.querySelectorAll("[data-key]").forEach(input => {
+    const k = input.dataset.key;
+    if (state.fields[k]) input.value = state.fields[k];
+    input.addEventListener("input", () => {
+      state.fields[k] = input.value;
+      save();
+    });
+  });
+
+  document.querySelectorAll("[data-note]").forEach(area => {
+    const id = area.dataset.note;
+    if (state.notes[id]) area.value = state.notes[id];
+    area.addEventListener("input", () => {
+      state.notes[id] = area.value;
+      save();
+    });
+  });
+
+  function paint() {
+    let done = 0, fails = 0;
+    TRIALS.forEach(t => {
+      const m = state.marks[t.id];
+      if (m) done++;
+      if (m === "ko") fails++;
+      const card = document.querySelector(`[data-mark][data-id="${t.id}"]`).closest(".trial");
+      card.dataset.status = m || "";
+      card.querySelectorAll("[data-mark]").forEach(b => {
+        b.setAttribute("aria-pressed", String(b.dataset.mark === m));
+      });
+    });
+    document.getElementById("done").textContent = done;
+    document.getElementById("fails").textContent = fails;
+    document.getElementById("failbox").hidden = fails === 0;
+    document.getElementById("bar").style.width = (done / TRIALS.length * 100) + "%";
+  }
+
+  document.addEventListener("click", e => {
+    const b = e.target.closest("[data-mark]");
+    if (!b) return;
+    const id = b.dataset.id;
+    state.marks[id] = state.marks[id] === b.dataset.mark ? "" : b.dataset.mark;
+    save();
+    paint();
+  });
+
+  function report() {
+    const f = state.fields;
+    const lignes = [
+      "# Essais des cartes virtuelles TinyRail",
+      "",
+      `Testeur : ${f.who || "?"}`,
+      `Date : ${f.when || "?"}`,
+      `App : ${f.app || "?"} · Téléphone : ${f.phone || "?"}`,
+      `Installation : ${f.lieu || "?"}`,
+      `Cartes : ${f.cartes || "?"}`,
+      ""
+    ];
+    let done = 0, fails = 0;
+    TRIALS.forEach((t, i) => {
+      const m = state.marks[t.id];
+      if (m) done++;
+      if (m === "ko") fails++;
+      const mot = m === "ok" ? "CONFORME" : m === "ko" ? "EN ECHEC" : m === "na" ? "NON FAIT" : "SANS REPONSE";
+      lignes.push(`${String(i + 1).padStart(2, "0")}. [${mot}] ${t.title}`);
+      const note = (state.notes[t.id] || "").trim();
+      if (note) lignes.push(`    ${note.replace(/\n/g, "\n    ")}`);
+    });
+    lignes.push("", `${done}/${TRIALS.length} essais renseignés, ${fails} en échec.`);
+    return lignes.join("\n");
+  }
+
+  const dump = document.getElementById("dump");
+  const said = document.getElementById("said");
+
+  document.getElementById("copy").addEventListener("click", async () => {
+    const texte = report();
+    dump.value = texte;
+    try {
+      await navigator.clipboard.writeText(texte);
+      said.classList.add("shown");
+      setTimeout(() => said.classList.remove("shown"), 1600);
+    } catch (e) {
+      // Presse-papiers refusé : on montre le texte, à sélectionner à la main.
+      dump.classList.add("shown");
+      dump.select();
+    }
+  });
+
+  document.getElementById("show").addEventListener("click", () => {
+    dump.value = report();
+    dump.classList.toggle("shown");
+  });
+
+  // ⚠️ **Effacer demande confirmation.** Un clic effaçait tout sur-le-champ, et
+  // ce bouton voisine avec « Copier le rapport » au bas d'une session de
+  // quatre-vingt-dix minutes. Le dialogue dit ce qui va disparaître, compté,
+  // parce qu'« êtes-vous sûr » ne fait réfléchir personne.
+  const dlg = document.getElementById("confirm-wipe");
+
+  function compteReponses() {
+    const n = Object.values(state.marks).filter(Boolean).length;
+    const notes = Object.values(state.notes).filter(v => v && v.trim()).length;
+    const champs = Object.values(state.fields).filter(v => v && v.trim()).length;
+    return { n, notes, champs, total: n + notes + champs };
+  }
+
+  function efface() {
+    state = { fields: {}, marks: {}, notes: {} };
+    save();
+    document.querySelectorAll("[data-key], [data-note]").forEach(el => { el.value = ""; });
+    dump.value = "";
+    dump.classList.remove("shown");
+    paint();
+  }
+
+  document.getElementById("wipe").addEventListener("click", () => {
+    const c = compteReponses();
+    // Rien à perdre : ne pas faire cliquer deux fois pour rien.
+    if (c.total === 0) { efface(); return; }
+
+    const morceaux = [];
+    if (c.n) morceaux.push(c.n > 1 ? `${c.n} verdicts` : "1 verdict");
+    if (c.notes) morceaux.push(c.notes > 1 ? `${c.notes} notes` : "1 note");
+    if (c.champs) morceaux.push(c.champs > 1 ? `${c.champs} champs remplis` : "1 champ rempli");
+    const liste = morceaux.length > 1
+      ? morceaux.slice(0, -1).join(", ") + " et " + morceaux[morceaux.length - 1]
+      : morceaux[0];
+    document.getElementById("cw-quoi").textContent =
+      `Vous perdez ${liste}.`;
+
+    if (typeof dlg.showModal === "function") dlg.showModal();
+    else if (confirm(`Vous perdez ${liste}. Tout effacer ?`)) efface();
+  });
+
+  document.getElementById("cw-non").addEventListener("click", () => dlg.close("non"));
+  document.getElementById("cw-oui").addEventListener("click", () => {
+    efface();
+    dlg.close("oui");
+  });
+
+
+
+  paint();
+</script>
+
+</body>
+</html>
