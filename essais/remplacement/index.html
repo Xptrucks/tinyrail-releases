@@ -37,12 +37,12 @@ const PROTOCOLE = {
     ],
     besoin: {
       titre: "Ce qu'il vous faut",
-      lede: "Réunissez tout avant de commencer : une carte manquante à l'essai 11 arrête la session pour de bon.",
+      lede: "Réunissez tout maintenant. À l'essai 11, il faut pouvoir couper l'alimentation d'une carte en pleine écriture : ce n'est pas le moment de chercher un interrupteur.",
       points: [
         "<b>Deux cartes TinyRail alimentées</b>, appelées ici A et B, et de quoi couper l'alimentation de l'une d'elles en cours d'essai.",
         "Un téléphone avec l'app, et de quoi chronométrer.",
         "Une charge branchée sur au moins une sortie, pour vérifier le courant mesuré.",
-        "Les cinq fichiers ci-dessous, téléchargés avant de commencer."
+        "Les cinq fichiers ci-dessous, sur le téléphone."
       ],
       avis: "Ces essais réécrivent la configuration des deux cartes et en remettent une à zéro. <b>N'utilisez pas une carte installée dans un van en service.</b>"
     },
@@ -50,7 +50,7 @@ const PROTOCOLE = {
       titre: "Les fichiers d'essai",
       lede: "Téléchargez-les tous avant de commencer, puis chargez-les depuis l'app quand un essai le demande. Ils ont été produits par l'app elle-même : si l'un d'eux était refusé au chargement, c'est un défaut à signaler.",
       liste: [
-        { nom: "modele-van-essai.json", taille: "3,4 ko", quoi: "Un van entier : deux cartes, leurs réglages et leurs pages. C'est la base de tous les essais." },
+        { nom: "modele-van-essai.json", taille: "3,4 ko", quoi: "Un van entier : deux cartes, leurs réglages et leurs pages. C'est l'état de départ que tous les essais supposent." },
         { nom: "config-cellule.json", taille: "1,9 ko", quoi: "Une carte de cellule complète : 8 sorties, 4 entrées, une sonde, des seuils, deux sorties appariées." },
         { nom: "config-soute.json", taille: "0,7 ko", quoi: "Une carte de soute simple : 3 sorties, 1 entrée. De quoi remettre la carte B d'aplomb entre deux essais." },
         { nom: "config-bornes.json", taille: "0,7 ko", quoi: "Les valeurs extrêmes que le firmware accepte, plus un nom de sortie anormalement long." },
@@ -110,7 +110,7 @@ const PROTOCOLE = {
         lede: "Deux fichiers difficiles : l'un aux bornes de ce que le firmware accepte, l'autre qu'il doit refuser en partie.",
         id: "bornes",
         titre: "Charger une configuration aux valeurs limites",
-        pourquoi: "Ce fichier contient les valeurs extrêmes que le firmware accepte, plus un nom de sortie anormalement long. On cherche ce qui casse au bord du domaine admis, et si un refus se lit.",
+        pourquoi: "Ce fichier contient les valeurs extrêmes que le firmware accepte, plus un nom de sortie anormalement long. On cherche ce qui casse au bord du domaine admis, et si un refus, quand il tombe, se comprend sans aller lire le fichier.",
         faire: [
           "Sur B : <span class='path'>… → Appliquer une configuration</span>, choisissez <code>config-bornes.json</code>.",
           "Lisez la confirmation, puis validez.",
@@ -199,8 +199,8 @@ const PROTOCOLE = {
       },
 
       {
-        phase: "Interrompre un remplacement en cours de route",
-        lede: "Trois façons de couper une écriture en cours : la carte, l'app, et la panne pour de bon. Provoquez-les franchement, et rechargez le modèle (essai 02) si la base a été défaite en route.",
+        phase: "Remplacer dans de mauvaises conditions",
+        lede: "Une écriture coupée en deux, une app fermée en plein travail, et une carte déjà morte au moment de commencer. Provoquez ces trois cas franchement, et rechargez le modèle (essai 02) si la base a été défaite en route.",
         id: "coupure",
         titre: "Couper l'alimentation en pleine écriture",
         pourquoi: "Un remplacement enchaîne une quarantaine de commandes. Si la carte disparaît au milieu, l'app doit s'arrêter vite, dire ce qui manque, et savoir reprendre là où elle s'est arrêtée.",
@@ -219,7 +219,7 @@ const PROTOCOLE = {
       {
         id: "app-tuee",
         titre: "Fermer l'app en plein remplacement",
-        pourquoi: "Un van à moitié rebranché ne se voit pas : des pages dont une partie commande l'ancienne carte et l'autre la neuve. C'est le genre de défaut qu'on découvre des semaines plus tard.",
+        pourquoi: "Un van à moitié basculé ne saute pas aux yeux : sur une même page, des tuiles commandent encore l'ancienne carte et les autres la neuve. C'est le genre de défaut qu'on découvre des semaines plus tard.",
         faire: [
           "Lancez un remplacement, puis <b>balayez l'app</b> pendant l'écriture.",
           "Rouvrez l'app et regardez vos pages."
@@ -317,12 +317,12 @@ const PROTOCOLE = {
     ],
     besoin: {
       titre: "What you need",
-      lede: "Gather it all before you start: a board missing at trial 11 ends the session for good.",
+      lede: "Gather it all now. Trial 11 needs the power to a board cut mid write: that is not the moment to go looking for a switch.",
       points: [
         "<b>Two powered TinyRail boards</b>, called A and B here, and a way to cut the power to one of them mid trial.",
         "A phone with the app, and something to time with.",
         "A load wired to at least one output, to check the measured current.",
-        "The five files below, downloaded before you start."
+        "The five files below, on the phone."
       ],
       avis: "These trials rewrite the configuration of both boards and factory reset one of them. <b>Do not use a board fitted in a van that is in service.</b>"
     },
@@ -330,7 +330,7 @@ const PROTOCOLE = {
       titre: "The trial files",
       lede: "Download them all before you start, then load them from the app when a trial asks for it. They were produced by the app itself: if one of them is refused on loading, that is a defect worth reporting.",
       liste: [
-        { nom: "modele-van-essai.json", taille: "3.4 kB", quoi: "A whole van: two boards, their settings and their pages. The starting point of every trial. Its labels are in French, and stay that way whatever language the app runs in." },
+        { nom: "modele-van-essai.json", taille: "3.4 kB", quoi: "A whole van: two boards, their settings and their pages. The state every trial assumes at the outset. Its labels are in French, and stay that way whatever language the app runs in." },
         { nom: "config-cellule.json", taille: "1.9 kB", quoi: "A complete cabin board: 8 outputs, 4 inputs, a sender, thresholds, two paired outputs." },
         { nom: "config-soute.json", taille: "0.7 kB", quoi: "A simple garage board: 3 outputs, 1 input. Enough to put board B back in shape between trials." },
         { nom: "config-bornes.json", taille: "0.7 kB", quoi: "The extreme values the firmware accepts, plus an unusually long output name." },
@@ -390,7 +390,7 @@ const PROTOCOLE = {
         lede: "Two difficult files: one at the edge of what the firmware accepts, one it must partly refuse.",
         id: "bornes",
         titre: "Load a configuration at the limit values",
-        pourquoi: "This file holds the extreme values the firmware accepts, plus an unusually long output name. We are looking for what breaks at the edge of the allowed range, and whether a refusal can be read.",
+        pourquoi: "This file holds the extreme values the firmware accepts, plus an unusually long output name. We are looking for what breaks at the edge of the allowed range, and whether a refusal, when it comes, makes sense without opening the file.",
         faire: [
           "On B: <span class='path'>… → Apply a configuration</span>, choose <code>config-bornes.json</code>.",
           "Read the confirmation, then accept.",
@@ -479,8 +479,8 @@ const PROTOCOLE = {
       },
 
       {
-        phase: "Interrupting a replacement halfway through",
-        lede: "Three ways of cutting a write short: the board, the app, and a failure for good. Cause them properly, and reload the template (trial 02) if the base got undone along the way.",
+        phase: "Replacing under bad conditions",
+        lede: "A write cut in two, an app closed mid work, and a board already dead when you start. Cause all three properly, and reload the template (trial 02) if the base got undone along the way.",
         id: "coupure",
         titre: "Cut the power mid write",
         pourquoi: "A replacement chains some forty commands. If the board disappears halfway, the app has to stop quickly, say what is missing, and be able to resume where it stopped.",
@@ -499,7 +499,7 @@ const PROTOCOLE = {
       {
         id: "app-tuee",
         titre: "Close the app mid replacement",
-        pourquoi: "A half moved van does not show: pages where part of the tiles command the old board and the rest the new one. That is the kind of defect found weeks later.",
+        pourquoi: "A half moved van does not jump out at you: on one page, some tiles still command the old board and the others the new one. That is the kind of defect found weeks later.",
         faire: [
           "Start a replacement, then <b>swipe the app away</b> during the writing.",
           "Reopen the app and look at your pages."

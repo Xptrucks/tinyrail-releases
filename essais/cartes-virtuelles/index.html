@@ -122,7 +122,7 @@ const PROTOCOLE = {
         attendu: [
           "Le menu confirme que la fenêtre est ouverte pour trente secondes.",
           "L'appairage passe, et les commandes deviennent disponibles.",
-          "Le second essai, hors fenêtre, est refusé comme le premier."
+          "La seconde tentative, hors fenêtre, est refusée comme la première."
         ]
       },
       {
@@ -145,7 +145,7 @@ const PROTOCOLE = {
         lede: "C'est la partie la plus longue, et c'est exactement ce que fait un installateur le jour où il pose une carte : nommer, typer, régler, seuiller.",
         id: "usine-releve",
         titre: "Relever l'état d'une carte jamais configurée",
-        pourquoi: "Ces valeurs sont copiées de ce que le firmware pose réellement au premier démarrage. Si elles étaient seulement vraisemblables, on éprouverait un premier démarrage qui n'existe pas.",
+        pourquoi: "Ce que vous allez lire est copié de ce que le firmware pose réellement au premier démarrage. Des valeurs seulement vraisemblables feraient éprouver un déballage qui n'existe pas, et rateraient ce qu'un client voit vraiment.",
         faire: [
           "Ouvrez <span class='path'>Configuration des sorties</span>, puis <span class='path'>Configuration des entrées</span>."
         ],
@@ -219,7 +219,7 @@ const PROTOCOLE = {
       {
         id: "relecture",
         titre: "Relire tous les réglages, la session fermée puis rouverte",
-        pourquoi: "Qu'une commande soit acceptée ne prouve pas qu'elle a été rangée au bon endroit. Seule la relecture, la session fermée puis rouverte, le prouve.",
+        pourquoi: "Une commande acceptée sur le moment peut n'avoir été rangée nulle part. Un réglage qui ne tient pas ne se voit qu'après avoir fermé la session, jamais sur l'écran qui vient de l'écrire.",
         faire: [
           "Éteignez l'interrupteur « Annoncer les cartes virtuelles », rallumez-le, et laissez la carte se reconnecter.",
           "Rouvrez les deux écrans de configuration."
@@ -232,7 +232,7 @@ const PROTOCOLE = {
 
       {
         phase: "Trois cartes dans une installation, et des pages qui les mêlent",
-        lede: "Un van équipé porte souvent deux ou trois cartes, et des pages qui mêlent leurs sorties.",
+        lede: "Jusqu'ici une seule carte. Ce qui suit ne peut se voir qu'à plusieurs : reconnaître de quelle carte vient une tuile, et commander tout le van d'un seul geste.",
         id: "multi-cartes",
         titre: "Ajouter deux cartes déjà équipées",
         pourquoi: "Les deux autres modèles arrivent configurés, avec des noms de charges et des entrées réglées : de quoi monter un van complet en une minute au lieu d'une heure.",
@@ -294,7 +294,7 @@ const PROTOCOLE = {
 
       {
         phase: "Redémarrer, remettre à zéro, débrancher",
-        lede: "Une carte simulée doit se comporter comme du matériel qu'on redémarre, qu'on remet à zéro, ou qu'on débranche.",
+        lede: "Trois façons de perdre ce qu'on vient de régler. Ce qui compte ici est ce que l'app garde, ce qu'elle jette, et ce qu'elle continue d'afficher alors qu'elle ne le devrait plus.",
         id: "redemarrage",
         titre: "Fermer l'app pour de bon, puis la rouvrir",
         pourquoi: "La clé d'appairage et toute la configuration doivent survivre au redémarrage. Si la clé changeait en route, l'app ne saurait plus s'authentifier auprès d'une carte qu'elle croit connaître.",
@@ -368,7 +368,7 @@ const PROTOCOLE = {
 
       {
         phase: "Ce que ces essais ne prouvent pas",
-        lede: "Une seule réponse, écrite en toutes lettres : une case à cocher n'aurait rien à dire ici.",
+        lede: "Une seule réponse, à écrire : la liste de ce que ces essais laissent croire et que seule une vraie carte peut confirmer.",
         id: "limites",
         titre: "Ce qui ne ressemble pas à du matériel",
         pourquoi: "Rien de la radio n'est en jeu ici : ni portée, ni autorisations, ni coupure franche, ni vraie mise à jour. Un banc trop confortable donne confiance à tort.",
@@ -506,7 +506,7 @@ const PROTOCOLE = {
         attendu: [
           "The menu confirms the window is open for thirty seconds.",
           "Pairing succeeds, and commands become available.",
-          "The second attempt, outside the window, is refused like the first."
+          "The second attempt, outside the window, is refused just like the first."
         ]
       },
       {
@@ -529,7 +529,7 @@ const PROTOCOLE = {
         lede: "This is the longest part, and it is exactly what a fitter does the day a board goes in: name, type, set, threshold.",
         id: "usine-releve",
         titre: "Read the state of a board that has never been configured",
-        pourquoi: "These values are copied from what the firmware actually sets on first start. Were they merely plausible, you would be testing a first start that does not exist.",
+        pourquoi: "What you are about to read is copied from what the firmware actually sets on first start. Merely plausible values would test an unboxing that does not exist, and miss what a customer really sees.",
         faire: [
           "Open <span class='path'>Configure outputs</span>, then <span class='path'>Configure inputs</span>."
         ],
@@ -603,7 +603,7 @@ const PROTOCOLE = {
       {
         id: "relecture",
         titre: "Read every setting back, session closed then reopened",
-        pourquoi: "A command being accepted does not prove it was stored in the right place. Only reading it back, with the session closed and reopened, proves that.",
+        pourquoi: "A command accepted at the time may have been stored nowhere. A setting that does not hold only shows after the session has been closed, never on the screen that just wrote it.",
         faire: [
           "Turn the “Announce virtual boards” switch off, turn it back on, and let the board reconnect.",
           "Reopen both configuration screens."
@@ -616,7 +616,7 @@ const PROTOCOLE = {
 
       {
         phase: "Three boards in one installation, and pages that mix them",
-        lede: "A fitted van often carries two or three boards, and pages that mix their outputs.",
+        lede: "One board so far. What follows can only be seen with several: telling which board a tile comes from, and commanding the whole van in one gesture.",
         id: "multi-cartes",
         titre: "Add two boards that arrive fitted",
         pourquoi: "The other two models arrive configured, with load names and inputs already set: enough to build a complete van in a minute instead of an hour.",
@@ -678,7 +678,7 @@ const PROTOCOLE = {
 
       {
         phase: "Restarting, resetting, unplugging",
-        lede: "A simulated board has to behave like hardware you restart, reset, or unplug.",
+        lede: "Three ways of losing what you have just set. What matters here is what the app keeps, what it throws away, and what it keeps showing when it should not.",
         id: "redemarrage",
         titre: "Close the app for good, then reopen it",
         pourquoi: "The pairing key and the whole configuration must survive a restart. Were the key to change along the way, the app could no longer authenticate against a board it believes it knows.",
@@ -752,7 +752,7 @@ const PROTOCOLE = {
 
       {
         phase: "What these trials do not prove",
-        lede: "One single answer, written out in full: a tick box would have nothing to say here.",
+        lede: "One single answer, to be written: the list of what these trials let you believe and only a real board can confirm.",
         id: "limites",
         titre: "What does not feel like hardware",
         pourquoi: "Nothing of the radio is involved here: no range, no permissions, no abrupt cut, no real update. A bench that is too comfortable gives confidence it has not earned.",
