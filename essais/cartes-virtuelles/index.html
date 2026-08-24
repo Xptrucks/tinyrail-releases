@@ -3,1226 +3,791 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Essais des cartes virtuelles TinyRail</title>
+<title>Cartes virtuelles · TinyRail</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Source+Sans+3:ital,wght@0,400;0,600;1,400&display=swap">
-
-<style>
-  :root {
-    --ground: #F2F4F1;
-    --surface: #FFFFFF;
-    --surface-sunk: #E9ECE8;
-    --ink: #14181B;
-    --ink-soft: #56626A;
-    --ink-faint: #7C8790;
-    --rule: #DBE0DC;
-    --accent: #1F5F8B;
-    --accent-soft: #E4EEF5;
-    --copper: #9C6224;
-    --ok: #2E7D52;
-    --ok-soft: #E2F0E8;
-    --ko: #B93B31;
-    --ko-soft: #F8E5E3;
-    --wait: #97690F;
-    --wait-soft: #F6EDDA;
-
-    --step: clamp(0.9rem, 0.8rem + 0.4vw, 1.05rem);
-    --shadow: 0 1px 2px rgba(20, 24, 27, .06), 0 8px 24px -18px rgba(20, 24, 27, .5);
-  }
-
-  @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) {
-      --ground: #0F1315;
-      --surface: #161B1E;
-      --surface-sunk: #1C2226;
-      --ink: #E6EBE9;
-      --ink-soft: #9AA6AC;
-      --ink-faint: #7A868C;
-      --rule: #262D31;
-      --accent: #7CBBE0;
-      --accent-soft: #16303F;
-      --copper: #D49A5C;
-      --ok: #62BB8C;
-      --ok-soft: #16301F;
-      --ko: #E77A6E;
-      --ko-soft: #341A18;
-      --wait: #D9AC4E;
-      --wait-soft: #2E2412;
-      --shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 10px 28px -20px rgba(0, 0, 0, .9);
-    }
-  }
-
-  :root[data-theme="dark"] {
-    --ground: #0F1315;
-    --surface: #161B1E;
-    --surface-sunk: #1C2226;
-    --ink: #E6EBE9;
-    --ink-soft: #9AA6AC;
-    --ink-faint: #7A868C;
-    --rule: #262D31;
-    --accent: #7CBBE0;
-    --accent-soft: #16303F;
-    --copper: #D49A5C;
-    --ok: #62BB8C;
-    --ok-soft: #16301F;
-    --ko: #E77A6E;
-    --ko-soft: #341A18;
-    --wait: #D9AC4E;
-    --wait-soft: #2E2412;
-    --shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 10px 28px -20px rgba(0, 0, 0, .9);
-  }
-
-  * { box-sizing: border-box; }
-
-  body {
-    margin: 0;
-    background: var(--ground);
-    color: var(--ink);
-    font-family: "Source Sans 3", system-ui, -apple-system, sans-serif;
-    font-size: var(--step);
-    line-height: 1.55;
-    -webkit-text-size-adjust: 100%;
-  }
-
-  .wrap {
-    max-width: 54rem;
-    margin: 0 auto;
-    padding: 0 1.1rem 5rem;
-  }
-
-  /* ── En-tête ───────────────────────────────────────────────────────────── */
-
-  .masthead {
-    position: sticky;
-    top: 0;
-    z-index: 20;
-    background: color-mix(in srgb, var(--ground) 92%, transparent);
-    backdrop-filter: blur(8px);
-    border-bottom: 1px solid var(--rule);
-  }
-
-  .masthead-inner {
-    max-width: 54rem;
-    margin: 0 auto;
-    padding: .55rem 1.1rem .5rem;
-    display: flex;
-    align-items: baseline;
-    gap: .9rem;
-    flex-wrap: wrap;
-  }
-
-  .masthead h1 {
-    font-family: Archivo, system-ui, sans-serif;
-    font-size: 1rem;
-    font-weight: 600;
-    letter-spacing: -.01em;
-    margin: 0;
-    flex: 1 1 auto;
-  }
-
-  .tally {
-    font-family: "IBM Plex Mono", ui-monospace, monospace;
-    font-size: .8rem;
-    font-variant-numeric: tabular-nums;
-    color: var(--ink-soft);
-    display: flex;
-    gap: .75rem;
-  }
-  .tally b { color: var(--ink); font-weight: 500; }
-  .tally .bad { color: var(--ko); }
-
-  .gauge {
-    height: 3px;
-    background: var(--surface-sunk);
-  }
-  .gauge span {
-    display: block;
-    height: 100%;
-    width: 0;
-    background: var(--accent);
-    transition: width .25s ease;
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .gauge span { transition: none; }
-  }
-
-  /* ── Titre ─────────────────────────────────────────────────────────────── */
-
-  header.intro { padding: 2.4rem 0 1.6rem; }
-
-  .eyebrow {
-    font-family: "IBM Plex Mono", ui-monospace, monospace;
-    font-size: .72rem;
-    letter-spacing: .14em;
-    text-transform: uppercase;
-    color: var(--copper);
-    margin: 0 0 .7rem;
-  }
-
-  header.intro h2 {
-    font-family: Archivo, system-ui, sans-serif;
-    font-size: clamp(1.75rem, 1.3rem + 2.2vw, 2.6rem);
-    line-height: 1.08;
-    letter-spacing: -.02em;
-    font-weight: 700;
-    margin: 0 0 .8rem;
-    text-wrap: balance;
-  }
-
-  header.intro p {
-    max-width: 62ch;
-    margin: 0 0 .7rem;
-    color: var(--ink-soft);
-  }
-
-  /* ── Fiche d'identification ────────────────────────────────────────────── */
-
-  .ident {
-    background: var(--surface);
-    border: 1px solid var(--rule);
-    border-radius: 10px;
-    padding: 1rem 1.05rem 1.1rem;
-    box-shadow: var(--shadow);
-    display: grid;
-    gap: .8rem 1.1rem;
-    grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
-  }
-
-  .field { display: flex; flex-direction: column; gap: .28rem; }
-
-  .field label {
-    font-family: "IBM Plex Mono", ui-monospace, monospace;
-    font-size: .7rem;
-    letter-spacing: .1em;
-    text-transform: uppercase;
-    color: var(--ink-faint);
-  }
-
-  input[type="text"], textarea {
-    font: inherit;
-    color: var(--ink);
-    background: var(--ground);
-    border: 1px solid var(--rule);
-    border-radius: 7px;
-    padding: .42rem .55rem;
-    width: 100%;
-  }
-  input[type="text"]:focus-visible, textarea:focus-visible {
-    outline: 2px solid var(--accent);
-    outline-offset: 1px;
-  }
-
-  /* ── Phases et essais ──────────────────────────────────────────────────── */
-
-  .phase { margin-top: 2.6rem; }
-
-  .phase > h3 {
-    font-family: Archivo, system-ui, sans-serif;
-    font-size: 1.15rem;
-    font-weight: 600;
-    letter-spacing: -.01em;
-    margin: 0 0 .25rem;
-    display: flex;
-    align-items: center;
-    gap: .6rem;
-  }
-
-  .phase > h3::after {
-    content: "";
-    flex: 1;
-    height: 1px;
-    background: var(--rule);
-  }
-
-  .phase > .lede {
-    margin: 0 0 1.1rem;
-    color: var(--ink-soft);
-    max-width: 64ch;
-  }
-
-  .trial {
-    background: var(--surface);
-    border: 1px solid var(--rule);
-    border-radius: 10px;
-    margin-bottom: .9rem;
-    box-shadow: var(--shadow);
-    overflow: hidden;
-  }
-
-  .trial[data-status="ok"] { border-color: color-mix(in srgb, var(--ok) 45%, var(--rule)); }
-  .trial[data-status="ko"] { border-color: color-mix(in srgb, var(--ko) 55%, var(--rule)); }
-
-  .trial-head {
-    display: flex;
-    gap: .8rem;
-    align-items: baseline;
-    padding: .9rem 1rem .2rem;
-  }
-
-  .num {
-    font-family: "IBM Plex Mono", ui-monospace, monospace;
-    font-size: .78rem;
-    font-variant-numeric: tabular-nums;
-    color: var(--ink-faint);
-    padding-top: .18rem;
-  }
-
-  .trial h4 {
-    font-family: Archivo, system-ui, sans-serif;
-    font-size: 1.02rem;
-    font-weight: 600;
-    margin: 0;
-    flex: 1;
-    text-wrap: balance;
-  }
-
-  .body { padding: .35rem 1rem 1rem 2.6rem; }
-
-  .hunt {
-    color: var(--ink-soft);
-    font-style: italic;
-    margin: 0 0 .7rem;
-  }
-
-  .label {
-    font-family: "IBM Plex Mono", ui-monospace, monospace;
-    font-size: .68rem;
-    letter-spacing: .1em;
-    text-transform: uppercase;
-    color: var(--ink-faint);
-    margin: .9rem 0 .3rem;
-  }
-
-  ol.steps, ul.checks { margin: 0; padding-left: 1.15rem; }
-  ol.steps li, ul.checks li { margin-bottom: .3rem; }
-  ol.steps { counter-reset: none; }
-
-  .expect {
-    background: var(--surface-sunk);
-    border-left: 2px solid var(--accent);
-    border-radius: 0 7px 7px 0;
-    padding: .6rem .8rem;
-    margin-top: .6rem;
-  }
-  .expect p { margin: 0; }
-  .expect p + p { margin-top: .4rem; }
-
-  .warn {
-    border-left: 2px solid var(--wait);
-    background: var(--wait-soft);
-    border-radius: 0 7px 7px 0;
-    padding: .55rem .8rem;
-    margin-top: .7rem;
-    color: var(--ink);
-  }
-  .warn p { margin: 0; }
-
-  code, kbd, .mono {
-    font-family: "IBM Plex Mono", ui-monospace, monospace;
-    font-size: .88em;
-  }
-  code {
-    background: var(--surface-sunk);
-    border-radius: 4px;
-    padding: .05em .32em;
-  }
-  .path { color: var(--copper); font-weight: 500; white-space: nowrap; }
-
-  /* ── Verdict ───────────────────────────────────────────────────────────── */
-
-  .verdict {
-    display: flex;
-    flex-wrap: wrap;
-    gap: .5rem .45rem;
-    align-items: center;
-    padding: .7rem 1rem .9rem 2.6rem;
-    border-top: 1px solid var(--rule);
-    background: var(--surface);
-  }
-
-  .verdict .set { display: flex; gap: .3rem; }
-
-  button.mark {
-    font: 600 .82rem/1 "Source Sans 3", sans-serif;
-    color: var(--ink-soft);
-    background: var(--ground);
-    border: 1px solid var(--rule);
-    border-radius: 999px;
-    padding: .42rem .8rem;
-    cursor: pointer;
-  }
-  button.mark:hover { border-color: var(--ink-faint); }
-  button.mark:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-
-  button.mark[aria-pressed="true"][data-mark="ok"] {
-    background: var(--ok-soft); border-color: var(--ok); color: var(--ok);
-  }
-  button.mark[aria-pressed="true"][data-mark="ko"] {
-    background: var(--ko-soft); border-color: var(--ko); color: var(--ko);
-  }
-  button.mark[aria-pressed="true"][data-mark="na"] {
-    background: var(--surface-sunk); border-color: var(--ink-faint); color: var(--ink-soft);
-  }
-
-  .verdict textarea {
-    flex: 1 1 16rem;
-    min-height: 2.3rem;
-    resize: vertical;
-    background: var(--surface);
-  }
-
-
-  /* ── Fichiers à charger ────────────────────────────────────────────────── */
-
-  .files { display: grid; gap: .55rem; margin-top: .9rem; }
-
-  .file {
-    display: flex;
-    align-items: center;
-    gap: .7rem;
-    background: var(--surface);
-    border: 1px solid var(--rule);
-    border-radius: 8px;
-    padding: .6rem .75rem;
-  }
-
-  .file .name {
-    font-family: "IBM Plex Mono", ui-monospace, monospace;
-    font-size: .82rem;
-    color: var(--ink);
-    flex: 1 1 auto;
-  }
-  .file .name small {
-    display: block;
-    font-family: "Source Sans 3", sans-serif;
-    font-size: .8rem;
-    color: var(--ink-soft);
-  }
-  .masthead h1 .retour {
-    color: var(--ink-faint);
-    text-decoration: none;
-  }
-  .masthead h1 .retour:hover { color: var(--accent); }
-
-  .garde {
-    margin: .9rem 0 0;
-    font-size: .86rem;
-    color: var(--ink-faint);
-  }
-
-  dialog#confirm-wipe {
-    max-width: 26rem;
-    border: 1px solid var(--rule);
-    border-radius: 10px;
-    background: var(--surface);
-    color: var(--ink);
-    padding: 1.2rem 1.3rem;
-    box-shadow: var(--shadow);
-  }
-  dialog#confirm-wipe::backdrop { background: rgba(0, 0, 0, .45); }
-  dialog#confirm-wipe h3 {
-    font-family: Archivo, system-ui, sans-serif;
-    font-size: 1.05rem;
-    margin: 0 0 .5rem;
-  }
-  dialog#confirm-wipe p { margin: 0 0 .6rem; color: var(--ink-soft); }
-  dialog#confirm-wipe .cw-avis { color: var(--ko); font-size: .88rem; }
-  .cw-actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: .5rem;
-    margin-top: 1rem;
-  }
-  .cw-actions .danger {
-    font: inherit;
-    font-size: .9rem;
-    background: var(--ko);
-    color: #fff;
-    border: 0;
-    border-radius: 6px;
-    padding: .42rem .9rem;
-    cursor: pointer;
-  }
-  .cw-actions .danger:hover { filter: brightness(1.08); }
-
-  .file .dl {
-    font: inherit;
-    font-size: .82rem;
-    text-decoration: none;
-    background: var(--accent);
-    color: var(--surface);
-    border: 0;
-    border-radius: 6px;
-    padding: .34rem .7rem;
-    white-space: nowrap;
-  }
-  .file .dl:hover { filter: brightness(1.08); }
-
-  .file .size {
-    font-family: "IBM Plex Mono", monospace;
-    font-size: .72rem;
-    color: var(--ink-faint);
-    font-variant-numeric: tabular-nums;
-  }
-  .file button {
-    font: 600 .8rem/1 "Source Sans 3", sans-serif;
-    background: var(--accent-soft);
-    color: var(--accent);
-    border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
-    border-radius: 999px;
-    padding: .4rem .8rem;
-    cursor: pointer;
-    white-space: nowrap;
-  }
-  .file button:hover { filter: brightness(1.04); }
-  .file button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-  .file button.done { background: var(--ok-soft); color: var(--ok); border-color: var(--ok); }
-
-  /* ── Rapport ───────────────────────────────────────────────────────────── */
-
-  .report {
-    margin-top: 2.8rem;
-    background: var(--surface);
-    border: 1px solid var(--rule);
-    border-radius: 10px;
-    padding: 1.1rem;
-    box-shadow: var(--shadow);
-  }
-  .report h3 {
-    font-family: Archivo, sans-serif;
-    font-size: 1.1rem;
-    margin: 0 0 .3rem;
-  }
-  .report p { margin: 0 0 .8rem; color: var(--ink-soft); }
-
-  .actions { display: flex; gap: .5rem; flex-wrap: wrap; }
-
-  button.primary, button.ghost {
-    font: 600 .88rem/1 "Source Sans 3", sans-serif;
-    border-radius: 7px;
-    padding: .6rem 1rem;
-    cursor: pointer;
-    border: 1px solid transparent;
-  }
-  button.primary { background: var(--accent); color: var(--surface); }
-  button.primary:hover { filter: brightness(1.08); }
-  button.ghost { background: transparent; color: var(--ink-soft); border-color: var(--rule); }
-  button.ghost:hover { color: var(--ink); border-color: var(--ink-faint); }
-  button.primary:focus-visible, button.ghost:focus-visible {
-    outline: 2px solid var(--accent); outline-offset: 2px;
-  }
-
-  #dump {
-    width: 100%;
-    min-height: 14rem;
-    margin-top: .9rem;
-    font-family: "IBM Plex Mono", monospace;
-    font-size: .78rem;
-    line-height: 1.5;
-    display: none;
-  }
-  #dump.shown { display: block; }
-
-  .said {
-    font-size: .84rem;
-    color: var(--ok);
-    margin-left: .4rem;
-    opacity: 0;
-    transition: opacity .2s;
-  }
-  .said.shown { opacity: 1; }
-
-  footer {
-    margin-top: 2.5rem;
-    padding-top: 1.2rem;
-    border-top: 1px solid var(--rule);
-    color: var(--ink-faint);
-    font-size: .84rem;
-  }
-
-  @media (max-width: 34rem) {
-    .body, .verdict { padding-left: 1rem; }
-  }
-</style>
+<link rel="stylesheet" href="../essais.css">
 </head>
 <body>
-
-<div class="masthead">
-  <div class="masthead-inner">
-    <h1><a class="retour" href="../">Essais</a> · Cartes virtuelles</h1>
-    <div class="tally">
-      <span><b id="done">0</b>/<span id="total">0</span> faits</span>
-      <span class="bad" id="failbox" hidden><b id="fails">0</b> en échec</span>
-    </div>
-  </div>
-  <div class="gauge"><span id="bar"></span></div>
-</div>
-
-<div class="wrap">
-
-  <header class="intro">
-    <p class="eyebrow">TinyRail · essais sans matériel</p>
-    <h2>Des cartes qui n'existent pas, traitées comme du matériel</h2>
-    <p>
-      Une carte virtuelle est annoncée dans le scan ordinaire, adoptée,
-      appairée, configurée, posée sur des pages et rattachée à une installation
-      par le code du produit, dans les vrais magasins. Ce protocole cherche les
-      endroits où l'app s'en aperçoit, et ceux où elle ne devrait pas.
-      Les essais sont dans l'ordre : chacun s'appuie sur le précédent.
-    </p>
-  </header>
-
-  <section class="ident" aria-label="Identification de la session d'essai">
-    <div class="field">
-      <label for="who">Testeur</label>
-      <input type="text" id="who" data-key="who" autocomplete="name">
-    </div>
-    <div class="field">
-      <label for="when">Date</label>
-      <input type="text" id="when" data-key="when" placeholder="2026-08-24">
-    </div>
-    <div class="field">
-      <label for="app">Version de l'app</label>
-      <input type="text" id="app" data-key="app" placeholder="Réglages → À propos">
-    </div>
-    <div class="field">
-      <label for="phone">Téléphone</label>
-      <input type="text" id="phone" data-key="phone" placeholder="iPhone 14, iOS 26.6">
-    </div>
-    <div class="field">
-      <label for="lieu">Installation d'essai</label>
-      <input type="text" id="lieu" data-key="lieu" placeholder="Banc">
-    </div>
-    <div class="field">
-      <label for="cartes">Cartes créées</label>
-      <input type="text" id="cartes" data-key="cartes" placeholder="SIM01 usine, SIM02 cellule…">
-    </div>
-  </section>
-
-  <section class="phase">
-    <h3>Avant de commencer</h3>
-    <p class="lede">
-      Rien à télécharger, rien à brancher : tout se crée depuis l'app. Il faut
-      une trentaine de minutes sans être dérangé, et de quoi chronométrer.
-    </p>
-    <div class="warn" style="margin:1rem 0 0">
-      <p>
-        <b>Ce que vous faites ici écrit dans les vraies données de l'app</b> :
-        clés d'appairage, noms de sorties mémorisés, tuiles, installations. Ce
-        n'est pas le mode démonstration, qui n'écrit nulle part. Créez une
-        <b>installation d'essai</b> et n'utilisez pas celle de votre van.
-      </p>
-    </div>
-  </section>
-
-  <main id="trials"></main>
-
-  <section class="report">
-    <h3>Rapport</h3>
-    <p>
-      Tout est gardé dans ce navigateur au fur et à mesure : vous pouvez fermer
-      l'onglet et reprendre plus tard. Le bouton met le compte rendu dans le
-      presse-papiers, prêt à coller dans un message.
-    </p>
-    <div class="actions">
-      <button class="primary" id="copy">Copier le rapport</button>
-      <span class="said" id="said">Copié</span>
-      <button class="ghost" id="show">Voir le texte</button>
-      <button class="ghost" id="wipe">Tout effacer</button>
-    </div>
-    <textarea id="dump" readonly aria-label="Compte rendu en texte"></textarea>
-    <p class="garde">
-      Vos réponses sont gardées dans ce navigateur : vous pouvez fermer la page
-      et reprendre plus tard, au même endroit. Elles ne quittent pas votre
-      appareil, et ne suivent pas sur un autre.
-    </p>
-  </section>
-
-  <dialog id="confirm-wipe" aria-labelledby="cw-titre">
-    <h3 id="cw-titre">Tout effacer ?</h3>
-    <p id="cw-quoi"></p>
-    <p class="cw-avis">Cela ne s'annule pas. Copiez le rapport d'abord si vous
-      voulez en garder une trace.</p>
-    <div class="cw-actions">
-      <button class="ghost" value="non" id="cw-non">Annuler</button>
-      <button class="danger" value="oui" id="cw-oui">Tout effacer</button>
-    </div>
-  </dialog>
-
-  <footer>
-    Un essai « non fait » n'est pas un échec : dites-le tel quel. Et un essai
-    concluant ici ne vaut pas pour du matériel : la carte simulée répond en
-    quelques millisecondes là où une vraie met des secondes, et rien de la radio
-    n'est en jeu.
-  </footer>
-</div>
-
+<div id="app"></div>
+<script src="../essais.js"></script>
 <script>
 
-  const TRIALS = [
-    {
-      phase: "Le banc",
-      lede: "Créer des cartes, et vérifier qu'elles arrivent là où arrivent les vraies.",
-      id: "banc-allumage",
-      title: "Allumer le banc, créer une carte sortie d'usine",
-      hunt: "L'entrée vit sous « Développement » parce que ce qu'on y fait écrit dans les vraies données de l'app, et non dans un bac à sable.",
-      steps: [
-        "<span class='path'>Réglages → Développement → Cartes virtuelles</span>.",
-        "Lisez l'écran avant de toucher quoi que ce soit : dit-il ce que ces cartes sont, et ce qu'elles ne prouvent pas ?",
-        "Touchez <b>Sortie d'usine</b> dans « Ajouter une carte »."
-      ],
-      expect: [
-        "Un message annonce la carte créée et où la retrouver.",
-        "Elle s'appelle <code>tinyrail-v2-SIM01</code> : le format du produit, impossible à prendre pour du matériel.",
-        "L'interrupteur « Annoncer les cartes virtuelles » s'est allumé tout seul : créer une carte sans l'allumer ne montrerait rien.",
-        "De retour dans Réglages, la ligne dit « Actives · 1 carte »."
-      ],
-      warn: "Une carte virtuelle laisse des traces réelles : clé, libellés mémorisés, tuiles, installation. Créez une installation d'essai et laissez votre van tranquille."
-    },
-    {
-      id: "scan-bt-eteint",
-      title: "La voir arriver, Bluetooth éteint",
-      hunt: "C'est le seul moment où l'on s'en sert vraiment : dans un train, sans matériel. Le scan réel attend que la radio soit prête ; ces annonces ne passent pas par là.",
-      steps: [
-        "<b>Coupez le Bluetooth du téléphone.</b>",
-        "Ouvrez <span class='path'>Appareils</span> et laissez la recherche tourner.",
-        "Comptez les secondes avant que la carte apparaisse."
-      ],
-      expect: [
-        "SIM01 est listée sous « À portée, non appairées », malgré le Bluetooth éteint.",
-        "Sa puissance reçue est fixe (−55 dBm) et ne danse pas : il n'y a pas de radio derrière.",
-        "Aucun message ne réclame d'allumer le Bluetooth pour cette carte.",
-        "<b>À noter :</b> combien de secondes avant qu'elle apparaisse."
-      ]
-    },
-    {
-      id: "mode-avion",
-      title: "Mode avion, puis relance de l'app",
-      hunt: "Une carte qui disparaît au premier changement d'état radio ne servirait à rien en déplacement.",
-      steps: [
-        "Passez le téléphone en mode avion.",
-        "Quittez l'app pour de bon (sélecteur d'applications), puis relancez-la."
-      ],
-      expect: [
-        "La carte est toujours annoncée.",
-        "Elle se reconnecte seule, sans qu'on la touche, comme une carte à portée."
-      ]
-    },
+const PROTOCOLE = {
+  cle: "cartes-virtuelles",
 
-    {
-      phase: "Adopter une carte",
-      lede: "L'appairage est la seule protection du produit : le banc doit le faire respecter, pas le contourner.",
-      id: "appairage-refus",
-      title: "Appairer sans avoir appuyé sur BOOT",
-      hunt: "Si une carte neuve acceptait la clé sans BOOT, le banc mentirait sur ce qui protège le produit, et un défaut d'appairage passerait ici sans se voir.",
-      steps: [
-        "Depuis <span class='path'>Appareils</span>, ouvrez SIM01 et touchez <b>Appairer</b> sans rien faire d'autre."
+  fr: {
+    nom: "Cartes virtuelles",
+    eyebrow: "TinyRail · essais sans matériel",
+    titre: "Essayer l'app sans aucune carte",
+    intro: [
+      "L'app sait fabriquer des cartes qui n'existent pas. Une fois créées, elles se comportent comme du matériel : elles apparaissent dans la recherche d'appareils, réclament un appairage, se configurent, se posent sur des pages et entrent dans une installation. C'est le même code que pour une vraie carte, aux mêmes endroits.",
+      "Ce protocole cherche les endroits où l'app trahirait la différence : un écran qui traiterait ces cartes à part, un réglage qui ne s'écrirait pas, une carte qui disparaîtrait d'une liste où elle devrait être.",
+      "Comptez une heure. Les essais sont dans l'ordre : chacun s'appuie sur le précédent."
+    ],
+    identLabel: "Identification de la session d'essai",
+    champs: [
+      { cle: "who", label: "Testeur", exemple: "" },
+      { cle: "when", label: "Date", exemple: "2026-08-24" },
+      { cle: "app", label: "Version de l'app", exemple: "Réglages → À propos" },
+      { cle: "phone", label: "Téléphone", exemple: "iPhone 14, iOS 26.6" },
+      { cle: "lieu", label: "Installation d'essai", exemple: "Banc d'essai" },
+      { cle: "cartes", label: "Cartes créées", exemple: "SIM01, SIM02, SIM03" }
+    ],
+    besoin: {
+      titre: "Avant de commencer",
+      lede: "Rien à brancher, rien à télécharger : tout se crée depuis l'app.",
+      points: [
+        "Un téléphone avec l'app installée, en version 1.8.0 ou plus récente.",
+        "De quoi chronométrer : trois essais demandent une durée.",
+        "Une trentaine de minutes sans être interrompu pour la première moitié."
       ],
-      expect: [
-        "L'appairage est refusé, et le message demande si la fenêtre de 30 s est ouverte.",
-        "La consultation continue de fonctionner : on lit la carte, on ne la commande pas.",
-        "Les écrans de réglage disent qu'il faut appairer, ils ne s'ouvrent pas à moitié."
-      ]
+      avis: "<b>Ces cartes simulées écrivent dans les vraies données de l'app</b>, pas dans un bac à sable. Elles y laissent des clés d'appairage, des noms de sorties, des tuiles et une installation, exactement comme du matériel. Créez une installation d'essai plutôt que d'utiliser celle de votre van : vous n'aurez rien à démêler ensuite."
     },
-    {
-      id: "appairage-boot",
-      title: "Appuyer sur BOOT, puis appairer dans les trente secondes",
-      hunt: "La fenêtre de 30 s existe aussi ici : c'est le comportement du firmware, pas une politesse de l'app.",
-      steps: [
-        "<span class='path'>Réglages → Cartes virtuelles</span>, menu « … » de SIM01, <b>Appuyer sur BOOT (3 s)</b>.",
-        "Revenez dans <span class='path'>Appareils</span> et appairez <b>dans les trente secondes</b>.",
-        "Recommencez ensuite l'appairage <b>sans</b> BOOT, ou plus de trente secondes après."
-      ],
-      expect: [
-        "Le banc annonce la fenêtre ouverte pour 30 s.",
-        "L'appairage passe, et les commandes deviennent disponibles.",
-        "Le second essai, hors fenêtre, est refusé comme le premier."
-      ]
-    },
-    {
-      id: "installation",
-      title: "Une installation d'essai, et la carte dedans",
-      hunt: "Une carte virtuelle doit entrer dans une installation par le chemin normal, sans écran ni cas à part.",
-      steps: [
-        "Créez une installation nommée <b>Banc</b>.",
-        "Rattachez-y SIM01."
-      ],
-      expect: [
-        "L'en-tête d'Appareils porte le nom de l'installation regardée.",
-        "SIM01 figure dans la première section, celle de l'installation.",
-        "Rien à l'écran ne signale que cette carte est simulée, hormis son nom."
-      ]
-    },
+    essais: [
+      {
+        phase: "Créer une carte",
+        lede: "L'entrée est rangée sous « Développement » dans les réglages, parce que ce qu'on y fait touche aux vraies données de l'app.",
+        id: "banc-allumage",
+        titre: "Créer une première carte, sortie d'usine",
+        pourquoi: "Une carte « sortie d'usine » reproduit ce que le firmware pose au tout premier démarrage. C'est l'état dans lequel un client reçoit sa carte, et donc le point de départ de tout le parcours de configuration.",
+        faire: [
+          "Dans l'app : <span class='path'>Réglages → Développement → Cartes virtuelles</span>.",
+          "Lisez l'écran avant de toucher quoi que ce soit. Dit-il ce que sont ces cartes, et ce qu'elles ne remplacent pas ?",
+          "En bas, sous « Ajouter une carte », touchez <b>Sortie d'usine</b>."
+        ],
+        attendu: [
+          "Un message confirme la création et dit où retrouver la carte.",
+          "Elle s'appelle <code>tinyrail-v2-SIM01</code> : c'est le format d'un vrai nom de carte, avec <code>SIM</code> à la place de l'adresse, pour qu'on ne puisse jamais la confondre avec du matériel.",
+          "L'interrupteur « Annoncer les cartes virtuelles » s'est allumé tout seul : sans lui, la carte créée n'apparaîtrait nulle part.",
+          "De retour dans Réglages, la ligne indique le nombre de cartes actives."
+        ]
+      },
+      {
+        id: "scan-bt-eteint",
+        titre: "La retrouver dans la recherche d'appareils, Bluetooth éteint",
+        pourquoi: "L'intérêt de ces cartes est de travailler sans matériel, souvent sans réseau : dans un train, en réunion, chez quelqu'un. Si elles avaient besoin de la radio pour apparaître, elles ne serviraient à rien.",
+        faire: [
+          "<b>Coupez le Bluetooth du téléphone.</b>",
+          "Ouvrez <span class='path'>Appareils</span> et laissez la recherche tourner.",
+          "Comptez les secondes avant que la carte apparaisse."
+        ],
+        attendu: [
+          "SIM01 est listée sous « À portée, non appairées », Bluetooth éteint.",
+          "Sa puissance reçue est fixe et ne varie pas : il n'y a pas de radio derrière.",
+          "Aucun message ne réclame d'allumer le Bluetooth pour cette carte.",
+          "<b>À noter :</b> combien de secondes avant qu'elle apparaisse."
+        ]
+      },
+      {
+        id: "mode-avion",
+        titre: "Mode avion, puis relance de l'app",
+        pourquoi: "Une carte qui disparaîtrait au premier changement d'état du téléphone obligerait à tout recréer à chaque essai, et ne servirait pas là où on en a besoin.",
+        faire: [
+          "Passez le téléphone en mode avion.",
+          "Quittez l'app pour de bon depuis le sélecteur d'applications, puis relancez-la."
+        ],
+        attendu: [
+          "La carte est toujours annoncée.",
+          "Elle se reconnecte seule, sans qu'on la touche.",
+          "Ce qu'elle porte est intact."
+        ]
+      },
 
-    {
-      phase: "Configurer une carte sortie d'usine",
-      lede: "Le gabarit d'usine existe pour cela : c'est le parcours de configuration entier, du premier nom au dernier seuil.",
-      id: "usine-releve",
-      title: "Ce qu'une carte neuve annonce",
-      hunt: "Ces valeurs sont relevées dans le firmware, pas inventées : vraisemblables au lieu d'exactes, elles feraient éprouver un premier démarrage qui n'existe pas.",
-      steps: [
-        "Ouvrez <span class='path'>Configuration des sorties</span>, puis <span class='path'>des entrées</span>."
-      ],
-      expect: [
-        "Les sorties s'appellent <code>Channel 1</code> à <code>Channel 8</code>, toutes de type <b>Générique</b>.",
-        "Les entrées s'appellent <code>Input 1</code> à <code>Input 4</code>, toutes en tension 0-30 V.",
-        "Aucun seuil d'alerte n'est posé, et rien n'est allumé."
-      ]
-    },
-    {
-      id: "ecriture-complete",
-      title: "Renommer et typer les huit sorties",
-      hunt: "C'est le parcours d'écriture entier : vrais opcodes, vraie file d'attente, vraies confirmations. Ce que l'app envoie ici, elle l'enverra à une carte.",
-      steps: [
-        "Nommez les huit sorties comme vous le feriez dans un van.",
-        "Donnez à chacune son type de charge.",
-        "Chronométrez du premier réglage au dernier."
-      ],
-      expect: [
-        "Chaque réglage est confirmé par la carte : l'écran n'affiche jamais une valeur que la carte n'a pas acceptée.",
-        "Aucun réglage ne revient en arrière tout seul quelques secondes plus tard.",
-        "<b>À noter :</b> le temps total, et s'il y a eu un moment d'attente sans explication."
-      ],
-      warn: "La carte simulée répond en une vingtaine de millisecondes là où une vraie met des secondes. Ce temps mesure l'app, pas le produit."
-    },
-    {
-      id: "sorties-fines",
-      title: "Gradation, appariement, extinction automatique, surintensité",
-      hunt: "Ce sont les réglages qu'on pose une fois et qu'on n'ose plus toucher : ils doivent se relire aussi bien qu'ils s'écrivent.",
-      steps: [
-        "Rendez une sortie gradable et réglez-la à mi-course.",
-        "Appariez CH3 et CH4.",
-        "Posez une extinction automatique sur une sortie, et un seuil de surintensité sur une autre."
-      ],
-      expect: [
-        "Les paires proposées sont figées : 1-2, 3-4, 5-6, 7-8, et les deux sorties commutent ensemble.",
-        "La sortie gradée garde sa consigne, et le courant lu suit la gradation.",
-        "L'extinction automatique se voit à l'écran avant de se produire, et se produit."
-      ]
-    },
-    {
-      id: "entrees-seuils",
-      title: "Une entrée qui alerte",
-      hunt: "Les entrées savent alerter depuis le 13 août et rien n'en a jamais tourné, ni sur carte ni sous les yeux de quiconque. C'est le premier regard.",
-      steps: [
-        "Mettez AN1 en <b>Réservoir eau propre</b> et donnez-lui un nom.",
-        "Relevez le niveau affiché, puis posez un seuil d'<b>avertissement au-dessus</b> de ce niveau.",
-        "Descendez ensuite le critique au-dessus du niveau à son tour."
-      ],
-      expect: [
-        "L'alerte se lève d'elle-même, sans rien rafraîchir à la main.",
-        "Elle apparaît une seule fois dans Alertes, sous le nom que vous avez donné à l'entrée et non sous « AN1 ».",
-        "Un appui dessus mène à la carte concernée.",
-        "Elle s'acquitte toute seule quand vous remettez le seuil sous le niveau : une alerte décrit un état."
-      ]
-    },
-    {
-      id: "entrees-refus",
-      title: "Un réglage que la carte doit refuser",
-      hunt: "Un critique inatteignable est un piège silencieux : la carte le refuse, et l'app doit le dire au lieu de l'afficher comme accepté.",
-      steps: [
-        "Sur une entrée réglée « alerte en dessous », posez un critique <b>supérieur</b> à l'avertissement.",
-        "Essayez ensuite un seuil largement hors des bornes admises."
-      ],
-      expect: [
-        "Le refus est annoncé, en clair, et dit ce qui ne va pas.",
-        "L'écran revient à la valeur précédente : rien n'est écrit à moitié.",
-        "L'alerte en cours, s'il y en avait une, n'a pas changé de niveau au passage."
-      ]
-    },
-    {
-      id: "relecture",
-      title: "Relire au lieu de croire le rapport d'écriture",
-      hunt: "Un rapport d'écriture prouve que les commandes ont été acceptées ; seule la relecture prouve les réglages.",
-      steps: [
-        "Éteignez l'interrupteur du banc, rallumez-le, laissez la session se rouvrir.",
-        "Rouvrez les écrans de configuration des sorties et des entrées."
-      ],
-      expect: [
-        "Tous les noms, types, seuils et appariements sont ceux que vous avez posés.",
-        "Rien n'est revenu au gabarit d'usine."
-      ]
-    },
+      {
+        phase: "Adopter la carte",
+        lede: "Une carte ne se commande qu'après un appairage, qui exige un appui physique sur son bouton BOOT. Les cartes simulées appliquent la même règle.",
+        id: "appairage-refus",
+        titre: "Essayer d'appairer sans avoir appuyé sur BOOT",
+        pourquoi: "L'appairage est la seule chose qui empêche quelqu'un de commander une carte qui n'est pas la sienne. Si une carte simulée acceptait la clé sans BOOT, tous les essais suivants vaudraient pour une app plus permissive que le produit.",
+        faire: [
+          "Depuis <span class='path'>Appareils</span>, ouvrez SIM01 et touchez <b>Appairer</b> sans rien faire d'autre."
+        ],
+        attendu: [
+          "L'appairage est refusé, et le message parle de la fenêtre de trente secondes.",
+          "La lecture continue de fonctionner : on voit la carte, on ne la commande pas.",
+          "Les écrans de réglage disent qu'il faut appairer, au lieu de s'ouvrir à moitié."
+        ]
+      },
+      {
+        id: "appairage-boot",
+        titre: "Appuyer sur BOOT, puis appairer dans les trente secondes",
+        pourquoi: "Sur une vraie carte, un appui de trois secondes sur BOOT ouvre une fenêtre de trente secondes pendant laquelle la clé peut être remise. La carte simulée a le même bouton, dans son menu.",
+        faire: [
+          "<span class='path'>Réglages → Cartes virtuelles</span>, menu « … » de SIM01, <b>Appuyer sur BOOT (3 s)</b>.",
+          "Revenez dans <span class='path'>Appareils</span> et appairez <b>dans les trente secondes</b>.",
+          "Recommencez ensuite un appairage sans BOOT, ou plus de trente secondes après."
+        ],
+        attendu: [
+          "Le menu confirme que la fenêtre est ouverte pour trente secondes.",
+          "L'appairage passe, et les commandes deviennent disponibles.",
+          "Le second essai, hors fenêtre, est refusé comme le premier."
+        ]
+      },
+      {
+        id: "installation",
+        titre: "Créer une installation d'essai et y mettre la carte",
+        pourquoi: "Une installation regroupe les cartes d'un même véhicule. La carte simulée doit y entrer par le chemin normal, sans écran ni cas particulier.",
+        faire: [
+          "Créez une installation nommée <b>Banc d'essai</b>.",
+          "Rattachez-y SIM01."
+        ],
+        attendu: [
+          "L'en-tête de l'écran Appareils porte le nom de l'installation regardée.",
+          "SIM01 figure dans la première section, celle de l'installation.",
+          "Rien à l'écran ne la distingue d'une vraie carte, à part son nom."
+        ]
+      },
 
-    {
-      phase: "Plusieurs cartes, et des pages",
-      lede: "Le multi-cartes n'a jamais été regardé à l'œil : deux cartes de plus, et des pages qui les mêlent.",
-      id: "multi-cartes",
-      title: "Ajouter une cellule et une soute",
-      hunt: "Trois cartes dans une installation, c'est le van d'un client. Deux, c'est un cas particulier qui cache les défauts de tri.",
-      steps: [
-        "Créez <b>Cellule équipée</b> et <b>Soute équipée</b>.",
-        "Appairez chacune (BOOT depuis le banc), puis rattachez-les à l'installation Banc."
-      ],
-      expect: [
-        "SIM02 et SIM03 apparaissent au scan, sans avoir à rien relancer.",
-        "Leurs sorties portent des noms français : éclairages, pompe à eau, treuil, feux de travail.",
-        "L'installation compte trois cartes, chacune avec son propre état.",
-        "Les valeurs mesurées diffèrent d'une carte à l'autre : deux cartes ne mesurent pas la même chose."
-      ]
-    },
-    {
-      id: "page-mixte",
-      title: "Une page qui mêle deux cartes",
-      hunt: "Une page est faite pour l'usage, pas pour le câblage : les sorties de deux cartes doivent s'y côtoyer sans qu'on sache laquelle est laquelle.",
-      steps: [
-        "Créez une page, posez-y des sorties de la cellule <b>et</b> de la soute, plus une entrée réservoir.",
-        "Sortez du mode édition par <b>Terminer</b>."
-      ],
-      expect: [
-        "Le sélecteur de tuiles propose les trois cartes, nommées par ce que vous leur avez donné.",
-        "Les tuiles répondent, quelle que soit leur carte d'origine.",
-        "Le bouton « Terminer » est atteignable sans dérouler toute la page."
-      ]
-    },
-    {
-      id: "page-hors-session",
-      title: "Composer une page en piochant dans une carte hors session",
-      hunt: "C'est le défaut qui a déclenché tout le chantier : une carte simulée n'entrait jamais dans le magasin, donc le sélecteur de tuiles ne la proposait pas. Un test le verrouille, personne ne l'a jamais regardé.",
-      steps: [
-        "Éteignez l'interrupteur <b>Annoncer les cartes virtuelles</b> : les trois cartes s'en vont.",
-        "Revenez sur une page, <span class='path'>… → Nouvelle page</span>, puis <b>Ajouter une tuile</b>."
-      ],
-      expect: [
-        "Les trois cartes sont <b>toujours proposées</b>, avec les noms de leurs sorties.",
-        "Une tuile posée s'affiche hors de portée, sans valeur, et non sous un nom d'attente ou « inconnue ».",
-        "Rallumez le banc : les tuiles reprennent vie sans qu'on refasse la page."
-      ]
-    },
-    {
-      id: "bouton-groupe",
-      title: "Un bouton « tout éteindre » sur trois cartes",
-      hunt: "Le bouton de groupe est ce qu'on touche en partant : il doit viser toutes les cartes, y compris celle qui ne répond pas.",
-      steps: [
-        "Posez un bouton « tout éteindre » et choisissez des sorties sur les trois cartes.",
-        "Allumez plusieurs sorties un peu partout, puis touchez le bouton."
-      ],
-      expect: [
-        "Le compte annoncé correspond aux sorties choisies, toutes cartes confondues.",
-        "Tout s'éteint, et l'écran attend la confirmation des cartes.",
-        "Avec une carte éteinte au banc, le bouton dit ce qui n'a pas pu être éteint au lieu de faire semblant."
-      ]
-    },
+      {
+        phase: "Configurer une carte neuve",
+        lede: "C'est la partie la plus longue, et c'est exactement ce que fait un installateur le jour où il pose une carte : nommer, typer, régler, seuiller.",
+        id: "usine-releve",
+        titre: "Regarder ce qu'annonce une carte neuve",
+        pourquoi: "Ces valeurs sont copiées de ce que le firmware pose réellement au premier démarrage. Si elles étaient seulement vraisemblables, on éprouverait un premier démarrage qui n'existe pas.",
+        faire: [
+          "Ouvrez <span class='path'>Configuration des sorties</span>, puis <span class='path'>Configuration des entrées</span>."
+        ],
+        attendu: [
+          "Les huit sorties s'appellent <code>Channel 1</code> à <code>Channel 8</code>, toutes de type <b>Générique</b>.",
+          "Les quatre entrées s'appellent <code>Input 1</code> à <code>Input 4</code>, toutes en tension 0-30 V.",
+          "Aucun seuil d'alerte n'est posé, et rien n'est allumé."
+        ]
+      },
+      {
+        id: "ecriture-complete",
+        titre: "Nommer et typer les huit sorties",
+        pourquoi: "C'est le parcours d'écriture complet : chaque réglage part vers la carte, qui l'accepte ou le refuse, et l'app ne doit afficher que ce qui a été accepté.",
+        faire: [
+          "Nommez les huit sorties comme vous le feriez dans un van.",
+          "Donnez à chacune son type de charge.",
+          "Chronométrez du premier réglage au dernier."
+        ],
+        attendu: [
+          "Chaque réglage est confirmé par la carte : l'écran n'affiche jamais une valeur qu'elle n'a pas acceptée.",
+          "Aucun réglage ne revient en arrière tout seul quelques secondes plus tard.",
+          "<b>À noter :</b> le temps total, et tout moment d'attente sans explication."
+        ],
+        avis: "La carte simulée répond en une vingtaine de millisecondes là où une vraie met des secondes. Ce temps mesure l'app, pas le produit."
+      },
+      {
+        id: "sorties-fines",
+        titre: "Gradation, appariement, extinction automatique, seuil de courant",
+        pourquoi: "Ce sont les réglages qu'on pose une fois et qu'on n'ose plus toucher ensuite. Ils doivent se relire aussi fidèlement qu'ils s'écrivent.",
+        faire: [
+          "Rendez une sortie gradable, et mettez-la à mi-course.",
+          "Appariez CH3 et CH4.",
+          "Posez une extinction automatique sur une sortie, et un seuil de surintensité sur une autre."
+        ],
+        attendu: [
+          "Les paires proposées sont imposées : 1-2, 3-4, 5-6, 7-8, et les deux sorties d'une paire commutent ensemble.",
+          "La sortie gradée garde sa consigne, et le courant mesuré suit la gradation.",
+          "L'extinction automatique s'annonce à l'écran avant de se produire, puis se produit."
+        ]
+      },
+      {
+        id: "entrees-seuils",
+        titre: "Faire lever une alerte depuis une entrée",
+        pourquoi: "Une entrée peut surveiller un réservoir ou une batterie et alerter à deux niveaux, avertissement puis critique. C'est une fonction récente, que personne n'a encore vue à l'œuvre.",
+        faire: [
+          "Mettez AN1 en <b>Réservoir eau propre</b> et donnez-lui un nom.",
+          "Relevez le niveau affiché, puis posez le seuil d'<b>avertissement juste au-dessus</b> de ce niveau.",
+          "Faites ensuite passer le seuil <b>critique</b> au-dessus du niveau à son tour."
+        ],
+        attendu: [
+          "L'alerte se lève d'elle-même, sans rien rafraîchir à la main.",
+          "Elle apparaît une seule fois dans la liste des alertes, sous le nom que vous avez donné à l'entrée et non sous « AN1 ».",
+          "Un appui dessus mène à la carte concernée.",
+          "En remettant les seuils sous le niveau, l'alerte s'efface d'elle-même : elle décrit un état, elle ne s'accumule pas."
+        ]
+      },
+      {
+        id: "entrees-refus",
+        titre: "Poser un seuil que la carte doit refuser",
+        pourquoi: "Un seuil critique placé du mauvais côté de l'avertissement rendrait l'avertissement inatteignable. La carte refuse ce réglage, et l'app doit le dire au lieu de l'afficher comme accepté.",
+        faire: [
+          "Sur une entrée qui alerte « en dessous », posez un critique <b>supérieur</b> à l'avertissement.",
+          "Essayez ensuite un seuil très au-delà des bornes admises."
+        ],
+        attendu: [
+          "Le refus est annoncé en clair, avec sa raison.",
+          "L'écran revient à la valeur précédente : rien n'est écrit à moitié.",
+          "L'alerte en cours, s'il y en avait une, n'a pas changé de niveau au passage."
+        ]
+      },
+      {
+        id: "relecture",
+        titre: "Tout relire après coup",
+        pourquoi: "Qu'une commande soit acceptée ne prouve pas qu'elle a été rangée au bon endroit. Seule la relecture, la session fermée puis rouverte, le prouve.",
+        faire: [
+          "Éteignez l'interrupteur « Annoncer les cartes virtuelles », rallumez-le, et laissez la carte se reconnecter.",
+          "Rouvrez les deux écrans de configuration."
+        ],
+        attendu: [
+          "Tous les noms, types, seuils et appariements sont ceux que vous avez posés.",
+          "Rien n'est revenu aux valeurs d'usine."
+        ]
+      },
 
-    {
-      phase: "Ce qui survit, ce qui tombe",
-      lede: "Une carte virtuelle doit se comporter comme du matériel qu'on redémarre, qu'on remet à zéro et qu'on débranche.",
-      id: "redemarrage",
-      title: "Tuer l'app et la relancer",
-      hunt: "Ce qu'on règle survit au redémarrage, clé d'appairage comprise : sans cela, l'app échouerait à s'authentifier contre une carte qu'elle croit connaître.",
-      steps: [
-        "Quittez l'app pour de bon depuis le sélecteur, puis relancez-la.",
-        "Chronométrez jusqu'à ce que les trois cartes soient connectées."
-      ],
-      expect: [
-        "Les trois cartes se reconnectent seules, sans réappairage.",
-        "Toute la configuration est là, et les pages aussi.",
-        "<b>À noter :</b> le temps jusqu'aux trois cartes connectées."
-      ]
-    },
-    {
-      id: "banc-eteint-en-session",
-      title: "Couper le banc alors qu'une session est ouverte",
-      hunt: "Une carte qui cesse d'être annoncée tout en restant pilotable serait un lien vers une carte qui n'existe nulle part.",
-      steps: [
-        "Ouvrez une carte, laissez son écran affiché.",
-        "Depuis un autre appareil ou en revenant en arrière, éteignez l'interrupteur du banc."
-      ],
-      expect: [
-        "Le lien tombe, et l'app le voit tomber.",
-        "L'écran de la carte le dit au lieu de garder des valeurs figées.",
-        "Une alerte « Carte hors de portée » est levée, puis résolue au rallumage."
-      ]
-    },
-    {
-      id: "usine",
-      title: "Réglages d'usine sur une carte configurée",
-      hunt: "Une remise à zéro rend une carte neuve mais garde sa clé : l'app doit rester appairée, et cesser d'afficher les réglages qu'on vient d'effacer.",
-      steps: [
-        "Sur SIM01, menu « … » → <b>Réglages d'usine</b>.",
-        "Revenez sur la carte et rouvrez ses écrans de configuration."
-      ],
-      expect: [
-        "La carte est revenue à <code>Channel 1</code> à <code>Channel 8</code>, sans seuils.",
-        "L'app est toujours appairée : aucune demande de BOOT.",
-        "L'écran ne montre plus les anciens réglages : la session est repartie sur la carte neuve.",
-        "Les tuiles qui la visaient sont toujours là, sous les noms d'usine."
-      ]
-    },
-    {
-      id: "retirer-absente",
-      title: "Retirer une carte du banc, et la retrouver absente",
-      hunt: "Une carte appairée hors de portée doit se voir : c'est quand une carte manque qu'il faut la reconnaître.",
-      steps: [
-        "Sur SIM02, menu « … » → <b>Retirer</b>, et lisez ce que le dialogue annonce.",
-        "Ouvrez <span class='path'>Appareils</span>."
-      ],
-      expect: [
-        "SIM02 apparaît dans l'installation, annoncée <b>absente</b>, sous le nom que vous lui aviez donné et non sous son identifiant.",
-        "Elle ne porte aucun bouton : il n'y a rien à faire depuis l'app pour une carte hors de portée.",
-        "La recherche continue de s'annoncer : l'écran ne semble pas figé.",
-        "Ses tuiles et son rattachement sont intacts, exactement comme une carte débranchée."
-      ]
-    },
-    {
-      id: "oublier",
-      title: "Oublier la carte pour de bon",
-      hunt: "Retirer du banc n'efface rien : c'est le chemin normal d'oubli qui doit nettoyer, et rien d'autre.",
-      steps: [
-        "Sur la carte absente, passez par <b>Oublier cette carte</b>."
-      ],
-      expect: [
-        "Elle disparaît de l'installation et de la liste des absentes.",
-        "Ses tuiles disparaissent des pages, ou disent clairement qu'elles ne visent plus rien.",
-        "Recréer une carte du même gabarit donne une carte neuve, non appairée : la clé est bien partie."
-      ]
-    },
+      {
+        phase: "Plusieurs cartes, et des pages",
+        lede: "Un van équipé porte souvent deux ou trois cartes, et des pages qui mêlent leurs sorties.",
+        id: "multi-cartes",
+        titre: "Ajouter deux cartes déjà équipées",
+        pourquoi: "Les deux autres modèles arrivent configurés, avec des noms de charges et des entrées réglées : de quoi monter un van complet en une minute au lieu d'une heure.",
+        faire: [
+          "Créez une <b>Cellule équipée</b> et une <b>Soute équipée</b>.",
+          "Appairez chacune, en passant par BOOT depuis leur menu.",
+          "Rattachez-les à l'installation d'essai."
+        ],
+        attendu: [
+          "SIM02 et SIM03 apparaissent sans qu'il faille relancer la recherche.",
+          "Leurs sorties portent des noms de charges (éclairages, pompe à eau, treuil, feux de travail), dans la langue de l'app.",
+          "L'installation compte trois cartes, chacune avec son propre état.",
+          "Les valeurs mesurées diffèrent d'une carte à l'autre : deux cartes ne mesurent pas la même chose."
+        ]
+      },
+      {
+        id: "page-mixte",
+        titre: "Composer une page qui mêle deux cartes",
+        pourquoi: "Une page suit l'usage, pas le câblage : allumer l'éclairage de la cellule et celui de la soute doit se faire au même endroit, sans avoir à savoir quelle carte commande quoi.",
+        faire: [
+          "Créez une page, puis posez-y des sorties de la cellule <b>et</b> de la soute, plus une entrée de réservoir.",
+          "Sortez du mode édition par <b>Terminer</b>."
+        ],
+        attendu: [
+          "Le sélecteur de tuiles propose les trois cartes, sous les noms que vous leur avez donnés.",
+          "Les tuiles répondent, quelle que soit la carte d'où elles viennent.",
+          "Le bouton « Terminer » est atteignable sans dérouler la page entière."
+        ]
+      },
+      {
+        id: "page-hors-session",
+        titre: "Composer une page avec une carte qui n'est pas connectée",
+        pourquoi: "On compose souvent ses pages à la maison, le van fermé et hors de portée. L'app doit proposer toutes les cartes connues, et pas seulement celles qui répondent à l'instant.",
+        faire: [
+          "Éteignez l'interrupteur « Annoncer les cartes virtuelles » : les trois cartes s'en vont.",
+          "Revenez aux pages, créez-en une, et touchez <b>Ajouter une tuile</b>."
+        ],
+        attendu: [
+          "Les trois cartes sont <b>toujours proposées</b>, avec les noms de leurs sorties.",
+          "Une tuile posée s'affiche sans valeur et se dit hors de portée, au lieu de porter un nom d'attente ou « inconnue ».",
+          "En rallumant l'interrupteur, les tuiles reprennent vie sans qu'on refasse la page."
+        ]
+      },
+      {
+        id: "bouton-groupe",
+        titre: "Un bouton « tout éteindre » sur trois cartes",
+        pourquoi: "C'est le bouton qu'on touche en partant. Il doit viser toutes les cartes, et dire ce qu'il n'a pas pu éteindre plutôt que de faire semblant.",
+        faire: [
+          "Posez un bouton « tout éteindre » et choisissez des sorties sur les trois cartes.",
+          "Allumez plusieurs sorties un peu partout, puis touchez le bouton.",
+          "Recommencez après avoir éteint l'interrupteur des cartes virtuelles."
+        ],
+        attendu: [
+          "Le nombre annoncé correspond aux sorties choisies, toutes cartes confondues.",
+          "Tout s'éteint, et l'écran attend la confirmation des cartes.",
+          "Avec les cartes coupées, il dit ce qui n'a pas pu être éteint."
+        ]
+      },
 
-    {
-      phase: "Les limites du banc",
-      lede: "Ce qui suit ne se coche pas : cela s'écrit.",
-      id: "limites",
-      title: "Ce qui ne ressemble pas à du matériel",
-      hunt: "Un banc trop confortable donne confiance à tort. Rien de la radio n'est éprouvé ici : portée, MTU, permissions, coupures franches, mise à jour réelle.",
-      steps: [
-        "Notez tout ce qui vous a paru trop rapide, trop propre, ou trop sûr par rapport à une vraie carte."
-      ],
-      expect: [
-        "Chaque écart relevé est une chose à revérifier sur matériel avant d'y croire."
-      ]
-    },
+      {
+        phase: "Ce qui survit, ce qui tombe",
+        lede: "Une carte simulée doit se comporter comme du matériel qu'on redémarre, qu'on remet à zéro, ou qu'on débranche.",
+        id: "redemarrage",
+        titre: "Fermer l'app pour de bon, puis la rouvrir",
+        pourquoi: "La clé d'appairage et toute la configuration doivent survivre au redémarrage. Si la clé changeait en route, l'app ne saurait plus s'authentifier auprès d'une carte qu'elle croit connaître.",
+        faire: [
+          "Quittez l'app depuis le sélecteur d'applications, puis relancez-la.",
+          "Chronométrez jusqu'à ce que les trois cartes soient connectées."
+        ],
+        attendu: [
+          "Les trois cartes se reconnectent seules, sans réappairage.",
+          "Toute la configuration est là, et les pages aussi.",
+          "<b>À noter :</b> le temps jusqu'aux trois cartes connectées."
+        ]
+      },
+      {
+        id: "banc-eteint-en-session",
+        titre: "Couper les cartes pendant qu'on en regarde une",
+        pourquoi: "Une carte qui cesserait d'exister tout en restant pilotable donnerait un écran qui commande dans le vide, et des valeurs figées qu'on croirait vraies.",
+        faire: [
+          "Ouvrez une carte et laissez son écran affiché.",
+          "Éteignez l'interrupteur « Annoncer les cartes virtuelles »."
+        ],
+        attendu: [
+          "Le lien tombe, et l'app le montre.",
+          "L'écran de la carte le dit, au lieu de garder les dernières valeurs comme si de rien n'était.",
+          "Une alerte « Carte hors de portée » apparaît, puis se résout au rallumage."
+        ]
+      },
+      {
+        id: "usine",
+        titre: "Remettre une carte configurée à ses réglages d'usine",
+        pourquoi: "Une remise à zéro rend la carte neuve mais garde sa clé : l'app doit rester appairée, et cesser aussitôt d'afficher les réglages qui viennent d'être effacés.",
+        faire: [
+          "Sur SIM01, menu « … » puis <b>Réglages d'usine</b>.",
+          "Revenez sur la carte et rouvrez ses écrans de configuration."
+        ],
+        attendu: [
+          "La carte est revenue à <code>Channel 1</code> à <code>Channel 8</code>, sans seuils.",
+          "L'app est toujours appairée : aucun appui sur BOOT n'est demandé.",
+          "Plus aucun ancien réglage n'est affiché.",
+          "Les tuiles qui visaient cette carte sont toujours là, sous les noms d'usine."
+        ]
+      },
+      {
+        id: "retirer-absente",
+        titre: "Retirer une carte, et la retrouver hors de portée",
+        pourquoi: "Quand une carte du van ne répond plus, l'utilisateur doit la voir manquer, sous le nom qu'il lui a donné. Un écran vide ne dirait pas la différence entre « mes cartes ne répondent pas » et « je n'ai pas de carte ».",
+        faire: [
+          "Sur SIM02, menu « … » puis <b>Retirer</b>, en lisant ce que le dialogue annonce.",
+          "Ouvrez <span class='path'>Appareils</span>."
+        ],
+        attendu: [
+          "SIM02 figure dans l'installation, annoncée <b>hors de portée</b>, sous le nom que vous lui aviez donné.",
+          "Aucune action ne lui est proposée : il n'y a rien à faire depuis l'app pour une carte qui ne répond pas.",
+          "La recherche continue de s'annoncer, sinon l'écran semblerait figé.",
+          "Ses tuiles et son rattachement sont intacts, comme pour une carte débranchée."
+        ]
+      },
+      {
+        id: "oublier",
+        titre: "Oublier la carte pour de bon",
+        pourquoi: "Retirer une carte simulée ne nettoie rien, exactement comme débrancher du matériel. C'est « Oublier cette carte » qui efface la clé et le rattachement.",
+        faire: [
+          "Sur la carte hors de portée, choisissez <b>Oublier cette carte</b>."
+        ],
+        attendu: [
+          "Elle disparaît de l'installation et de la liste.",
+          "Ses tuiles disparaissent des pages, ou disent clairement qu'elles ne visent plus rien.",
+          "Recréer une carte du même modèle donne une carte neuve, non appairée : la clé est bien partie."
+        ]
+      },
 
-    {
-      phase: "Jugement",
-      lede: "Ces deux entrées se remplissent en toutes lettres.",
-      id: "hesitations",
-      title: "Ce qui a demandé de réfléchir",
-      hunt: "Une étape qu'on relit deux fois est un défaut, au même titre qu'une panne.",
-      steps: ["Où avez-vous hésité, cherché un bouton, relu une phrase ?"],
-      expect: ["Notez chaque hésitation, même celle qui vous paraît bête."]
-    },
-    {
-      id: "confiance",
-      title: "Qu'iriez-vous quand même vérifier sur une vraie carte ?",
-      hunt: "",
-      steps: ["Répondez, et dites ce qui vous manquerait pour ne pas avoir à le refaire."],
-      expect: ["« Tout, par principe » est une réponse utile ; dites alors dans quel ordre."]
-    }
-  ];
+      {
+        phase: "Ce que ces essais ne prouvent pas",
+        lede: "Cette réponse s'écrit en toutes lettres, elle ne se coche pas.",
+        id: "limites",
+        titre: "Ce qui ne ressemble pas à du matériel",
+        pourquoi: "Rien de la radio n'est en jeu ici : ni portée, ni autorisations, ni coupure franche, ni vraie mise à jour. Un banc trop confortable donne confiance à tort.",
+        faire: [
+          "Notez tout ce qui vous a paru trop rapide, trop propre ou trop sûr par rapport à une vraie carte."
+        ],
+        attendu: [
+          "Chaque écart relevé est une chose à revérifier sur du matériel avant d'y croire."
+        ]
+      },
 
-  const KEY = "tinyrail-essais-cartes-virtuelles-v1";
-  let state = { fields: {}, marks: {}, notes: {} };
-
-  try {
-    const saved = localStorage.getItem(KEY);
-    if (saved) state = Object.assign(state, JSON.parse(saved));
-  } catch (e) { /* stockage indisponible : la page reste utilisable, sans mémoire */ }
-
-  function save() {
-    try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {}
-  }
-
-  const host = document.getElementById("trials");
-  let currentPhase = null;
-  let phaseBox = null;
-
-  TRIALS.forEach((t, i) => {
-    if (t.phase) {
-      const sec = document.createElement("section");
-      sec.className = "phase";
-      const h = document.createElement("h3");
-      h.textContent = t.phase;
-      sec.append(h);
-      if (t.lede) {
-        const p = document.createElement("p");
-        p.className = "lede";
-        p.textContent = t.lede;
-        sec.append(p);
+      {
+        phase: "Jugement",
+        lede: "Ces deux réponses se remplissent en toutes lettres.",
+        id: "hesitations",
+        titre: "Ce qui a demandé de réfléchir",
+        pourquoi: "Une étape qu'on relit deux fois est un défaut, au même titre qu'une panne.",
+        faire: ["Où avez-vous hésité, cherché un bouton, relu une phrase ?"],
+        attendu: ["Notez chaque hésitation, même celle qui vous paraît bête."]
+      },
+      {
+        id: "confiance",
+        titre: "Qu'iriez-vous quand même vérifier sur une vraie carte ?",
+        pourquoi: "",
+        faire: ["Répondez, et dites ce qui vous manquerait pour ne pas avoir à le refaire."],
+        attendu: ["« Tout, par principe » est une réponse utile : dites alors dans quel ordre."]
       }
-      host.append(sec);
-      phaseBox = sec;
-    }
+    ],
+    rapportTitre: "Essais des cartes virtuelles TinyRail",
+    pied: "Un essai « non fait » n'est pas un échec : dites-le tel quel. Et un essai concluant ici ne vaut pas pour du matériel : la carte simulée répond en quelques millisecondes là où une vraie met des secondes, et rien de la radio n'est en jeu."
+  },
 
-    const card = document.createElement("article");
-    card.className = "trial";
-    card.dataset.status = state.marks[t.id] || "";
+  en: {
+    nom: "Virtual boards",
+    eyebrow: "TinyRail · trials without hardware",
+    titre: "Trying the app with no board at all",
+    intro: [
+      "The app can create boards that do not exist. Once created, they behave like hardware: they show up in the device search, ask to be paired, get configured, land on pages and join an installation. It is the same code as for a real board, in the same places.",
+      "This protocol looks for the places where the app would give the difference away: a screen treating these boards as a special case, a setting that never gets written, a board missing from a list where it belongs.",
+      "Allow about an hour. The trials are in order: each one builds on the previous."
+    ],
+    identLabel: "Test session details",
+    champs: [
+      { cle: "who", label: "Tester", exemple: "" },
+      { cle: "when", label: "Date", exemple: "2026-08-24" },
+      { cle: "app", label: "App version", exemple: "Settings → About" },
+      { cle: "phone", label: "Phone", exemple: "iPhone 14, iOS 26.6" },
+      { cle: "lieu", label: "Test installation", exemple: "Test bench" },
+      { cle: "cartes", label: "Boards created", exemple: "SIM01, SIM02, SIM03" }
+    ],
+    besoin: {
+      titre: "Before you start",
+      lede: "Nothing to plug in, nothing to download: everything is created from the app.",
+      points: [
+        "A phone with the app installed, version 1.8.0 or later.",
+        "Something to time with: three trials ask for a duration.",
+        "About thirty uninterrupted minutes for the first half."
+      ],
+      avis: "<b>These simulated boards write into the app's real data</b>, not into a sandbox. They leave pairing keys, output names, tiles and an installation behind, exactly like hardware would. Create a test installation instead of using your own van's: nothing will need untangling afterwards."
+    },
+    essais: [
+      {
+        phase: "Creating a board",
+        lede: "The entry sits under “Development” in the settings, because what you do there touches the app's real data.",
+        id: "banc-allumage",
+        titre: "Create a first board, out of the box",
+        pourquoi: "An “out of the box” board reproduces what the firmware sets on its very first start. That is the state a customer receives a board in, and therefore the starting point of the whole configuration journey.",
+        faire: [
+          "In the app: <span class='path'>Settings → Development → Virtual boards</span>.",
+          "Read the screen before touching anything. Does it say what these boards are, and what they do not replace?",
+          "At the bottom, under “Add a board”, tap <b>Out of the box</b>."
+        ],
+        attendu: [
+          "A message confirms the board was created and says where to find it.",
+          "It is called <code>tinyrail-v2-SIM01</code>: the format of a real board name, with <code>SIM</code> in place of the address, so it can never be mistaken for hardware.",
+          "The “Announce virtual boards” switch turned itself on: without it, the board you just created would appear nowhere.",
+          "Back in Settings, the line shows how many boards are active."
+        ]
+      },
+      {
+        id: "scan-bt-eteint",
+        titre: "Find it in the device search, with Bluetooth off",
+        pourquoi: "The point of these boards is to work without hardware, often without a network: on a train, in a meeting, at someone's place. If they needed the radio to appear, they would be of no use.",
+        faire: [
+          "<b>Switch the phone's Bluetooth off.</b>",
+          "Open <span class='path'>Devices</span> and let the search run.",
+          "Count the seconds until the board appears."
+        ],
+        attendu: [
+          "SIM01 is listed under “Nearby, not paired”, with Bluetooth off.",
+          "Its signal strength is fixed and does not wander: there is no radio behind it.",
+          "No message asks you to turn Bluetooth on for this board.",
+          "<b>Write down:</b> how many seconds before it appeared."
+        ]
+      },
+      {
+        id: "mode-avion",
+        titre: "Airplane mode, then restart the app",
+        pourquoi: "A board that vanished at the first change of phone state would have to be recreated for every trial, and would fail exactly where it is needed.",
+        faire: [
+          "Put the phone into airplane mode.",
+          "Close the app for good from the app switcher, then launch it again."
+        ],
+        attendu: [
+          "The board is still announced.",
+          "It reconnects on its own, without being touched.",
+          "Everything it holds is intact."
+        ]
+      },
 
-    const steps = t.steps.map(s => `<li>${s}</li>`).join("");
-    const expects = t.expect.map(s => `<p>${s}</p>`).join("");
+      {
+        phase: "Adopting the board",
+        lede: "A board can only be commanded once paired, and pairing needs a physical press on its BOOT button. Simulated boards follow the same rule.",
+        id: "appairage-refus",
+        titre: "Try to pair without pressing BOOT",
+        pourquoi: "Pairing is the only thing stopping someone from commanding a board that is not theirs. If a simulated board accepted the key without BOOT, every later trial would be testing an app more permissive than the product.",
+        faire: [
+          "From <span class='path'>Devices</span>, open SIM01 and tap <b>Pair</b> without doing anything else."
+        ],
+        attendu: [
+          "Pairing is refused, and the message mentions the thirty second window.",
+          "Reading still works: you can see the board, you cannot command it.",
+          "The settings screens say pairing is needed, rather than opening half way."
+        ]
+      },
+      {
+        id: "appairage-boot",
+        titre: "Press BOOT, then pair within thirty seconds",
+        pourquoi: "On a real board, holding BOOT for three seconds opens a thirty second window during which the key can be handed over. The simulated board has the same button, in its menu.",
+        faire: [
+          "<span class='path'>Settings → Virtual boards</span>, “…” menu on SIM01, <b>Press BOOT (3 s)</b>.",
+          "Go back to <span class='path'>Devices</span> and pair <b>within thirty seconds</b>.",
+          "Then try pairing again without BOOT, or more than thirty seconds later."
+        ],
+        attendu: [
+          "The menu confirms the window is open for thirty seconds.",
+          "Pairing succeeds, and commands become available.",
+          "The second attempt, outside the window, is refused like the first."
+        ]
+      },
+      {
+        id: "installation",
+        titre: "Create a test installation and put the board in it",
+        pourquoi: "An installation groups the boards of one vehicle. The simulated board has to join it through the normal path, with no special screen or case.",
+        faire: [
+          "Create an installation called <b>Test bench</b>.",
+          "Attach SIM01 to it."
+        ],
+        attendu: [
+          "The header of the Devices screen carries the name of the installation you are looking at.",
+          "SIM01 appears in the first section, the installation's own.",
+          "Nothing on screen sets it apart from a real board, other than its name."
+        ]
+      },
 
-    card.innerHTML = `
-      <div class="trial-head">
-        <span class="num">${String(i + 1).padStart(2, "0")}</span>
-        <h4>${t.title}</h4>
-      </div>
-      <div class="body">
-        ${t.hunt ? `<p class="hunt">${t.hunt}</p>` : ""}
-        <p class="label">Ce que vous faites</p>
-        <ol class="steps">${steps}</ol>
-        <p class="label">Ce qui doit se passer</p>
-        <div class="expect">${expects}</div>
-        ${t.warn ? `<div class="warn"><p>${t.warn}</p></div>` : ""}
-      </div>
-      <div class="verdict">
-        <div class="set" role="group" aria-label="Verdict de l'essai ${i + 1}">
-          <button class="mark" data-mark="ok" data-id="${t.id}" aria-pressed="false">Conforme</button>
-          <button class="mark" data-mark="ko" data-id="${t.id}" aria-pressed="false">En échec</button>
-          <button class="mark" data-mark="na" data-id="${t.id}" aria-pressed="false">Non fait</button>
-        </div>
-        <textarea data-note="${t.id}" placeholder="Ce que vous avez vu, mesuré, ou trouvé étrange"></textarea>
-      </div>`;
+      {
+        phase: "Configuring a brand new board",
+        lede: "This is the longest part, and it is exactly what a fitter does the day a board goes in: name, type, set, threshold.",
+        id: "usine-releve",
+        titre: "Look at what a brand new board announces",
+        pourquoi: "These values are copied from what the firmware actually sets on first start. Were they merely plausible, you would be testing a first start that does not exist.",
+        faire: [
+          "Open <span class='path'>Configure outputs</span>, then <span class='path'>Configure inputs</span>."
+        ],
+        attendu: [
+          "The eight outputs are called <code>Channel 1</code> to <code>Channel 8</code>, all of type <b>Generic</b>.",
+          "The four inputs are called <code>Input 1</code> to <code>Input 4</code>, all in 0-30 V voltage mode.",
+          "No alert threshold is set, and nothing is switched on."
+        ]
+      },
+      {
+        id: "ecriture-complete",
+        titre: "Name and type the eight outputs",
+        pourquoi: "This is the complete writing journey: every setting travels to the board, which accepts or refuses it, and the app must only show what was accepted.",
+        faire: [
+          "Name the eight outputs as you would in a van.",
+          "Give each one its load type.",
+          "Time yourself from the first setting to the last."
+        ],
+        attendu: [
+          "Every setting is confirmed by the board: the screen never shows a value the board did not accept.",
+          "No setting reverts on its own a few seconds later.",
+          "<b>Write down:</b> the total time, and any wait with no explanation."
+        ],
+        avis: "The simulated board answers in about twenty milliseconds where a real one takes seconds. This time measures the app, not the product."
+      },
+      {
+        id: "sorties-fines",
+        titre: "Dimming, pairing, auto off, current threshold",
+        pourquoi: "These are the settings you make once and never dare touch again. They must read back as faithfully as they were written.",
+        faire: [
+          "Make one output dimmable, and set it half way.",
+          "Pair CH3 with CH4.",
+          "Set an automatic switch off on one output, and an overcurrent threshold on another."
+        ],
+        attendu: [
+          "The pairs on offer are fixed: 1-2, 3-4, 5-6, 7-8, and both outputs of a pair switch together.",
+          "The dimmed output holds its setting, and the measured current follows the dimming.",
+          "The automatic switch off announces itself on screen before it happens, then happens."
+        ]
+      },
+      {
+        id: "entrees-seuils",
+        titre: "Make an input raise an alert",
+        pourquoi: "An input can watch a tank or a battery and raise alerts at two levels, warning then critical. It is a recent feature, and nobody has seen it at work yet.",
+        faire: [
+          "Set AN1 to <b>Fresh water tank</b> and give it a name.",
+          "Read the level shown, then set the <b>warning threshold just above</b> that level.",
+          "Then move the <b>critical</b> threshold above the level as well."
+        ],
+        attendu: [
+          "The alert raises itself, with nothing refreshed by hand.",
+          "It appears once in the alert list, under the name you gave the input rather than “AN1”.",
+          "Tapping it leads to the board concerned.",
+          "Putting the thresholds back below the level clears the alert on its own: it describes a state, it does not pile up."
+        ]
+      },
+      {
+        id: "entrees-refus",
+        titre: "Set a threshold the board must refuse",
+        pourquoi: "A critical threshold on the wrong side of the warning would make the warning unreachable. The board refuses that setting, and the app has to say so instead of showing it as accepted.",
+        faire: [
+          "On an input alerting “below”, set a critical threshold <b>above</b> the warning.",
+          "Then try a threshold far outside the allowed range."
+        ],
+        attendu: [
+          "The refusal is announced plainly, with its reason.",
+          "The screen goes back to the previous value: nothing is half written.",
+          "Any alert already raised did not change level along the way."
+        ]
+      },
+      {
+        id: "relecture",
+        titre: "Read everything back afterwards",
+        pourquoi: "A command being accepted does not prove it was stored in the right place. Only reading it back, with the session closed and reopened, proves that.",
+        faire: [
+          "Turn the “Announce virtual boards” switch off, turn it back on, and let the board reconnect.",
+          "Reopen both configuration screens."
+        ],
+        attendu: [
+          "Every name, type, threshold and pairing is the one you set.",
+          "Nothing has gone back to factory values."
+        ]
+      },
 
-    host.append(card);
-  });
+      {
+        phase: "Several boards, and pages",
+        lede: "A fitted van often carries two or three boards, and pages that mix their outputs.",
+        id: "multi-cartes",
+        titre: "Add two boards that arrive fitted",
+        pourquoi: "The other two models arrive configured, with load names and inputs already set: enough to build a complete van in a minute instead of an hour.",
+        faire: [
+          "Create a <b>Fitted cabin</b> and a <b>Fitted garage</b>.",
+          "Pair each one, going through BOOT from its menu.",
+          "Attach them to the test installation."
+        ],
+        attendu: [
+          "SIM02 and SIM03 appear without restarting the search.",
+          "Their outputs carry load names (lights, water pump, winch, work lights), in the app's language.",
+          "The installation holds three boards, each with its own state.",
+          "The measured values differ from one board to the next: two boards do not measure the same thing."
+        ]
+      },
+      {
+        id: "page-mixte",
+        titre: "Build a page mixing two boards",
+        pourquoi: "A page follows usage, not wiring: switching on the cabin light and the garage light belongs in one place, without having to know which board commands what.",
+        faire: [
+          "Create a page, then put outputs from the cabin <b>and</b> the garage on it, plus a tank input.",
+          "Leave edit mode with <b>Done</b>."
+        ],
+        attendu: [
+          "The tile picker offers all three boards, under the names you gave them.",
+          "The tiles respond, whichever board they come from.",
+          "The “Done” button can be reached without scrolling through the whole page."
+        ]
+      },
+      {
+        id: "page-hors-session",
+        titre: "Build a page with a board that is not connected",
+        pourquoi: "Pages are often built at home, with the van locked and out of range. The app has to offer every known board, not only those answering right now.",
+        faire: [
+          "Turn the “Announce virtual boards” switch off: all three boards disappear.",
+          "Go back to the pages, create one, and tap <b>Add a tile</b>."
+        ],
+        attendu: [
+          "All three boards are <b>still offered</b>, with their output names.",
+          "A tile you place shows no value and says it is out of range, rather than carrying a placeholder name or “unknown”.",
+          "Turning the switch back on brings the tiles to life without rebuilding the page."
+        ]
+      },
+      {
+        id: "bouton-groupe",
+        titre: "A “turn everything off” button across three boards",
+        pourquoi: "This is the button you press on the way out. It has to reach every board, and say what it could not switch off rather than pretend.",
+        faire: [
+          "Add a “turn everything off” button and choose outputs on all three boards.",
+          "Switch several outputs on here and there, then press the button.",
+          "Do it again after turning the virtual boards switch off."
+        ],
+        attendu: [
+          "The count shown matches the outputs chosen, across all boards.",
+          "Everything goes off, and the screen waits for the boards to confirm.",
+          "With the boards cut off, it says what could not be switched off."
+        ]
+      },
 
-  document.getElementById("total").textContent = TRIALS.length;
+      {
+        phase: "What survives, what drops",
+        lede: "A simulated board has to behave like hardware you restart, reset, or unplug.",
+        id: "redemarrage",
+        titre: "Close the app for good, then reopen it",
+        pourquoi: "The pairing key and the whole configuration must survive a restart. Were the key to change along the way, the app could no longer authenticate against a board it believes it knows.",
+        faire: [
+          "Close the app from the app switcher, then launch it again.",
+          "Time it until all three boards are connected."
+        ],
+        attendu: [
+          "All three boards reconnect on their own, with no re-pairing.",
+          "The whole configuration is there, and so are the pages.",
+          "<b>Write down:</b> the time until all three boards are connected."
+        ]
+      },
+      {
+        id: "banc-eteint-en-session",
+        titre: "Cut the boards off while looking at one",
+        pourquoi: "A board that stopped existing while remaining commandable would give you a screen commanding into thin air, and frozen values you would take for real.",
+        faire: [
+          "Open a board and leave its screen showing.",
+          "Turn the “Announce virtual boards” switch off."
+        ],
+        attendu: [
+          "The link drops, and the app shows it.",
+          "The board's screen says so, instead of keeping the last values as if nothing happened.",
+          "A “board out of range” alert appears, then clears when you switch back on."
+        ]
+      },
+      {
+        id: "usine",
+        titre: "Factory reset a configured board",
+        pourquoi: "A reset makes the board new again but keeps its key: the app must stay paired, and stop showing the settings that were just wiped.",
+        faire: [
+          "On SIM01, “…” menu, then <b>Factory reset</b>.",
+          "Go back to the board and reopen its configuration screens."
+        ],
+        attendu: [
+          "The board is back to <code>Channel 1</code> through <code>Channel 8</code>, with no thresholds.",
+          "The app is still paired: no BOOT press is asked for.",
+          "None of the old settings are shown any more.",
+          "The tiles pointing at that board are still there, under the factory names."
+        ]
+      },
+      {
+        id: "retirer-absente",
+        titre: "Remove a board, and find it out of range",
+        pourquoi: "When a board in the van stops answering, the owner has to see it missing, under the name they gave it. An empty screen would not tell “my boards are not answering” from “I have no boards”.",
+        faire: [
+          "On SIM02, “…” menu, then <b>Remove</b>, reading what the dialog announces.",
+          "Open <span class='path'>Devices</span>."
+        ],
+        attendu: [
+          "SIM02 appears in the installation, marked <b>out of range</b>, under the name you gave it.",
+          "No action is offered on it: there is nothing the app can do about a board that does not answer.",
+          "The search keeps announcing itself, otherwise the screen would look frozen.",
+          "Its tiles and its installation are untouched, as for an unplugged board."
+        ]
+      },
+      {
+        id: "oublier",
+        titre: "Forget the board for good",
+        pourquoi: "Removing a simulated board cleans nothing up, exactly like unplugging hardware. It is “Forget this board” that erases the key and the attachment.",
+        faire: [
+          "On the out of range board, choose <b>Forget this board</b>."
+        ],
+        attendu: [
+          "It disappears from the installation and from the list.",
+          "Its tiles disappear from the pages, or clearly say they point at nothing any more.",
+          "Creating a board of the same model again gives a new, unpaired board: the key really is gone."
+        ]
+      },
 
-  // Restitution de l'état
-  document.querySelectorAll("[data-key]").forEach(input => {
-    const k = input.dataset.key;
-    if (state.fields[k]) input.value = state.fields[k];
-    input.addEventListener("input", () => {
-      state.fields[k] = input.value;
-      save();
-    });
-  });
+      {
+        phase: "What these trials do not prove",
+        lede: "This answer is written out, not ticked.",
+        id: "limites",
+        titre: "What does not feel like hardware",
+        pourquoi: "Nothing of the radio is involved here: no range, no permissions, no abrupt cut, no real update. A bench that is too comfortable gives confidence it has not earned.",
+        faire: [
+          "Write down everything that felt too fast, too clean or too safe compared with a real board."
+        ],
+        attendu: [
+          "Every gap you note is something to check again on hardware before believing it."
+        ]
+      },
 
-  document.querySelectorAll("[data-note]").forEach(area => {
-    const id = area.dataset.note;
-    if (state.notes[id]) area.value = state.notes[id];
-    area.addEventListener("input", () => {
-      state.notes[id] = area.value;
-      save();
-    });
-  });
-
-  function paint() {
-    let done = 0, fails = 0;
-    TRIALS.forEach(t => {
-      const m = state.marks[t.id];
-      if (m) done++;
-      if (m === "ko") fails++;
-      const card = document.querySelector(`[data-mark][data-id="${t.id}"]`).closest(".trial");
-      card.dataset.status = m || "";
-      card.querySelectorAll("[data-mark]").forEach(b => {
-        b.setAttribute("aria-pressed", String(b.dataset.mark === m));
-      });
-    });
-    document.getElementById("done").textContent = done;
-    document.getElementById("fails").textContent = fails;
-    document.getElementById("failbox").hidden = fails === 0;
-    document.getElementById("bar").style.width = (done / TRIALS.length * 100) + "%";
+      {
+        phase: "Judgement",
+        lede: "These two answers are written out in full.",
+        id: "hesitations",
+        titre: "What made you stop and think",
+        pourquoi: "A step you read twice is a defect, just as much as a failure is.",
+        faire: ["Where did you hesitate, hunt for a button, read a sentence again?"],
+        attendu: ["Note every hesitation, even the ones that feel silly."]
+      },
+      {
+        id: "confiance",
+        titre: "What would you still check on a real board?",
+        pourquoi: "",
+        faire: ["Answer, and say what you would need in order not to have to check it again."],
+        attendu: ["“All of it, on principle” is a useful answer: then say in which order."]
+      }
+    ],
+    rapportTitre: "TinyRail virtual board trials",
+    pied: "A trial marked “not done” is not a failure: say so as it is. And a trial that passes here does not carry over to hardware: the simulated board answers in milliseconds where a real one takes seconds, and none of the radio is involved."
   }
 
-  document.addEventListener("click", e => {
-    const b = e.target.closest("[data-mark]");
-    if (!b) return;
-    const id = b.dataset.id;
-    state.marks[id] = state.marks[id] === b.dataset.mark ? "" : b.dataset.mark;
-    save();
-    paint();
-  });
+};
 
-  function report() {
-    const f = state.fields;
-    const lignes = [
-      "# Essais des cartes virtuelles TinyRail",
-      "",
-      `Testeur : ${f.who || "?"}`,
-      `Date : ${f.when || "?"}`,
-      `App : ${f.app || "?"} · Téléphone : ${f.phone || "?"}`,
-      `Installation : ${f.lieu || "?"}`,
-      `Cartes : ${f.cartes || "?"}`,
-      ""
-    ];
-    let done = 0, fails = 0;
-    TRIALS.forEach((t, i) => {
-      const m = state.marks[t.id];
-      if (m) done++;
-      if (m === "ko") fails++;
-      const mot = m === "ok" ? "CONFORME" : m === "ko" ? "EN ECHEC" : m === "na" ? "NON FAIT" : "SANS REPONSE";
-      lignes.push(`${String(i + 1).padStart(2, "0")}. [${mot}] ${t.title}`);
-      const note = (state.notes[t.id] || "").trim();
-      if (note) lignes.push(`    ${note.replace(/\n/g, "\n    ")}`);
-    });
-    lignes.push("", `${done}/${TRIALS.length} essais renseignés, ${fails} en échec.`);
-    return lignes.join("\n");
-  }
-
-  const dump = document.getElementById("dump");
-  const said = document.getElementById("said");
-
-  document.getElementById("copy").addEventListener("click", async () => {
-    const texte = report();
-    dump.value = texte;
-    try {
-      await navigator.clipboard.writeText(texte);
-      said.classList.add("shown");
-      setTimeout(() => said.classList.remove("shown"), 1600);
-    } catch (e) {
-      // Presse-papiers refusé : on montre le texte, à sélectionner à la main.
-      dump.classList.add("shown");
-      dump.select();
-    }
-  });
-
-  document.getElementById("show").addEventListener("click", () => {
-    dump.value = report();
-    dump.classList.toggle("shown");
-  });
-
-  // ⚠️ **Effacer demande confirmation.** Un clic effaçait tout sur-le-champ, et
-  // ce bouton voisine avec « Copier le rapport » au bas d'une session de
-  // quatre-vingt-dix minutes. Le dialogue dit ce qui va disparaître, compté,
-  // parce qu'« êtes-vous sûr » ne fait réfléchir personne.
-  const dlg = document.getElementById("confirm-wipe");
-
-  function compteReponses() {
-    const n = Object.values(state.marks).filter(Boolean).length;
-    const notes = Object.values(state.notes).filter(v => v && v.trim()).length;
-    const champs = Object.values(state.fields).filter(v => v && v.trim()).length;
-    return { n, notes, champs, total: n + notes + champs };
-  }
-
-  function efface() {
-    state = { fields: {}, marks: {}, notes: {} };
-    save();
-    document.querySelectorAll("[data-key], [data-note]").forEach(el => { el.value = ""; });
-    dump.value = "";
-    dump.classList.remove("shown");
-    paint();
-  }
-
-  document.getElementById("wipe").addEventListener("click", () => {
-    const c = compteReponses();
-    // Rien à perdre : ne pas faire cliquer deux fois pour rien.
-    if (c.total === 0) { efface(); return; }
-
-    const morceaux = [];
-    if (c.n) morceaux.push(c.n > 1 ? `${c.n} verdicts` : "1 verdict");
-    if (c.notes) morceaux.push(c.notes > 1 ? `${c.notes} notes` : "1 note");
-    if (c.champs) morceaux.push(c.champs > 1 ? `${c.champs} champs remplis` : "1 champ rempli");
-    const liste = morceaux.length > 1
-      ? morceaux.slice(0, -1).join(", ") + " et " + morceaux[morceaux.length - 1]
-      : morceaux[0];
-    document.getElementById("cw-quoi").textContent =
-      `Vous perdez ${liste}.`;
-
-    if (typeof dlg.showModal === "function") dlg.showModal();
-    else if (confirm(`Vous perdez ${liste}. Tout effacer ?`)) efface();
-  });
-
-  document.getElementById("cw-non").addEventListener("click", () => dlg.close("non"));
-  document.getElementById("cw-oui").addEventListener("click", () => {
-    efface();
-    dlg.close("oui");
-  });
-
-
-
-  paint();
+Essais.protocole(PROTOCOLE);
 </script>
-
 </body>
 </html>

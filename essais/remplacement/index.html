@@ -3,1121 +3,583 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Essais de remplacement TinyRail</title>
+<title>Remplacement · TinyRail</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Source+Sans+3:ital,wght@0,400;0,600;1,400&display=swap">
-
-<style>
-  :root {
-    --ground: #F2F4F1;
-    --surface: #FFFFFF;
-    --surface-sunk: #E9ECE8;
-    --ink: #14181B;
-    --ink-soft: #56626A;
-    --ink-faint: #7C8790;
-    --rule: #DBE0DC;
-    --accent: #1F5F8B;
-    --accent-soft: #E4EEF5;
-    --copper: #9C6224;
-    --ok: #2E7D52;
-    --ok-soft: #E2F0E8;
-    --ko: #B93B31;
-    --ko-soft: #F8E5E3;
-    --wait: #97690F;
-    --wait-soft: #F6EDDA;
-
-    --step: clamp(0.9rem, 0.8rem + 0.4vw, 1.05rem);
-    --shadow: 0 1px 2px rgba(20, 24, 27, .06), 0 8px 24px -18px rgba(20, 24, 27, .5);
-  }
-
-  @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) {
-      --ground: #0F1315;
-      --surface: #161B1E;
-      --surface-sunk: #1C2226;
-      --ink: #E6EBE9;
-      --ink-soft: #9AA6AC;
-      --ink-faint: #7A868C;
-      --rule: #262D31;
-      --accent: #7CBBE0;
-      --accent-soft: #16303F;
-      --copper: #D49A5C;
-      --ok: #62BB8C;
-      --ok-soft: #16301F;
-      --ko: #E77A6E;
-      --ko-soft: #341A18;
-      --wait: #D9AC4E;
-      --wait-soft: #2E2412;
-      --shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 10px 28px -20px rgba(0, 0, 0, .9);
-    }
-  }
-
-  :root[data-theme="dark"] {
-    --ground: #0F1315;
-    --surface: #161B1E;
-    --surface-sunk: #1C2226;
-    --ink: #E6EBE9;
-    --ink-soft: #9AA6AC;
-    --ink-faint: #7A868C;
-    --rule: #262D31;
-    --accent: #7CBBE0;
-    --accent-soft: #16303F;
-    --copper: #D49A5C;
-    --ok: #62BB8C;
-    --ok-soft: #16301F;
-    --ko: #E77A6E;
-    --ko-soft: #341A18;
-    --wait: #D9AC4E;
-    --wait-soft: #2E2412;
-    --shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 10px 28px -20px rgba(0, 0, 0, .9);
-  }
-
-  * { box-sizing: border-box; }
-
-  body {
-    margin: 0;
-    background: var(--ground);
-    color: var(--ink);
-    font-family: "Source Sans 3", system-ui, -apple-system, sans-serif;
-    font-size: var(--step);
-    line-height: 1.55;
-    -webkit-text-size-adjust: 100%;
-  }
-
-  .wrap {
-    max-width: 54rem;
-    margin: 0 auto;
-    padding: 0 1.1rem 5rem;
-  }
-
-  /* ── En-tête ───────────────────────────────────────────────────────────── */
-
-  .masthead {
-    position: sticky;
-    top: 0;
-    z-index: 20;
-    background: color-mix(in srgb, var(--ground) 92%, transparent);
-    backdrop-filter: blur(8px);
-    border-bottom: 1px solid var(--rule);
-  }
-
-  .masthead-inner {
-    max-width: 54rem;
-    margin: 0 auto;
-    padding: .55rem 1.1rem .5rem;
-    display: flex;
-    align-items: baseline;
-    gap: .9rem;
-    flex-wrap: wrap;
-  }
-
-  .masthead h1 {
-    font-family: Archivo, system-ui, sans-serif;
-    font-size: 1rem;
-    font-weight: 600;
-    letter-spacing: -.01em;
-    margin: 0;
-    flex: 1 1 auto;
-  }
-
-  .tally {
-    font-family: "IBM Plex Mono", ui-monospace, monospace;
-    font-size: .8rem;
-    font-variant-numeric: tabular-nums;
-    color: var(--ink-soft);
-    display: flex;
-    gap: .75rem;
-  }
-  .tally b { color: var(--ink); font-weight: 500; }
-  .tally .bad { color: var(--ko); }
-
-  .gauge {
-    height: 3px;
-    background: var(--surface-sunk);
-  }
-  .gauge span {
-    display: block;
-    height: 100%;
-    width: 0;
-    background: var(--accent);
-    transition: width .25s ease;
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .gauge span { transition: none; }
-  }
-
-  /* ── Titre ─────────────────────────────────────────────────────────────── */
-
-  header.intro { padding: 2.4rem 0 1.6rem; }
-
-  .eyebrow {
-    font-family: "IBM Plex Mono", ui-monospace, monospace;
-    font-size: .72rem;
-    letter-spacing: .14em;
-    text-transform: uppercase;
-    color: var(--copper);
-    margin: 0 0 .7rem;
-  }
-
-  header.intro h2 {
-    font-family: Archivo, system-ui, sans-serif;
-    font-size: clamp(1.75rem, 1.3rem + 2.2vw, 2.6rem);
-    line-height: 1.08;
-    letter-spacing: -.02em;
-    font-weight: 700;
-    margin: 0 0 .8rem;
-    text-wrap: balance;
-  }
-
-  header.intro p {
-    max-width: 62ch;
-    margin: 0 0 .7rem;
-    color: var(--ink-soft);
-  }
-
-  /* ── Fiche d'identification ────────────────────────────────────────────── */
-
-  .ident {
-    background: var(--surface);
-    border: 1px solid var(--rule);
-    border-radius: 10px;
-    padding: 1rem 1.05rem 1.1rem;
-    box-shadow: var(--shadow);
-    display: grid;
-    gap: .8rem 1.1rem;
-    grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
-  }
-
-  .field { display: flex; flex-direction: column; gap: .28rem; }
-
-  .field label {
-    font-family: "IBM Plex Mono", ui-monospace, monospace;
-    font-size: .7rem;
-    letter-spacing: .1em;
-    text-transform: uppercase;
-    color: var(--ink-faint);
-  }
-
-  input[type="text"], textarea {
-    font: inherit;
-    color: var(--ink);
-    background: var(--ground);
-    border: 1px solid var(--rule);
-    border-radius: 7px;
-    padding: .42rem .55rem;
-    width: 100%;
-  }
-  input[type="text"]:focus-visible, textarea:focus-visible {
-    outline: 2px solid var(--accent);
-    outline-offset: 1px;
-  }
-
-  /* ── Phases et essais ──────────────────────────────────────────────────── */
-
-  .phase { margin-top: 2.6rem; }
-
-  .phase > h3 {
-    font-family: Archivo, system-ui, sans-serif;
-    font-size: 1.15rem;
-    font-weight: 600;
-    letter-spacing: -.01em;
-    margin: 0 0 .25rem;
-    display: flex;
-    align-items: center;
-    gap: .6rem;
-  }
-
-  .phase > h3::after {
-    content: "";
-    flex: 1;
-    height: 1px;
-    background: var(--rule);
-  }
-
-  .phase > .lede {
-    margin: 0 0 1.1rem;
-    color: var(--ink-soft);
-    max-width: 64ch;
-  }
-
-  .trial {
-    background: var(--surface);
-    border: 1px solid var(--rule);
-    border-radius: 10px;
-    margin-bottom: .9rem;
-    box-shadow: var(--shadow);
-    overflow: hidden;
-  }
-
-  .trial[data-status="ok"] { border-color: color-mix(in srgb, var(--ok) 45%, var(--rule)); }
-  .trial[data-status="ko"] { border-color: color-mix(in srgb, var(--ko) 55%, var(--rule)); }
-
-  .trial-head {
-    display: flex;
-    gap: .8rem;
-    align-items: baseline;
-    padding: .9rem 1rem .2rem;
-  }
-
-  .num {
-    font-family: "IBM Plex Mono", ui-monospace, monospace;
-    font-size: .78rem;
-    font-variant-numeric: tabular-nums;
-    color: var(--ink-faint);
-    padding-top: .18rem;
-  }
-
-  .trial h4 {
-    font-family: Archivo, system-ui, sans-serif;
-    font-size: 1.02rem;
-    font-weight: 600;
-    margin: 0;
-    flex: 1;
-    text-wrap: balance;
-  }
-
-  .body { padding: .35rem 1rem 1rem 2.6rem; }
-
-  .hunt {
-    color: var(--ink-soft);
-    font-style: italic;
-    margin: 0 0 .7rem;
-  }
-
-  .label {
-    font-family: "IBM Plex Mono", ui-monospace, monospace;
-    font-size: .68rem;
-    letter-spacing: .1em;
-    text-transform: uppercase;
-    color: var(--ink-faint);
-    margin: .9rem 0 .3rem;
-  }
-
-  ol.steps, ul.checks { margin: 0; padding-left: 1.15rem; }
-  ol.steps li, ul.checks li { margin-bottom: .3rem; }
-  ol.steps { counter-reset: none; }
-
-  .expect {
-    background: var(--surface-sunk);
-    border-left: 2px solid var(--accent);
-    border-radius: 0 7px 7px 0;
-    padding: .6rem .8rem;
-    margin-top: .6rem;
-  }
-  .expect p { margin: 0; }
-  .expect p + p { margin-top: .4rem; }
-
-  .warn {
-    border-left: 2px solid var(--wait);
-    background: var(--wait-soft);
-    border-radius: 0 7px 7px 0;
-    padding: .55rem .8rem;
-    margin-top: .7rem;
-    color: var(--ink);
-  }
-  .warn p { margin: 0; }
-
-  code, kbd, .mono {
-    font-family: "IBM Plex Mono", ui-monospace, monospace;
-    font-size: .88em;
-  }
-  code {
-    background: var(--surface-sunk);
-    border-radius: 4px;
-    padding: .05em .32em;
-  }
-  .path { color: var(--copper); font-weight: 500; white-space: nowrap; }
-
-  /* ── Verdict ───────────────────────────────────────────────────────────── */
-
-  .verdict {
-    display: flex;
-    flex-wrap: wrap;
-    gap: .5rem .45rem;
-    align-items: center;
-    padding: .7rem 1rem .9rem 2.6rem;
-    border-top: 1px solid var(--rule);
-    background: var(--surface);
-  }
-
-  .verdict .set { display: flex; gap: .3rem; }
-
-  button.mark {
-    font: 600 .82rem/1 "Source Sans 3", sans-serif;
-    color: var(--ink-soft);
-    background: var(--ground);
-    border: 1px solid var(--rule);
-    border-radius: 999px;
-    padding: .42rem .8rem;
-    cursor: pointer;
-  }
-  button.mark:hover { border-color: var(--ink-faint); }
-  button.mark:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-
-  button.mark[aria-pressed="true"][data-mark="ok"] {
-    background: var(--ok-soft); border-color: var(--ok); color: var(--ok);
-  }
-  button.mark[aria-pressed="true"][data-mark="ko"] {
-    background: var(--ko-soft); border-color: var(--ko); color: var(--ko);
-  }
-  button.mark[aria-pressed="true"][data-mark="na"] {
-    background: var(--surface-sunk); border-color: var(--ink-faint); color: var(--ink-soft);
-  }
-
-  .verdict textarea {
-    flex: 1 1 16rem;
-    min-height: 2.3rem;
-    resize: vertical;
-    background: var(--surface);
-  }
-
-
-  /* ── Fichiers à charger ────────────────────────────────────────────────── */
-
-  .files { display: grid; gap: .55rem; margin-top: .9rem; }
-
-  .file {
-    display: flex;
-    align-items: center;
-    gap: .7rem;
-    background: var(--surface);
-    border: 1px solid var(--rule);
-    border-radius: 8px;
-    padding: .6rem .75rem;
-  }
-
-  .file .name {
-    font-family: "IBM Plex Mono", ui-monospace, monospace;
-    font-size: .82rem;
-    color: var(--ink);
-    flex: 1 1 auto;
-  }
-  .file .name small {
-    display: block;
-    font-family: "Source Sans 3", sans-serif;
-    font-size: .8rem;
-    color: var(--ink-soft);
-  }
-  .masthead h1 .retour {
-    color: var(--ink-faint);
-    text-decoration: none;
-  }
-  .masthead h1 .retour:hover { color: var(--accent); }
-
-  .garde {
-    margin: .9rem 0 0;
-    font-size: .86rem;
-    color: var(--ink-faint);
-  }
-
-  dialog#confirm-wipe {
-    max-width: 26rem;
-    border: 1px solid var(--rule);
-    border-radius: 10px;
-    background: var(--surface);
-    color: var(--ink);
-    padding: 1.2rem 1.3rem;
-    box-shadow: var(--shadow);
-  }
-  dialog#confirm-wipe::backdrop { background: rgba(0, 0, 0, .45); }
-  dialog#confirm-wipe h3 {
-    font-family: Archivo, system-ui, sans-serif;
-    font-size: 1.05rem;
-    margin: 0 0 .5rem;
-  }
-  dialog#confirm-wipe p { margin: 0 0 .6rem; color: var(--ink-soft); }
-  dialog#confirm-wipe .cw-avis { color: var(--ko); font-size: .88rem; }
-  .cw-actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: .5rem;
-    margin-top: 1rem;
-  }
-  .cw-actions .danger {
-    font: inherit;
-    font-size: .9rem;
-    background: var(--ko);
-    color: #fff;
-    border: 0;
-    border-radius: 6px;
-    padding: .42rem .9rem;
-    cursor: pointer;
-  }
-  .cw-actions .danger:hover { filter: brightness(1.08); }
-
-  .file .dl {
-    font: inherit;
-    font-size: .82rem;
-    text-decoration: none;
-    background: var(--accent);
-    color: var(--surface);
-    border: 0;
-    border-radius: 6px;
-    padding: .34rem .7rem;
-    white-space: nowrap;
-  }
-  .file .dl:hover { filter: brightness(1.08); }
-
-  .file .size {
-    font-family: "IBM Plex Mono", monospace;
-    font-size: .72rem;
-    color: var(--ink-faint);
-    font-variant-numeric: tabular-nums;
-  }
-  .file button {
-    font: 600 .8rem/1 "Source Sans 3", sans-serif;
-    background: var(--accent-soft);
-    color: var(--accent);
-    border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
-    border-radius: 999px;
-    padding: .4rem .8rem;
-    cursor: pointer;
-    white-space: nowrap;
-  }
-  .file button:hover { filter: brightness(1.04); }
-  .file button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-  .file button.done { background: var(--ok-soft); color: var(--ok); border-color: var(--ok); }
-
-  /* ── Rapport ───────────────────────────────────────────────────────────── */
-
-  .report {
-    margin-top: 2.8rem;
-    background: var(--surface);
-    border: 1px solid var(--rule);
-    border-radius: 10px;
-    padding: 1.1rem;
-    box-shadow: var(--shadow);
-  }
-  .report h3 {
-    font-family: Archivo, sans-serif;
-    font-size: 1.1rem;
-    margin: 0 0 .3rem;
-  }
-  .report p { margin: 0 0 .8rem; color: var(--ink-soft); }
-
-  .actions { display: flex; gap: .5rem; flex-wrap: wrap; }
-
-  button.primary, button.ghost {
-    font: 600 .88rem/1 "Source Sans 3", sans-serif;
-    border-radius: 7px;
-    padding: .6rem 1rem;
-    cursor: pointer;
-    border: 1px solid transparent;
-  }
-  button.primary { background: var(--accent); color: var(--surface); }
-  button.primary:hover { filter: brightness(1.08); }
-  button.ghost { background: transparent; color: var(--ink-soft); border-color: var(--rule); }
-  button.ghost:hover { color: var(--ink); border-color: var(--ink-faint); }
-  button.primary:focus-visible, button.ghost:focus-visible {
-    outline: 2px solid var(--accent); outline-offset: 2px;
-  }
-
-  #dump {
-    width: 100%;
-    min-height: 14rem;
-    margin-top: .9rem;
-    font-family: "IBM Plex Mono", monospace;
-    font-size: .78rem;
-    line-height: 1.5;
-    display: none;
-  }
-  #dump.shown { display: block; }
-
-  .said {
-    font-size: .84rem;
-    color: var(--ok);
-    margin-left: .4rem;
-    opacity: 0;
-    transition: opacity .2s;
-  }
-  .said.shown { opacity: 1; }
-
-  footer {
-    margin-top: 2.5rem;
-    padding-top: 1.2rem;
-    border-top: 1px solid var(--rule);
-    color: var(--ink-faint);
-    font-size: .84rem;
-  }
-
-  @media (max-width: 34rem) {
-    .body, .verdict { padding-left: 1rem; }
-  }
-</style>
+<link rel="stylesheet" href="../essais.css">
 </head>
 <body>
-
-<div class="masthead">
-  <div class="masthead-inner">
-    <h1><a class="retour" href="../">Essais</a> · Remplacement</h1>
-    <div class="tally">
-      <span><b id="done">0</b>/<span id="total">0</span> faits</span>
-      <span class="bad" id="failbox" hidden><b id="fails">0</b> en échec</span>
-    </div>
-  </div>
-  <div class="gauge"><span id="bar"></span></div>
-</div>
-
-<div class="wrap">
-
-  <header class="intro">
-    <p class="eyebrow">TinyRail · essais sur matériel</p>
-    <h2>Remplacer une carte, et tout ce qui peut mal se passer autour</h2>
-    <p>
-      Rien de ce chantier n'a tourné sur du vrai matériel. Les essais sont dans
-      l'ordre : chacun s'appuie sur le précédent.
-    </p>
-  </header>
-
-  <section class="ident" aria-label="Identification de la session d'essai">
-    <div class="field">
-      <label for="who">Testeur</label>
-      <input type="text" id="who" data-key="who" autocomplete="name">
-    </div>
-    <div class="field">
-      <label for="when">Date</label>
-      <input type="text" id="when" data-key="when" placeholder="2026-08-21">
-    </div>
-    <div class="field">
-      <label for="app">Version de l'app</label>
-      <input type="text" id="app" data-key="app" placeholder="Réglages → À propos">
-    </div>
-    <div class="field">
-      <label for="cardA">Carte A</label>
-      <input type="text" id="cardA" data-key="cardA" placeholder="ed0dd4 · fw 0.13.0">
-    </div>
-    <div class="field">
-      <label for="cardB">Carte B</label>
-      <input type="text" id="cardB" data-key="cardB" placeholder="ab12cd · fw 0.13.0">
-    </div>
-    <div class="field">
-      <label for="phone">Téléphone</label>
-      <input type="text" id="phone" data-key="phone" placeholder="iPhone 14, iOS 26.6">
-    </div>
-  </section>
-
-  <section class="phase">
-    <h3>Les fichiers</h3>
-    <p class="lede">
-      Téléchargez chacun d'eux, puis chargez-le depuis l'app quand un essai le
-      demande. Ils remplacent la configuration de la carte visée.
-    </p>
-    <div class="files" id="files"></div>
-  </section>
-
-  <main id="trials"></main>
-
-  <section class="report">
-    <h3>Rapport</h3>
-    <p>
-      Tout est gardé dans ce navigateur au fur et à mesure : vous pouvez fermer
-      l'onglet et reprendre plus tard. Le bouton met le compte rendu dans le
-      presse-papiers, prêt à coller dans un message.
-    </p>
-    <div class="actions">
-      <button class="primary" id="copy">Copier le rapport</button>
-      <span class="said" id="said">Copié</span>
-      <button class="ghost" id="show">Voir le texte</button>
-      <button class="ghost" id="wipe">Tout effacer</button>
-    </div>
-    <textarea id="dump" readonly aria-label="Compte rendu en texte"></textarea>
-    <p class="garde">
-      Vos réponses sont gardées dans ce navigateur : vous pouvez fermer la page
-      et reprendre plus tard, au même endroit. Elles ne quittent pas votre
-      appareil, et ne suivent pas sur un autre.
-    </p>
-  </section>
-
-  <dialog id="confirm-wipe" aria-labelledby="cw-titre">
-    <h3 id="cw-titre">Tout effacer ?</h3>
-    <p id="cw-quoi"></p>
-    <p class="cw-avis">Cela ne s'annule pas. Copiez le rapport d'abord si vous
-      voulez en garder une trace.</p>
-    <div class="cw-actions">
-      <button class="ghost" value="non" id="cw-non">Annuler</button>
-      <button class="danger" value="oui" id="cw-oui">Tout effacer</button>
-    </div>
-  </dialog>
-
-  <footer>
-    Un essai « non fait » n'est pas un échec : dites-le tel quel. Ce qui compte
-    est de savoir ce qui a été regardé, et ce qui ne l'a pas été.
-  </footer>
-</div>
-
+<div id="app"></div>
+<script src="../essais.js"></script>
 <script>
 
-  const FILES = [
-    { id: "modele", nom: "modele-van-essai.json", taille: "3.4 ko", quoi: "Deux cartes et leurs pages : la base de tous les essais." },
-    { id: "cellule", nom: "config-cellule.json", taille: "1.9 ko", quoi: "8 sorties, 4 entrées, sonde, seuils, appariement." },
-    { id: "soute", nom: "config-soute.json", taille: "0.7 ko", quoi: "3 sorties, 1 entrée. De quoi remettre la carte B d'aplomb." },
-    { id: "bornes", nom: "config-bornes.json", taille: "0.7 ko", quoi: "Valeurs aux limites admises, et un nom de sortie très long." },
-    { id: "refus", nom: "config-refus.json", taille: "0.4 ko", quoi: "Contient un type de charge inexistant : la carte doit refuser ce seul réglage." }
-  ];
+const PROTOCOLE = {
+  cle: "remplacement",
 
-  const TRIALS = [
-    {
-      phase: "Base de test",
-      lede: "À faire avant tout le reste, sur une installation neuve pour ne pas toucher à votre van.",
-      id: "installation",
-      title: "Installation d'essai, deux cartes appairées",
-      hunt: "",
-      steps: [
-        "Créez une installation nommée <b>Test remplacement</b>.",
-        "Appairez les cartes A et B dedans."
-      ],
-      expect: [
-        "Les deux cartes répondent et sont rattachées à cette installation."
-      ]
-    },
-    {
-      id: "import-modele",
-      title: "Installer le modèle, Cellule sur A et Soute sur B",
-      hunt: "Premier essai d'import : il pose la configuration des deux cartes et les pages d'un coup.",
-      steps: [
-        "<span class='path'>… → Configuration → Installer un modèle</span>, choisissez <code>modele-van-essai.json</code>.",
-        "Associez <b>Cellule</b> à la carte A, <b>Soute</b> à la carte B.",
-        "Laissez « Reprendre aussi les noms des cartes » décoché.",
-        "Installez."
-      ],
-      expect: [
-        "L'écran nomme des rôles, pas des identifiants Bluetooth.",
-        "Deux pages apparaissent, <b>Séjour</b> et <b>Soute</b>, avec un bouton « tout éteindre » qui vise les deux cartes.",
-        "Les sorties de A s'appellent « Plafonnier salon », « Pompe à eau »… celles de B « Compresseur », « Treuil »."
-      ]
-    },
-    {
-      id: "controle-base",
-      title: "Contrôler la base sur les cartes",
-      hunt: "Le rapport d'écriture ne prouve que l'acceptation des commandes ; seule la relecture prouve les réglages.",
-      steps: [
-        "Sur A : <span class='path'>Configuration des sorties</span>, puis <span class='path'>des entrées</span>, puis <span class='path'>Système</span>.",
-        "Sur B : les mêmes écrans."
-      ],
-      expect: [
-        "Sur A : CH3 en extinction auto après 120 s, CH5 et CH6 appariés, seuil CH3 à 5 A, coupure batterie 11,50 V, thermique 85/70 °C.",
-        "Sur A, entrées : AN1 et AN2 en sonde résistive, AN3 en tension avec seuils, AN4 en contact lié à CH1.",
-        "Sur B : trois sorties nommées, seuil du treuil à 10 A."
-      ]
-    },
-
-    {
-      phase: "Import de configuration",
+  fr: {
+    nom: "Remplacement",
+    eyebrow: "TinyRail · essais sur matériel",
+    titre: "Remplacer une carte en panne",
+    intro: [
+      "Une carte de puissance lâche dans un van déjà équipé. On en pose une neuve, et tout doit suivre : les noms des sorties, les seuils, les réglages des entrées, les pages de l'app, jusqu'au bouton « tout éteindre ». C'est ce que l'app fait quand on lui demande de remplacer une carte, et c'est ce que ce protocole met à l'épreuve.",
+      "Trois fonctions voisines sont éprouvées au passage, parce qu'elles reposent sur les mêmes écritures : charger une configuration depuis un fichier, installer un modèle d'installation, et la proposition de sauvegarde qui suit une modification.",
+      "Comptez une heure et demie. Les essais sont dans l'ordre : chacun s'appuie sur le précédent."
+    ],
+    identLabel: "Identification de la session d'essai",
+    champs: [
+      { cle: "who", label: "Testeur", exemple: "" },
+      { cle: "when", label: "Date", exemple: "2026-08-24" },
+      { cle: "app", label: "Version de l'app", exemple: "Réglages → À propos" },
+      { cle: "phone", label: "Téléphone", exemple: "iPhone 14, iOS 26.6" },
+      { cle: "cardA", label: "Carte A", exemple: "ed0dd4 · fw 0.13.0" },
+      { cle: "cardB", label: "Carte B", exemple: "ab12cd · fw 0.13.0" }
+    ],
+    besoin: {
+      titre: "Ce qu'il vous faut",
       lede: "",
-      id: "bornes",
-      title: "Appliquer les valeurs limites sur B",
-      hunt: "On cherche ce que le firmware refuse aux bornes de ce qu'il accepte.",
-      steps: [
-        "Sur B : <span class='path'>… → Appliquer une configuration</span>, choisissez <code>config-bornes.json</code>.",
-        "Lisez la confirmation, validez.",
-        "Relisez la configuration de B."
+      points: [
+        "<b>Deux cartes TinyRail alimentées</b>, appelées ici A et B, et de quoi couper l'alimentation de l'une d'elles en cours d'essai.",
+        "Un téléphone avec l'app, et de quoi chronométrer.",
+        "Une charge branchée sur au moins une sortie, pour vérifier le courant mesuré.",
+        "Les cinq fichiers ci-dessous, téléchargés avant de commencer."
       ],
-      expect: [
-        "La confirmation dit d'où vient le fichier, de quand il date, et que cela ne s'annule pas.",
-        "Seuils écrits : 0,5 A et 10 A, délai 10 s, thermique 100/50 °C, extinction auto 3600 s.",
-        "Le nom de sortie très long est accepté, ou refusé proprement avec sa raison."
+      avis: "Ces essais réécrivent la configuration des deux cartes et en remettent une à zéro. <b>N'utilisez pas une carte installée dans un van en service.</b>"
+    },
+    fichiers: {
+      titre: "Les fichiers d'essai",
+      lede: "Téléchargez-les tous avant de commencer, puis chargez-les depuis l'app quand un essai le demande. Ils ont été produits par l'app elle-même : si l'un d'eux était refusé au chargement, c'est un défaut à signaler.",
+      liste: [
+        { nom: "modele-van-essai.json", taille: "3,4 ko", quoi: "Un van entier : deux cartes, leurs réglages et leurs pages. C'est la base de tous les essais." },
+        { nom: "config-cellule.json", taille: "1,9 ko", quoi: "Une carte de cellule complète : 8 sorties, 4 entrées, une sonde, des seuils, deux sorties appariées." },
+        { nom: "config-soute.json", taille: "0,7 ko", quoi: "Une carte de soute simple : 3 sorties, 1 entrée. De quoi remettre la carte B d'aplomb entre deux essais." },
+        { nom: "config-bornes.json", taille: "0,7 ko", quoi: "Les valeurs extrêmes que le firmware accepte, plus un nom de sortie anormalement long." },
+        { nom: "config-refus.json", taille: "0,4 ko", quoi: "Contient un type de charge qui n'existe pas : la carte doit refuser ce seul réglage et accepter le reste." }
       ]
     },
-    {
-      id: "refus",
-      title: "Appliquer une configuration que la carte refuse",
-      hunt: "Le rapport d'échec doit se lire et se recopier : c'est ce qui permet de reprendre les réglages à la main.",
-      steps: [
-        "Sur B : appliquez <code>config-refus.json</code>."
-      ],
-      expect: [
-        "Le plafonnier passe, la pompe à eau non.",
-        "La liste « À régler à la main » nomme le réglage (<b>type de charge sur Pompe à eau</b>) et donne la raison.",
-        "Photographiez cet écran : est-il suffisant pour refaire le réglage vous-même ?"
-      ]
-    },
-    {
-      id: "remise-soute",
-      title: "Remettre B d'aplomb",
-      hunt: "",
-      steps: [
-        "Sur B : appliquez <code>config-soute.json</code>."
-      ],
-      expect: ["B retrouve ses trois sorties nommées."]
-    },
+    essais: [
+      {
+        phase: "Poser la base de test",
+        lede: "À faire avant tout le reste, dans une installation neuve pour ne pas toucher à votre van.",
+        id: "installation",
+        titre: "Créer une installation d'essai avec les deux cartes",
+        pourquoi: "Tout ce qui suit modifie des cartes et des pages. Une installation à part tient votre van hors du chemin, et donne à tous les essais le même point de départ.",
+        faire: [
+          "Créez une installation nommée <b>Test remplacement</b>.",
+          "Appairez les cartes A et B dedans : appui de trois secondes sur le bouton BOOT de chacune, puis « Appairer » dans les trente secondes.",
+          "Notez leurs identifiants dans les champs « Carte A » et « Carte B » en haut de cette page."
+        ],
+        attendu: [
+          "Les deux cartes répondent et sont rattachées à cette installation."
+        ]
+      },
+      {
+        id: "import-modele",
+        titre: "Installer le modèle : Cellule sur A, Soute sur B",
+        pourquoi: "Un modèle d'installation décrit un van entier : la configuration de chaque carte et les pages qui vont avec. Le charger est la façon la plus rapide de mettre les deux cartes dans un état connu, et c'est du même coup le premier essai de chargement.",
+        faire: [
+          "<span class='path'>… → Configuration → Installer un modèle</span>, choisissez <code>modele-van-essai.json</code>.",
+          "Associez <b>Cellule</b> à la carte A, et <b>Soute</b> à la carte B.",
+          "Laissez « Reprendre aussi les noms des cartes » décoché.",
+          "Installez."
+        ],
+        attendu: [
+          "L'écran d'association parle de rôles (Cellule, Soute) et non d'identifiants Bluetooth : c'est ce qui permet de savoir quelle carte va où.",
+          "Deux pages apparaissent, <b>Séjour</b> et <b>Soute</b>, avec un bouton « tout éteindre » qui vise les deux cartes.",
+          "Les sorties de A s'appellent « Plafonnier salon », « Pompe à eau »… celles de B « Compresseur », « Treuil »."
+        ]
+      },
+      {
+        id: "controle-base",
+        titre: "Vérifier sur les cartes ce que le modèle a écrit",
+        pourquoi: "Quand l'app annonce qu'une écriture est passée, elle dit seulement que les cartes ont accepté les commandes. Seule la relecture des écrans de configuration prouve que les réglages sont bien là.",
+        faire: [
+          "Sur A : <span class='path'>Configuration des sorties</span>, puis <span class='path'>des entrées</span>, puis <span class='path'>Système</span>.",
+          "Sur B : les mêmes écrans."
+        ],
+        attendu: [
+          "Sur A, sorties : CH3 s'éteint tout seul après 120 s, CH5 et CH6 sont appariés, le seuil de CH3 est à 5 A.",
+          "Sur A, système : coupure batterie à 11,50 V, seuils thermiques 85/70 °C.",
+          "Sur A, entrées : AN1 et AN2 en sonde résistive, AN3 en tension avec seuils, AN4 en contact lié à CH1.",
+          "Sur B : trois sorties nommées, seuil du treuil à 10 A."
+        ]
+      },
 
-    {
-      phase: "Remplacement",
-      lede: "La carte A est vivante : c'est le meilleur cas, sa configuration se lit à l'instant.",
-      id: "remplacement",
-      title: "Remplacer A par B",
-      hunt: "On cherche ce qui ne suit pas : une tuile restée sur l'ancienne carte, un groupe amputé.",
-      steps: [
-        "Ouvrez A, <span class='path'>… → Remplacer cette carte</span>.",
-        "<b>Relever maintenant</b>, puis Continuer.",
-        "Choisissez B.",
-        "Cochez la remise à zéro de l'ancienne carte, puis lancez."
-      ],
-      expect: [
-        "B apparaît sous <b>Cartes déjà appairées</b>, sans passer par le scan.",
-        "La progression compte les étapes (« 23 sur 46 »).",
-        "À la fin : les tuiles de la page Séjour commandent B, le bouton « tout éteindre » vise toujours trois sorties, A a disparu de la liste."
-      ],
-      warn: "Chronométrez l'écriture. C'est la première fois qu'une vraie carte encaisse une quarantaine d'écritures à la suite."
-    },
-    {
-      id: "verif-b",
-      title: "Vérifier B, réglage par réglage",
-      hunt: "",
-      steps: [
-        "Relisez sur B les trois écrans de configuration, et comparez à ce que portait A (essai 03)."
-      ],
-      expect: [
-        "Tout ce que portait A se retrouve sur B, nom de carte compris.",
-        "Allumez une sortie : le courant mesuré correspond à la charge."
-      ]
-    },
-    {
-      id: "ancienne",
-      title: "Ce qu'est devenue A",
-      hunt: "Deux cartes portant les mêmes libellés au scan seraient indiscernables.",
-      steps: [
-        "Réappairez A (appui 3 s sur BOOT) et regardez ses réglages."
-      ],
-      expect: ["A est revenue d'usine : plus de noms de sorties ni de seuils."]
-    },
-    {
-      id: "ha",
-      title: "Home Assistant, si vous l'utilisez",
-      hunt: "Limite connue : on juge si l'app la dit assez clairement.",
-      steps: ["Cherchez les entités de A, puis celles de B."],
-      expect: [
-        "B est un appareil nouveau ; les entités de A sont indisponibles.",
-        "Les automatisations qui citaient A sont à reprendre."
-      ]
-    },
+      {
+        phase: "Charger une configuration depuis un fichier",
+        lede: "Deux fichiers difficiles : l'un aux bornes de ce que le firmware accepte, l'autre qu'il doit refuser en partie.",
+        id: "bornes",
+        titre: "Charger une configuration aux valeurs limites",
+        pourquoi: "Ce fichier contient les valeurs extrêmes que le firmware accepte, plus un nom de sortie anormalement long. On cherche ce qui casse au bord du domaine admis, et si un refus se lit.",
+        faire: [
+          "Sur B : <span class='path'>… → Appliquer une configuration</span>, choisissez <code>config-bornes.json</code>.",
+          "Lisez la confirmation, puis validez.",
+          "Relisez ensuite la configuration de B."
+        ],
+        attendu: [
+          "La confirmation dit d'où vient le fichier, de quand il date, et que l'opération ne s'annule pas.",
+          "Les seuils écrits sont 0,5 A et 10 A, délai 10 s, thermique 100/50 °C, extinction automatique 3600 s.",
+          "Le nom de sortie très long est accepté, ou refusé proprement avec sa raison."
+        ]
+      },
+      {
+        id: "refus",
+        titre: "Charger une configuration que la carte doit refuser en partie",
+        pourquoi: "Ce fichier contient un type de charge qui n'existe pas. La carte doit refuser ce seul réglage et accepter tout le reste. Le rapport d'échec doit alors permettre de refaire à la main ce qui n'est pas passé.",
+        faire: [
+          "Sur B : appliquez <code>config-refus.json</code>."
+        ],
+        attendu: [
+          "Le plafonnier passe, la pompe à eau non.",
+          "La liste « À régler à la main » nomme le réglage en cause (<b>type de charge sur Pompe à eau</b>) et donne la raison du refus.",
+          "Photographiez cet écran : vous suffirait-il pour refaire le réglage vous-même, sans autre information ?"
+        ]
+      },
+      {
+        id: "remise-soute",
+        titre: "Remettre B dans un état propre",
+        pourquoi: "Les essais suivants partent d'une carte B saine.",
+        faire: [
+          "Sur B : appliquez <code>config-soute.json</code>."
+        ],
+        attendu: ["B retrouve ses trois sorties nommées."]
+      },
 
-    {
-      phase: "Quand ça se passe mal",
-      lede: "Provoquez les pannes franchement. Rechargez le modèle (essai 02) si la base a été défaite.",
-      id: "coupure",
-      title: "Couper l'alimentation en pleine écriture",
-      hunt: "Sans garde, l'app enverrait les quarante commandes restantes dans le vide.",
-      steps: [
-        "Lancez un remplacement, dans l'autre sens si besoin.",
-        "Pendant l'écriture, <b>coupez l'alimentation de la carte cible</b>.",
-        "Rebranchez, laissez-la revenir, touchez « Réessayer le reste »."
-      ],
-      expect: [
-        "L'écriture s'arrête vite, elle ne s'obstine pas.",
-        "Le rapport nomme chaque réglage manquant et sa raison.",
-        "La reprise n'écrit que ce qui manquait."
-      ],
-      warn: "Notez le délai entre la coupure et la réaction de l'écran."
-    },
-    {
-      id: "app-tuee",
-      title: "Tuer l'app pendant le remplacement",
-      hunt: "Un van à moitié rebranché ne se voit pas.",
-      steps: [
-        "Lancez un remplacement, puis <b>balayez l'app</b> pendant l'écriture.",
-        "Rouvrez l'app, regardez vos pages."
-      ],
-      expect: [
-        "Aucune page ne mélange les deux cartes.",
-        "L'app termine seule, sans rien demander."
-      ]
-    },
-    {
-      id: "carte-morte",
-      title: "Remplacer une carte qui ne répond plus",
-      hunt: "Le vrai cas d'usage : tout doit tenir sans que la carte remplacée dise un mot.",
-      steps: [
-        "Débranchez complètement une carte, attendez qu'elle passe hors de portée.",
-        "Ouvrez-la, <span class='path'>… → Remplacer cette carte</span>, allez au bout."
-      ],
-      expect: [
-        "L'entrée du menu est utilisable alors que la carte est muette.",
-        "Le résumé affiche la date du dernier relevé, sans proposer d'en refaire un.",
-        "Le remplacement se fait avec ce relevé."
-      ]
-    },
+      {
+        phase: "Le remplacement lui-même",
+        lede: "La carte A répond encore : c'est le meilleur cas, sa configuration peut être relevée à l'instant.",
+        id: "remplacement",
+        titre: "Remplacer A par B, la carte A étant vivante",
+        pourquoi: "Le remplacement écrit sur la carte neuve tout ce que portait l'ancienne, puis fait suivre les pages. On cherche ce qui ne suit pas : une tuile restée sur l'ancienne carte, un bouton de groupe amputé d'une sortie.",
+        faire: [
+          "Ouvrez A, puis <span class='path'>… → Remplacer cette carte</span>.",
+          "Touchez <b>Relever maintenant</b>, puis Continuer.",
+          "Choisissez la carte B.",
+          "Cochez la remise à zéro de l'ancienne carte, puis lancez."
+        ],
+        attendu: [
+          "B apparaît sous <b>Cartes déjà appairées</b>, sans qu'il faille passer par une recherche.",
+          "La progression compte les étapes, par exemple « 23 sur 46 ».",
+          "À la fin : les tuiles de la page Séjour commandent B, le bouton « tout éteindre » vise toujours trois sorties, et A a disparu de la liste."
+        ],
+        avis: "Chronométrez l'écriture. C'est le seul moment où une vraie carte reçoit une quarantaine d'écritures à la suite."
+      },
+      {
+        id: "verif-b",
+        titre: "Vérifier B, réglage par réglage",
+        pourquoi: "Le résumé de fin dit ce qui a été envoyé ; il ne dit pas ce que la carte porte vraiment.",
+        faire: [
+          "Relisez sur B les trois écrans de configuration, et comparez à ce que portait A (essai 03).",
+          "Allumez une sortie sur laquelle une charge est branchée."
+        ],
+        attendu: [
+          "Tout ce que portait A se retrouve sur B, nom de la carte compris.",
+          "Le courant mesuré correspond à la charge branchée."
+        ]
+      },
+      {
+        id: "ancienne",
+        titre: "Regarder ce qu'est devenue la carte A",
+        pourquoi: "Sans remise à zéro, deux cartes porteraient les mêmes noms de sorties et seraient indiscernables lors d'une recherche.",
+        faire: [
+          "Réappairez A (appui de trois secondes sur BOOT), puis regardez ses réglages."
+        ],
+        attendu: ["A est revenue à ses réglages d'usine : plus de noms de sorties, plus de seuils."]
+      },
+      {
+        id: "ha",
+        titre: "Home Assistant, si vous l'utilisez",
+        pourquoi: "Pour Home Assistant, une carte neuve est un appareil neuf : ses entités changent de nom, et les automatisations qui citaient l'ancienne cessent de fonctionner. C'est une limite connue du remplacement ; ce qu'on juge ici, c'est si l'app la dit assez clairement.",
+        faire: ["Cherchez les entités de A, puis celles de B."],
+        attendu: [
+          "B est un appareil nouveau, et les entités de A sont indisponibles.",
+          "Les automatisations qui citaient A sont à reprendre.",
+          "Dites si l'app vous avait prévenu assez clairement pour que ce ne soit pas une surprise."
+        ]
+      },
 
-    {
-      phase: "Sauvegarde",
-      lede: "",
-      id: "proposition",
-      title: "La proposition de sauvegarde",
-      hunt: "Une proposition qui revient sans raison finit par se chasser sans se lire.",
-      steps: [
-        "Changez un réglage sur une carte, allez sur <span class='path'>Appareils</span>.",
-        "Répondez <b>Plus tard</b>.",
-        "Fermez l'app, rouvrez-la, retournez sur Appareils.",
-        "Changez encore un réglage, retournez sur Appareils."
-      ],
-      expect: [
-        "Elle apparaît à l'étape 1 et dit pourquoi cela compte.",
-        "Elle ne revient pas après « Plus tard », même à la réouverture.",
-        "Elle revient après la nouvelle modification, et seulement là."
-      ]
-    },
-    {
-      id: "export-modele",
-      title: "Sortir un modèle et le reposer sans une carte",
-      hunt: "Ce qui n'est associé à rien doit disparaître des pages.",
-      steps: [
-        "<span class='path'>… → Configuration → Exporter en modèle</span>.",
-        "<span class='path'>Installer un modèle</span> avec ce fichier : associez un rôle, laissez l'autre sur <b>Pas installé</b>."
-      ],
-      expect: [
-        "L'écran annonce, avant d'installer, que ce qui n'est associé à rien ne sera pas installé.",
-        "Après : aucune tuile pour le rôle laissé de côté, et le bouton de groupe ne garde que les sorties installées."
-      ]
-    },
+      {
+        phase: "Quand ça se passe mal",
+        lede: "Provoquez les pannes franchement. Rechargez le modèle (essai 02) si la base a été défaite en route.",
+        id: "coupure",
+        titre: "Couper l'alimentation en pleine écriture",
+        pourquoi: "Un remplacement enchaîne une quarantaine de commandes. Si la carte disparaît au milieu, l'app doit s'arrêter vite, dire ce qui manque, et savoir reprendre là où elle s'est arrêtée.",
+        faire: [
+          "Lancez un remplacement, dans l'autre sens si besoin.",
+          "Pendant l'écriture, <b>coupez l'alimentation de la carte cible</b>.",
+          "Rebranchez, laissez la carte revenir, puis touchez « Réessayer le reste »."
+        ],
+        attendu: [
+          "L'écriture s'arrête vite : elle ne s'obstine pas dans le vide.",
+          "Le rapport nomme chaque réglage manquant et la raison.",
+          "La reprise n'écrit que ce qui manquait."
+        ],
+        avis: "Notez le délai entre la coupure et la réaction de l'écran."
+      },
+      {
+        id: "app-tuee",
+        titre: "Fermer l'app en plein remplacement",
+        pourquoi: "Un van à moitié rebranché ne se voit pas : des pages dont une partie commande l'ancienne carte et l'autre la neuve. C'est le genre de défaut qu'on découvre des semaines plus tard.",
+        faire: [
+          "Lancez un remplacement, puis <b>balayez l'app</b> pendant l'écriture.",
+          "Rouvrez l'app et regardez vos pages."
+        ],
+        attendu: [
+          "Aucune page ne mélange les deux cartes.",
+          "L'app termine seule, sans rien demander."
+        ]
+      },
+      {
+        id: "carte-morte",
+        titre: "Remplacer une carte qui ne répond plus",
+        pourquoi: "C'est le vrai cas d'usage : la carte est morte. Tout doit tenir avec le dernier relevé connu, sans que la carte remplacée dise un mot.",
+        faire: [
+          "Débranchez complètement une carte, et attendez qu'elle passe hors de portée.",
+          "Ouvrez-la, <span class='path'>… → Remplacer cette carte</span>, et allez au bout."
+        ],
+        attendu: [
+          "L'entrée du menu reste utilisable alors que la carte est muette.",
+          "Le résumé affiche la date du dernier relevé, sans proposer d'en refaire un.",
+          "Le remplacement se fait avec ce relevé."
+        ]
+      },
 
-    {
-      phase: "Jugement",
-      lede: "Ces deux entrées se remplissent en toutes lettres.",
-      id: "hesitations",
-      title: "Ce qui a demandé de réfléchir",
-      hunt: "Une étape qu'on relit deux fois est un défaut, au même titre qu'une panne.",
-      steps: ["Où avez-vous hésité, cherché un bouton, relu une phrase ?"],
-      expect: ["Notez chaque hésitation, même celle qui vous paraît bête."]
-    },
-    {
-      id: "confiance",
-      title: "Le feriez-vous sur le van d'un client ?",
-      hunt: "",
-      steps: ["Répondez, et dites ce qui manque pour que ce soit oui."],
-      expect: ["« Oui mais je vérifierais tout derrière » est une réponse utile."]
-    }
-  ];
+      {
+        phase: "Sauvegarder et refaire ailleurs",
+        lede: "Ce qui rend un remplacement possible : un relevé récent, et un modèle réutilisable.",
+        id: "proposition",
+        titre: "La proposition de sauvegarde après une modification",
+        pourquoi: "Sans relevé récent, un remplacement repart d'une configuration ancienne. L'app propose donc d'en faire un après chaque changement. Mais une proposition qui revient sans raison finit par se chasser sans se lire.",
+        faire: [
+          "Changez un réglage sur une carte, puis allez sur <span class='path'>Appareils</span>.",
+          "Répondez <b>Plus tard</b>.",
+          "Fermez l'app, rouvrez-la, et retournez sur Appareils.",
+          "Changez encore un réglage, et retournez sur Appareils."
+        ],
+        attendu: [
+          "Elle apparaît à la première étape, et dit pourquoi cela compte.",
+          "Elle ne revient pas après « Plus tard », même après avoir rouvert l'app.",
+          "Elle revient après la nouvelle modification, et seulement là."
+        ]
+      },
+      {
+        id: "export-modele",
+        titre: "Sortir un modèle, et le reposer sans une des cartes",
+        pourquoi: "Un modèle sert à refaire le même van chez quelqu'un d'autre, parfois avec moins de cartes. Ce qui n'est associé à aucune carte ne doit pas laisser de tuiles mortes derrière lui.",
+        faire: [
+          "<span class='path'>… → Configuration → Exporter en modèle</span>.",
+          "<span class='path'>Installer un modèle</span> avec ce fichier : associez un rôle, et laissez l'autre sur <b>Pas installé</b>."
+        ],
+        attendu: [
+          "Avant d'installer, l'écran annonce que ce qui n'est associé à rien ne sera pas installé.",
+          "Après : aucune tuile pour le rôle laissé de côté, et le bouton de groupe ne garde que les sorties installées."
+        ]
+      },
 
-  const KEY = "tinyrail-essais-remplacement-v1";
-  let state = { fields: {}, marks: {}, notes: {} };
-
-  try {
-    const saved = localStorage.getItem(KEY);
-    if (saved) state = Object.assign(state, JSON.parse(saved));
-  } catch (e) { /* stockage indisponible : la page reste utilisable, sans mémoire */ }
-
-  function save() {
-    try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {}
-  }
-
-  const host = document.getElementById("trials");
-  let currentPhase = null;
-  let phaseBox = null;
-
-  TRIALS.forEach((t, i) => {
-    if (t.phase) {
-      const sec = document.createElement("section");
-      sec.className = "phase";
-      const h = document.createElement("h3");
-      h.textContent = t.phase;
-      sec.append(h);
-      if (t.lede) {
-        const p = document.createElement("p");
-        p.className = "lede";
-        p.textContent = t.lede;
-        sec.append(p);
+      {
+        phase: "Jugement",
+        lede: "Ces deux réponses se remplissent en toutes lettres.",
+        id: "hesitations",
+        titre: "Ce qui a demandé de réfléchir",
+        pourquoi: "Une étape qu'on relit deux fois est un défaut, au même titre qu'une panne.",
+        faire: ["Où avez-vous hésité, cherché un bouton, relu une phrase ?"],
+        attendu: ["Notez chaque hésitation, même celle qui vous paraît bête."]
+      },
+      {
+        id: "confiance",
+        titre: "Le feriez-vous sur le van d'un client ?",
+        pourquoi: "",
+        faire: ["Répondez, et dites ce qui manque pour que ce soit oui."],
+        attendu: ["« Oui, mais je vérifierais tout derrière » est une réponse utile."]
       }
-      host.append(sec);
-      phaseBox = sec;
-    }
+    ],
+    rapportTitre: "Essais de remplacement TinyRail",
+    pied: "Un essai « non fait » n'est pas un échec : dites-le tel quel. Ce qui compte est de savoir ce qui a été regardé, et ce qui ne l'a pas été."
+  },
 
-    const card = document.createElement("article");
-    card.className = "trial";
-    card.dataset.status = state.marks[t.id] || "";
+  en: {
+    nom: "Replacement",
+    eyebrow: "TinyRail · trials on hardware",
+    titre: "Replacing a failed board",
+    intro: [
+      "A power board dies in a van that is already fitted out. You put a new one in, and everything has to follow: output names, thresholds, input settings, the app's pages, right down to the “turn everything off” button. That is what the app does when you ask it to replace a board, and that is what this protocol puts to the test.",
+      "Three neighbouring features get exercised along the way, because they rest on the same writes: loading a configuration from a file, installing an installation template, and the backup prompt that follows a change.",
+      "Allow an hour and a half. The trials are in order: each one builds on the previous."
+    ],
+    identLabel: "Test session details",
+    champs: [
+      { cle: "who", label: "Tester", exemple: "" },
+      { cle: "when", label: "Date", exemple: "2026-08-24" },
+      { cle: "app", label: "App version", exemple: "Settings → About" },
+      { cle: "phone", label: "Phone", exemple: "iPhone 14, iOS 26.6" },
+      { cle: "cardA", label: "Board A", exemple: "ed0dd4 · fw 0.13.0" },
+      { cle: "cardB", label: "Board B", exemple: "ab12cd · fw 0.13.0" }
+    ],
+    besoin: {
+      titre: "What you need",
+      lede: "",
+      points: [
+        "<b>Two powered TinyRail boards</b>, called A and B here, and a way to cut the power to one of them mid trial.",
+        "A phone with the app, and something to time with.",
+        "A load wired to at least one output, to check the measured current.",
+        "The five files below, downloaded before you start."
+      ],
+      avis: "These trials rewrite the configuration of both boards and factory reset one of them. <b>Do not use a board fitted in a van that is in service.</b>"
+    },
+    fichiers: {
+      titre: "The trial files",
+      lede: "Download them all before you start, then load them from the app when a trial asks for it. They were produced by the app itself: if one of them is refused on loading, that is a defect worth reporting.",
+      liste: [
+        { nom: "modele-van-essai.json", taille: "3.4 kB", quoi: "A whole van: two boards, their settings and their pages. The starting point of every trial. Its labels are in French, and stay that way whatever language the app runs in." },
+        { nom: "config-cellule.json", taille: "1.9 kB", quoi: "A complete cabin board: 8 outputs, 4 inputs, a sender, thresholds, two paired outputs." },
+        { nom: "config-soute.json", taille: "0.7 kB", quoi: "A simple garage board: 3 outputs, 1 input. Enough to put board B back in shape between trials." },
+        { nom: "config-bornes.json", taille: "0.7 kB", quoi: "The extreme values the firmware accepts, plus an unusually long output name." },
+        { nom: "config-refus.json", taille: "0.4 kB", quoi: "Contains a load type that does not exist: the board must refuse that one setting and accept the rest." }
+      ]
+    },
+    essais: [
+      {
+        phase: "Setting up the test base",
+        lede: "Do this before anything else, in a fresh installation so your own van stays untouched.",
+        id: "installation",
+        titre: "Create a test installation with both boards",
+        pourquoi: "Everything that follows changes boards and pages. A separate installation keeps your van out of the way, and gives every trial the same starting point.",
+        faire: [
+          "Create an installation called <b>Replacement test</b>.",
+          "Pair boards A and B into it: hold each board's BOOT button for three seconds, then tap “Pair” within thirty seconds.",
+          "Write their identifiers into the “Board A” and “Board B” fields at the top of this page."
+        ],
+        attendu: [
+          "Both boards answer and are attached to that installation."
+        ]
+      },
+      {
+        id: "import-modele",
+        titre: "Install the template: Cellule on A, Soute on B",
+        pourquoi: "An installation template describes a whole van: the configuration of each board and the pages that go with it. Loading it is the fastest way to bring both boards to a known state, and it doubles as the first loading trial.",
+        faire: [
+          "<span class='path'>… → Configuration → Install a template</span>, choose <code>modele-van-essai.json</code>.",
+          "Match <b>Cellule</b> (cabin) to board A, and <b>Soute</b> (garage) to board B.",
+          "Leave “Also take the board names” unticked.",
+          "Install."
+        ],
+        attendu: [
+          "The matching screen talks about roles (Cellule, Soute) rather than Bluetooth identifiers: that is what lets you tell which board goes where.",
+          "Two pages appear, <b>Séjour</b> and <b>Soute</b>, with a “turn everything off” button reaching both boards.",
+          "The trial files are written in French: the outputs on A are called “Plafonnier salon”, “Pompe à eau”… those on B “Compresseur”, “Treuil”."
+        ]
+      },
+      {
+        id: "controle-base",
+        titre: "Check on the boards what the template wrote",
+        pourquoi: "When the app reports a write went through, it only says the boards accepted the commands. Only reading the configuration screens back proves the settings are really there.",
+        faire: [
+          "On A: <span class='path'>Configure outputs</span>, then <span class='path'>Configure inputs</span>, then <span class='path'>System</span>.",
+          "On B: the same screens."
+        ],
+        attendu: [
+          "On A, outputs: CH3 switches itself off after 120 s, CH5 and CH6 are paired, CH3's threshold is 5 A.",
+          "On A, system: battery cutoff at 11.50 V, thermal thresholds 85/70 °C.",
+          "On A, inputs: AN1 and AN2 as resistive senders, AN3 as voltage with thresholds, AN4 as a contact linked to CH1.",
+          "On B: three named outputs, winch threshold at 10 A."
+        ]
+      },
 
-    const steps = t.steps.map(s => `<li>${s}</li>`).join("");
-    const expects = t.expect.map(s => `<p>${s}</p>`).join("");
+      {
+        phase: "Loading a configuration from a file",
+        lede: "Two difficult files: one at the edge of what the firmware accepts, one it must partly refuse.",
+        id: "bornes",
+        titre: "Load a configuration at the limit values",
+        pourquoi: "This file holds the extreme values the firmware accepts, plus an unusually long output name. We are looking for what breaks at the edge of the allowed range, and whether a refusal can be read.",
+        faire: [
+          "On B: <span class='path'>… → Apply a configuration</span>, choose <code>config-bornes.json</code>.",
+          "Read the confirmation, then accept.",
+          "Read board B's configuration back afterwards."
+        ],
+        attendu: [
+          "The confirmation says where the file comes from, when it dates from, and that the operation cannot be undone.",
+          "The thresholds written are 0.5 A and 10 A, delay 10 s, thermal 100/50 °C, automatic switch off 3600 s.",
+          "The very long output name is accepted, or cleanly refused with its reason."
+        ]
+      },
+      {
+        id: "refus",
+        titre: "Load a configuration the board must partly refuse",
+        pourquoi: "This file holds a load type that does not exist. The board must refuse that one setting and accept everything else. The failure report then has to let you redo by hand what did not go through.",
+        faire: [
+          "On B: apply <code>config-refus.json</code>."
+        ],
+        attendu: [
+          "“Plafonnier salon” goes through, “Pompe à eau” does not.",
+          "The “To set by hand” list names the setting at fault (<b>load type on “Pompe à eau”</b>) and gives the reason for the refusal.",
+          "Photograph that screen: would it be enough for you to redo the setting yourself, with nothing else to go on?"
+        ]
+      },
+      {
+        id: "remise-soute",
+        titre: "Put board B back in a clean state",
+        pourquoi: "The trials that follow start from a healthy board B.",
+        faire: [
+          "On B: apply <code>config-soute.json</code>."
+        ],
+        attendu: ["B gets its three named outputs back."]
+      },
 
-    card.innerHTML = `
-      <div class="trial-head">
-        <span class="num">${String(i + 1).padStart(2, "0")}</span>
-        <h4>${t.title}</h4>
-      </div>
-      <div class="body">
-        ${t.hunt ? `<p class="hunt">${t.hunt}</p>` : ""}
-        <p class="label">Ce que vous faites</p>
-        <ol class="steps">${steps}</ol>
-        <p class="label">Ce qui doit se passer</p>
-        <div class="expect">${expects}</div>
-        ${t.warn ? `<div class="warn"><p>${t.warn}</p></div>` : ""}
-      </div>
-      <div class="verdict">
-        <div class="set" role="group" aria-label="Verdict de l'essai ${i + 1}">
-          <button class="mark" data-mark="ok" data-id="${t.id}" aria-pressed="false">Conforme</button>
-          <button class="mark" data-mark="ko" data-id="${t.id}" aria-pressed="false">En échec</button>
-          <button class="mark" data-mark="na" data-id="${t.id}" aria-pressed="false">Non fait</button>
-        </div>
-        <textarea data-note="${t.id}" placeholder="Ce que vous avez vu, mesuré, ou trouvé étrange"></textarea>
-      </div>`;
+      {
+        phase: "The replacement itself",
+        lede: "Board A still answers: the best case, since its configuration can be read there and then.",
+        id: "remplacement",
+        titre: "Replace A with B, board A still alive",
+        pourquoi: "The replacement writes onto the new board everything the old one held, then moves the pages over. We are looking for what fails to follow: a tile left pointing at the old board, a group button short of an output.",
+        faire: [
+          "Open A, then <span class='path'>… → Replace this board</span>.",
+          "Tap <b>Read it now</b>, then Continue.",
+          "Choose board B.",
+          "Tick the factory reset of the old board, then start."
+        ],
+        attendu: [
+          "B shows up under <b>Boards already paired</b>, with no search needed.",
+          "The progress counts the steps, for example “23 of 46”.",
+          "At the end: the tiles on the Séjour page command B, the “turn everything off” button still reaches three outputs, and A has gone from the list."
+        ],
+        avis: "Time the writing. It is the only moment when a real board takes some forty writes in a row."
+      },
+      {
+        id: "verif-b",
+        titre: "Check B, setting by setting",
+        pourquoi: "The closing summary says what was sent; it does not say what the board actually holds.",
+        faire: [
+          "Read back the three configuration screens on B, and compare with what A held (trial 03).",
+          "Switch on an output that has a load wired to it."
+        ],
+        attendu: [
+          "Everything A held is found on B, board name included.",
+          "The measured current matches the load."
+        ]
+      },
+      {
+        id: "ancienne",
+        titre: "Look at what became of board A",
+        pourquoi: "Without the reset, two boards would carry the same output names and be indistinguishable in a search.",
+        faire: [
+          "Pair A again (hold BOOT for three seconds), then look at its settings."
+        ],
+        attendu: ["A is back to factory settings: no output names, no thresholds."]
+      },
+      {
+        id: "ha",
+        titre: "Home Assistant, if you use it",
+        pourquoi: "To Home Assistant, a new board is a new device: its entities change name, and automations naming the old one stop working. It is a known limit of replacement; what we are judging here is whether the app says so clearly enough.",
+        faire: ["Look for A's entities, then for B's."],
+        attendu: [
+          "B is a new device, and A's entities are unavailable.",
+          "Automations naming A need revisiting.",
+          "Say whether the app warned you clearly enough for this not to be a surprise."
+        ]
+      },
 
-    host.append(card);
-  });
+      {
+        phase: "When it goes wrong",
+        lede: "Cause the failures properly. Reload the template (trial 02) if the base got undone along the way.",
+        id: "coupure",
+        titre: "Cut the power mid write",
+        pourquoi: "A replacement chains some forty commands. If the board disappears halfway, the app has to stop quickly, say what is missing, and be able to resume where it stopped.",
+        faire: [
+          "Start a replacement, the other way round if need be.",
+          "During the writing, <b>cut the power to the target board</b>.",
+          "Power it back, let it come back, then tap “Retry the rest”."
+        ],
+        attendu: [
+          "The writing stops quickly: it does not keep pushing into thin air.",
+          "The report names every missing setting and the reason.",
+          "The retry only writes what was missing."
+        ],
+        avis: "Note the delay between the power cut and the screen reacting."
+      },
+      {
+        id: "app-tuee",
+        titre: "Close the app mid replacement",
+        pourquoi: "A half moved van does not show: pages where part of the tiles command the old board and the rest the new one. That is the kind of defect found weeks later.",
+        faire: [
+          "Start a replacement, then <b>swipe the app away</b> during the writing.",
+          "Reopen the app and look at your pages."
+        ],
+        attendu: [
+          "No page mixes the two boards.",
+          "The app finishes on its own, without asking anything."
+        ]
+      },
+      {
+        id: "carte-morte",
+        titre: "Replace a board that no longer answers",
+        pourquoi: "This is the real case: the board is dead. Everything has to hold with the last known reading, without the replaced board saying a word.",
+        faire: [
+          "Unplug a board completely, and wait for it to fall out of range.",
+          "Open it, <span class='path'>… → Replace this board</span>, and go all the way."
+        ],
+        attendu: [
+          "The menu entry stays usable while the board is silent.",
+          "The summary shows the date of the last reading, without offering to take a new one.",
+          "The replacement goes ahead with that reading."
+        ]
+      },
 
-  document.getElementById("total").textContent = TRIALS.length;
+      {
+        phase: "Backing up and rebuilding elsewhere",
+        lede: "What makes a replacement possible in the first place: a recent reading, and a reusable template.",
+        id: "proposition",
+        titre: "The backup prompt after a change",
+        pourquoi: "Without a recent reading, a replacement starts from an old configuration. So the app offers to take one after every change. But a prompt that comes back for no reason ends up being dismissed unread.",
+        faire: [
+          "Change a setting on a board, then go to <span class='path'>Devices</span>.",
+          "Answer <b>Later</b>.",
+          "Close the app, reopen it, and go back to Devices.",
+          "Change another setting, and go back to Devices."
+        ],
+        attendu: [
+          "It appears at the first step, and says why it matters.",
+          "It does not come back after “Later”, not even after reopening the app.",
+          "It comes back after the new change, and only then."
+        ]
+      },
+      {
+        id: "export-modele",
+        titre: "Export a template, and lay it down without one of the boards",
+        pourquoi: "A template is there to rebuild the same van for someone else, sometimes with fewer boards. Whatever is matched to no board must not leave dead tiles behind.",
+        faire: [
+          "<span class='path'>… → Configuration → Export as a template</span>.",
+          "<span class='path'>Install a template</span> with that file: match one role, and leave the other on <b>Not installed</b>."
+        ],
+        attendu: [
+          "Before installing, the screen says that whatever is matched to nothing will not be installed.",
+          "Afterwards: no tile for the role left out, and the group button keeps only the outputs installed."
+        ]
+      },
 
-  // Restitution de l'état
-  document.querySelectorAll("[data-key]").forEach(input => {
-    const k = input.dataset.key;
-    if (state.fields[k]) input.value = state.fields[k];
-    input.addEventListener("input", () => {
-      state.fields[k] = input.value;
-      save();
-    });
-  });
-
-  document.querySelectorAll("[data-note]").forEach(area => {
-    const id = area.dataset.note;
-    if (state.notes[id]) area.value = state.notes[id];
-    area.addEventListener("input", () => {
-      state.notes[id] = area.value;
-      save();
-    });
-  });
-
-  function paint() {
-    let done = 0, fails = 0;
-    TRIALS.forEach(t => {
-      const m = state.marks[t.id];
-      if (m) done++;
-      if (m === "ko") fails++;
-      const card = document.querySelector(`[data-mark][data-id="${t.id}"]`).closest(".trial");
-      card.dataset.status = m || "";
-      card.querySelectorAll("[data-mark]").forEach(b => {
-        b.setAttribute("aria-pressed", String(b.dataset.mark === m));
-      });
-    });
-    document.getElementById("done").textContent = done;
-    document.getElementById("fails").textContent = fails;
-    document.getElementById("failbox").hidden = fails === 0;
-    document.getElementById("bar").style.width = (done / TRIALS.length * 100) + "%";
+      {
+        phase: "Judgement",
+        lede: "These two answers are written out in full.",
+        id: "hesitations",
+        titre: "What made you stop and think",
+        pourquoi: "A step you read twice is a defect, just as much as a failure is.",
+        faire: ["Where did you hesitate, hunt for a button, read a sentence again?"],
+        attendu: ["Note every hesitation, even the ones that feel silly."]
+      },
+      {
+        id: "confiance",
+        titre: "Would you do this on a customer's van?",
+        pourquoi: "",
+        faire: ["Answer, and say what is missing for that to be a yes."],
+        attendu: ["“Yes, but I would check everything afterwards” is a useful answer."]
+      }
+    ],
+    rapportTitre: "TinyRail replacement trials",
+    pied: "A trial marked “not done” is not a failure: say so as it is. What matters is knowing what was looked at, and what was not."
   }
 
-  document.addEventListener("click", e => {
-    const b = e.target.closest("[data-mark]");
-    if (!b) return;
-    const id = b.dataset.id;
-    state.marks[id] = state.marks[id] === b.dataset.mark ? "" : b.dataset.mark;
-    save();
-    paint();
-  });
+};
 
-  function report() {
-    const f = state.fields;
-    const lignes = [
-      "# Essais de remplacement TinyRail",
-      "",
-      `Testeur : ${f.who || "?"}`,
-      `Date : ${f.when || "?"}`,
-      `App : ${f.app || "?"} · Téléphone : ${f.phone || "?"}`,
-      `Carte A : ${f.cardA || "?"}`,
-      `Carte B : ${f.cardB || "?"}`,
-      ""
-    ];
-    let done = 0, fails = 0;
-    TRIALS.forEach((t, i) => {
-      const m = state.marks[t.id];
-      if (m) done++;
-      if (m === "ko") fails++;
-      const mot = m === "ok" ? "CONFORME" : m === "ko" ? "EN ECHEC" : m === "na" ? "NON FAIT" : "SANS REPONSE";
-      lignes.push(`${String(i + 1).padStart(2, "0")}. [${mot}] ${t.title}`);
-      const note = (state.notes[t.id] || "").trim();
-      if (note) lignes.push(`    ${note.replace(/\n/g, "\n    ")}`);
-    });
-    lignes.push("", `${done}/${TRIALS.length} essais renseignés, ${fails} en échec.`);
-    return lignes.join("\n");
-  }
-
-  const dump = document.getElementById("dump");
-  const said = document.getElementById("said");
-
-  document.getElementById("copy").addEventListener("click", async () => {
-    const texte = report();
-    dump.value = texte;
-    try {
-      await navigator.clipboard.writeText(texte);
-      said.classList.add("shown");
-      setTimeout(() => said.classList.remove("shown"), 1600);
-    } catch (e) {
-      // Presse-papiers refusé : on montre le texte, à sélectionner à la main.
-      dump.classList.add("shown");
-      dump.select();
-    }
-  });
-
-  document.getElementById("show").addEventListener("click", () => {
-    dump.value = report();
-    dump.classList.toggle("shown");
-  });
-
-  // ⚠️ **Effacer demande confirmation.** Un clic effaçait tout sur-le-champ, et
-  // ce bouton voisine avec « Copier le rapport » au bas d'une session de
-  // quatre-vingt-dix minutes. Le dialogue dit ce qui va disparaître, compté,
-  // parce qu'« êtes-vous sûr » ne fait réfléchir personne.
-  const dlg = document.getElementById("confirm-wipe");
-
-  function compteReponses() {
-    const n = Object.values(state.marks).filter(Boolean).length;
-    const notes = Object.values(state.notes).filter(v => v && v.trim()).length;
-    const champs = Object.values(state.fields).filter(v => v && v.trim()).length;
-    return { n, notes, champs, total: n + notes + champs };
-  }
-
-  function efface() {
-    state = { fields: {}, marks: {}, notes: {} };
-    save();
-    document.querySelectorAll("[data-key], [data-note]").forEach(el => { el.value = ""; });
-    dump.value = "";
-    dump.classList.remove("shown");
-    paint();
-  }
-
-  document.getElementById("wipe").addEventListener("click", () => {
-    const c = compteReponses();
-    // Rien à perdre : ne pas faire cliquer deux fois pour rien.
-    if (c.total === 0) { efface(); return; }
-
-    const morceaux = [];
-    if (c.n) morceaux.push(c.n > 1 ? `${c.n} verdicts` : "1 verdict");
-    if (c.notes) morceaux.push(c.notes > 1 ? `${c.notes} notes` : "1 note");
-    if (c.champs) morceaux.push(c.champs > 1 ? `${c.champs} champs remplis` : "1 champ rempli");
-    const liste = morceaux.length > 1
-      ? morceaux.slice(0, -1).join(", ") + " et " + morceaux[morceaux.length - 1]
-      : morceaux[0];
-    document.getElementById("cw-quoi").textContent =
-      `Vous perdez ${liste}.`;
-
-    if (typeof dlg.showModal === "function") dlg.showModal();
-    else if (confirm(`Vous perdez ${liste}. Tout effacer ?`)) efface();
-  });
-
-  document.getElementById("cw-non").addEventListener("click", () => dlg.close("non"));
-  document.getElementById("cw-oui").addEventListener("click", () => {
-    efface();
-    dlg.close("oui");
-  });
-
-
-  // ── Les fichiers à charger ───────────────────────────────────────────────
-  //
-  // Un lien, pas un bouton : la page est servie à côté de ses fichiers, et le
-  // navigateur les enregistre lui-même. C'est ce que le visualiseur d'artifact
-  // ne permettait pas, d'où la copie d'avant.
-  const filesHost = document.getElementById("files");
-  FILES.forEach(f => {
-    const row = document.createElement("div");
-    row.className = "file";
-    row.innerHTML = `
-      <span class="name">${f.nom}<small>${f.quoi}</small></span>
-      <span class="size">${f.taille}</span>
-      <a class="dl" href="fixtures/${f.nom}" download>Télécharger</a>`;
-    filesHost.append(row);
-  });
-
-
-  paint();
+Essais.protocole(PROTOCOLE);
 </script>
-
-</body></html>
 </body>
 </html>

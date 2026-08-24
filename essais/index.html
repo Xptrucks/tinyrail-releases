@@ -7,268 +7,151 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Source+Sans+3:ital,wght@0,400;0,600;1,400&display=swap">
-<style>
-  :root {
-    --ground: #F2F4F1;
-    --surface: #FFFFFF;
-    --surface-sunk: #E9ECE8;
-    --ink: #14181B;
-    --ink-soft: #56626A;
-    --ink-faint: #7C8790;
-    --rule: #DBE0DC;
-    --accent: #1F5F8B;
-    --accent-soft: #E4EEF5;
-    --copper: #9C6224;
-    --ok: #2E7D52;
-    --ok-soft: #E2F0E8;
-    --ko: #B93B31;
-    --ko-soft: #F8E5E3;
-    --wait: #97690F;
-    --wait-soft: #F6EDDA;
-
-    --step: clamp(0.9rem, 0.8rem + 0.4vw, 1.05rem);
-    --shadow: 0 1px 2px rgba(20, 24, 27, .06), 0 8px 24px -18px rgba(20, 24, 27, .5);
-  }
-
-  @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) {
-      --ground: #0F1315;
-      --surface: #161B1E;
-      --surface-sunk: #1C2226;
-      --ink: #E6EBE9;
-      --ink-soft: #9AA6AC;
-      --ink-faint: #7A868C;
-      --rule: #262D31;
-      --accent: #7CBBE0;
-      --accent-soft: #16303F;
-      --copper: #D49A5C;
-      --ok: #62BB8C;
-      --ok-soft: #16301F;
-      --ko: #E77A6E;
-      --ko-soft: #341A18;
-      --wait: #D9AC4E;
-      --wait-soft: #2E2412;
-      --shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 10px 28px -20px rgba(0, 0, 0, .9);
-    }
-  }
-
-  :root[data-theme="dark"] {
-    --ground: #0F1315;
-    --surface: #161B1E;
-    --surface-sunk: #1C2226;
-    --ink: #E6EBE9;
-    --ink-soft: #9AA6AC;
-    --ink-faint: #7A868C;
-    --rule: #262D31;
-    --accent: #7CBBE0;
-    --accent-soft: #16303F;
-    --copper: #D49A5C;
-    --ok: #62BB8C;
-    --ok-soft: #16301F;
-    --ko: #E77A6E;
-    --ko-soft: #341A18;
-    --wait: #D9AC4E;
-    --wait-soft: #2E2412;
-    --shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 10px 28px -20px rgba(0, 0, 0, .9);
-  }
-
-  * { box-sizing: border-box; }
-
-  body {
-    margin: 0;
-    background: var(--ground);
-    color: var(--ink);
-    font-family: "Source Sans 3", system-ui, -apple-system, sans-serif;
-    font-size: var(--step);
-    line-height: 1.55;
-    -webkit-text-size-adjust: 100%;
-  }
-
-  .wrap { max-width: 48rem; margin: 0 auto; padding: 2.4rem 1.1rem 5rem; }
-
-  h1 {
-    font-family: Archivo, system-ui, sans-serif;
-    font-size: 1.7rem;
-    font-weight: 700;
-    letter-spacing: -.02em;
-    margin: 0 0 .5rem;
-  }
-
-  .lede { color: var(--ink-soft); margin: 0 0 2rem; max-width: 38rem; }
-
-  h2 {
-    font-family: Archivo, system-ui, sans-serif;
-    font-size: .78rem;
-    font-weight: 600;
-    letter-spacing: .07em;
-    text-transform: uppercase;
-    color: var(--ink-faint);
-    margin: 2.4rem 0 .9rem;
-  }
-
-  .card {
-    display: block;
-    text-decoration: none;
-    color: inherit;
-    background: var(--surface);
-    border: 1px solid var(--rule);
-    border-radius: 10px;
-    padding: 1rem 1.1rem;
-    margin-bottom: .75rem;
-    box-shadow: var(--shadow);
-  }
-  a.card:hover { border-color: var(--accent); }
-
-  .card h3 {
-    font-family: Archivo, system-ui, sans-serif;
-    font-size: 1.02rem;
-    font-weight: 600;
-    margin: 0 0 .3rem;
-    display: flex;
-    align-items: center;
-    gap: .6rem;
-    flex-wrap: wrap;
-  }
-
-  .card p { margin: 0 0 .6rem; color: var(--ink-soft); }
-
-  .meta {
-    display: flex;
-    flex-wrap: wrap;
-    gap: .3rem .9rem;
-    font-family: "IBM Plex Mono", ui-monospace, monospace;
-    font-size: .74rem;
-    color: var(--ink-faint);
-  }
-
-  .tag {
-    font-family: "IBM Plex Mono", ui-monospace, monospace;
-    font-size: .68rem;
-    font-weight: 500;
-    letter-spacing: .04em;
-    text-transform: uppercase;
-    padding: .12rem .45rem;
-    border-radius: 4px;
-  }
-  .tag.pret { background: var(--ok-soft); color: var(--ok); }
-  .tag.attente { background: var(--wait-soft); color: var(--wait); }
-
-  .card.futur { opacity: .72; border-style: dashed; box-shadow: none; }
-
-  .note {
-    border-left: 2px solid var(--rule);
-    padding-left: .9rem;
-    color: var(--ink-soft);
-    font-size: .93rem;
-    margin: 1.4rem 0 0;
-  }
-  .note b { color: var(--ink); font-weight: 600; }
-
-  footer {
-    margin-top: 3rem;
-    padding-top: 1.2rem;
-    border-top: 1px solid var(--rule);
-    color: var(--ink-faint);
-    font-size: .82rem;
-  }
-</style>
+<link rel="stylesheet" href="essais.css">
 </head>
 <body>
-<div class="wrap">
+<div id="app"></div>
+<script src="essais.js"></script>
+<script>
 
-  <h1>Essais manuels</h1>
-  <p class="lede">
-    Ce que les tests automatisés ne peuvent pas prouver, parce qu'il faut une
-    carte, un téléphone et quelqu'un pour regarder. Chaque protocole se suit
-    dans l'ordre, garde vos réponses dans le navigateur, et produit un compte
-    rendu à recopier.
-  </p>
+const SOMMAIRE = {
 
-  <h2>Protocoles</h2>
+  fr: {
+    titre: "Essais manuels",
+    lede: "Certaines choses ne se prouvent qu'en les faisant : il faut une carte TinyRail, un téléphone, et quelqu'un qui regarde. Chaque page ci-dessous est un protocole d'essai, c'est-à-dire une suite de manipulations à jouer dans l'ordre, avec pour chacune ce qu'il faut faire et ce qui doit se passer.",
 
-  <a class="card" href="remplacement/">
-    <h3>Remplacer une carte en panne <span class="tag pret">prêt</span></h3>
-    <p>
-      Une carte lâche, vous en posez une neuve, et l'app doit la remettre dans
-      l'état de celle qu'elle remplace : mêmes libellés, mêmes seuils, mêmes
-      pages. Éprouve aussi l'écriture d'une configuration depuis un fichier et
-      l'installation d'un modèle d'installation.
-    </p>
-    <div class="meta">
-      <span>17 essais · 6 phases</span>
-      <span>2 cartes · 1 téléphone</span>
-      <span>~90 min</span>
-      <span>D-102</span>
-    </div>
-  </a>
+    repere: {
+      titre: "Comment se sert-on d'un protocole ?",
+      texte: [
+        "Vous ouvrez la page sur un ordinateur ou une tablette, et vous gardez le téléphone pour l'app. Vous suivez les essais dans l'ordre : chacun s'appuie sur le précédent.",
+        "Pour chaque essai, vous répondez <b>Conforme</b>, <b>En échec</b> ou <b>Non fait</b>, et vous écrivez ce que vous avez vu. Un essai « non fait » n'est pas une faute : ce qui compte est de savoir ce qui a été regardé et ce qui ne l'a pas été.",
+        "Vos réponses restent dans votre navigateur, vous pouvez donc fermer la page et reprendre plus tard. À la fin, un bouton met tout le compte rendu dans le presse-papiers, prêt à coller dans un message.",
+        "Trouver un échec est le but : c'est exactement ce qu'on cherche ici."
+      ]
+    },
 
-  <a class="card" href="cartes-virtuelles/">
-    <h3>Créer des cartes virtuelles <span class="tag pret">prêt</span></h3>
-    <p>
-      Des cartes sans radio, annoncées dans le scan ordinaire, appairées,
-      configurées et posées sur des pages par le code du produit. Éprouve ce
-      qu'on ne peut pas éprouver autrement sans matériel : le parcours de
-      configuration entier depuis une sortie d'usine, les seuils d'alerte des
-      entrées, le multi-cartes, et une page composée avec une carte hors
-      session.
-    </p>
-    <div class="meta">
-      <span>24 essais · 7 phases</span>
-      <span>aucune carte · 1 téléphone</span>
-      <span>~60 min</span>
-      <span>D-105 · D-106</span>
-    </div>
-  </a>
+    sections: [
+      {
+        titre: "Protocoles prêts",
+        cartes: [
+          {
+            href: "remplacement/",
+            titre: "Remplacer une carte en panne",
+            tag: "prêt",
+            texte: "Une carte lâche dans un van, vous en posez une neuve, et l'app doit remettre la neuve dans l'état exact de l'ancienne : mêmes noms de sorties, mêmes seuils, mêmes pages. Le protocole éprouve aussi ce qui gravite autour : charger une configuration depuis un fichier, installer un modèle d'installation, et ce qui se passe quand l'écriture est interrompue en plein milieu.",
+            meta: ["17 essais", "2 cartes · 1 téléphone", "fichiers à télécharger", "environ 1 h 30"]
+          },
+          {
+            href: "cartes-virtuelles/",
+            titre: "Essayer l'app sans aucune carte",
+            tag: "prêt",
+            texte: "L'app sait créer des cartes simulées : elles apparaissent dans la recherche d'appareils, s'appairent, se configurent et se posent sur des pages comme du vrai matériel, même Bluetooth éteint. Ce protocole éprouve tout ce parcours, sans rien brancher : la configuration complète d'une carte neuve, les seuils d'alerte des entrées, et plusieurs cartes dans une même installation.",
+            meta: ["24 essais", "aucune carte · 1 téléphone", "rien à télécharger", "environ 1 h"]
+          }
+        ]
+      },
+      {
+        titre: "En préparation",
+        cartes: [
+          {
+            titre: "Alertes et notifications",
+            tag: "à écrire",
+            texte: "Une alerte décrit un état : elle ne s'annonce qu'une fois, s'efface d'elle-même quand l'état cesse, et mène à la carte concernée. Rien de tout cela ne se voit sans laisser le téléphone en poche pendant des heures.",
+            meta: ["1 carte · 1 téléphone"]
+          },
+          {
+            titre: "Mise à jour d'une carte par Bluetooth",
+            tag: "à écrire",
+            texte: "La mise à jour depuis le téléphone fonctionne et a été jouée sur une vraie carte. Ce qui n'a jamais été éprouvé, c'est ce qui arrive quand elle échoue : lien coupé en plein transfert, paquets perdus, carte éteinte au mauvais moment.",
+            meta: ["1 carte · 1 téléphone"]
+          },
+          {
+            titre: "Entrées universelles",
+            tag: "à écrire",
+            texte: "Sonde de réservoir, tension de batterie, contact sur seuil : les quatre entrées d'une carte savent mesurer et alerter, mais aucune sonde réelle n'a encore été branchée dessus.",
+            meta: ["1 carte · sondes"]
+          }
+        ]
+      }
+    ],
 
-  <h2>À venir</h2>
+    note: {
+      titre: "Pourquoi ces protocoles existent.",
+      texte: "Trois façons de vérifier un produit, qui ne se remplacent pas. Les tests automatisés prouvent que la mécanique interne fonctionne. La relecture des parcours montre les impasses, ces endroits où tout marche mais où l'utilisateur ne va nulle part. Et seul le matériel dit si une vraie carte encaisse ce qu'on lui envoie. La troisième n'a pas d'autre support qu'un document que quelqu'un suit, en regardant."
+    },
 
-  <div class="card futur">
-    <h3>Alertes et notifications <span class="tag attente">à écrire</span></h3>
-    <p>
-      Une alerte décrit un état : elle ne s'annonce qu'une fois, s'acquitte
-      d'elle-même quand l'état cesse, et mène à la carte concernée. Rien de
-      tout cela ne se voit sans laisser le téléphone en poche pendant des
-      heures.
-    </p>
-    <div class="meta"><span>1 carte · 1 téléphone</span><span>D-101</span></div>
-  </div>
+    pied: "TinyRail · Xptrucks. Les fichiers d'essai se téléchargent depuis les protocoles qui en ont. Aucun ne contient de clé d'appairage : celle-ci s'obtient par un appui physique sur le bouton BOOT de la carte, et ne se transfère pas."
+  },
 
-  <div class="card futur">
-    <h3>Mise à jour par Bluetooth <span class="tag attente">à écrire</span></h3>
-    <p>
-      Le canal bêta n'a jamais servi pour de vrai, et le déroulé d'erreur d'une
-      mise à jour n'a été éprouvé qu'en test : aucune panne réelle n'a été
-      provoquée sur une carte, ni paquets perdus ni lien coupé en plein
-      transfert.
-    </p>
-    <div class="meta"><span>1 carte · 1 téléphone</span><span>D-087 · D-103</span></div>
-  </div>
+  en: {
+    titre: "Manual trials",
+    lede: "Some things can only be proven by doing them: it takes a TinyRail board, a phone, and someone watching. Each page below is a trial protocol, that is, a series of steps to run in order, each one telling you what to do and what should happen.",
 
-  <div class="card futur">
-    <h3>Entrées universelles <span class="tag attente">à écrire</span></h3>
-    <p>
-      Sonde de réservoir, batterie, contact sur seuil : les entrées savent
-      alerter depuis le 13 août, et rien n'en a jamais tourné sur une carte. La
-      démonstration les couvre entièrement, elle.
-    </p>
-    <div class="meta"><span>1 carte · sondes</span><span>D-095</span></div>
-  </div>
+    repere: {
+      titre: "How do you use a protocol?",
+      texte: [
+        "Open the page on a computer or a tablet, and keep the phone for the app. Run the trials in order: each one builds on the previous.",
+        "For every trial you answer <b>Pass</b>, <b>Fail</b> or <b>Not done</b>, and you write down what you saw. A trial marked “not done” is not a mistake: what matters is knowing what was looked at and what was not.",
+        "Your answers stay in your browser, so you can close the page and pick up later. At the end, one button puts the whole report on the clipboard, ready to paste into a message.",
+        "Finding a failure is the point: that is exactly what we are looking for here."
+      ]
+    },
 
-  <p class="note">
-    <b>Pourquoi ces protocoles existent.</b> Trois mesures ne se recouvrent
-    pas : les tests automatisés prouvent la mécanique, la relecture des parcours
-    trouve les impasses, et seul le matériel dit si une vraie carte encaisse ce
-    qu'on lui envoie. La troisième n'a pas d'autre support qu'un document que
-    quelqu'un suit.
-  </p>
+    sections: [
+      {
+        titre: "Ready to run",
+        cartes: [
+          {
+            href: "remplacement/",
+            titre: "Replacing a failed board",
+            tag: "ready",
+            texte: "A board dies in a van, you fit a new one, and the app has to bring the new one to the exact state of the old one: same output names, same thresholds, same pages. The protocol also covers what surrounds it: loading a configuration from a file, installing an installation template, and what happens when the writing is interrupted halfway through.",
+            meta: ["17 trials", "2 boards · 1 phone", "files to download", "about 1 h 30"]
+          },
+          {
+            href: "cartes-virtuelles/",
+            titre: "Trying the app with no board at all",
+            tag: "ready",
+            texte: "The app can create simulated boards: they show up in the device search, pair, configure and land on pages exactly like real hardware, even with Bluetooth switched off. This protocol exercises that whole journey without plugging anything in: configuring a brand new board from end to end, input alert thresholds, and several boards in one installation.",
+            meta: ["24 trials", "no board · 1 phone", "nothing to download", "about 1 h"]
+          }
+        ]
+      },
+      {
+        titre: "Being written",
+        cartes: [
+          {
+            titre: "Alerts and notifications",
+            tag: "to write",
+            texte: "An alert describes a state: it announces itself once, clears itself when the state ends, and leads to the board concerned. None of this can be seen without leaving the phone in a pocket for hours.",
+            meta: ["1 board · 1 phone"]
+          },
+          {
+            titre: "Updating a board over Bluetooth",
+            tag: "to write",
+            texte: "Updating from the phone works and has been run on a real board. What has never been tried is what happens when it fails: link cut mid transfer, packets lost, board powered off at the worst moment.",
+            meta: ["1 board · 1 phone"]
+          },
+          {
+            titre: "Universal inputs",
+            tag: "to write",
+            texte: "Tank sender, battery voltage, threshold contact: the four inputs of a board can measure and raise alerts, but no real sender has been wired to one yet.",
+            meta: ["1 board · senders"]
+          }
+        ]
+      }
+    ],
 
-  <footer>
-    TinyRail · Xptrucks : les fichiers d'essai se téléchargent depuis les
-    protocoles qui en ont. Aucun ne contient de clé d'appairage : celle-ci
-    s'obtient par un appui physique sur le bouton BOOT de la carte, et ne se
-    transfère pas.
-  </footer>
+    note: {
+      titre: "Why these protocols exist.",
+      texte: "Three ways of checking a product, and none replaces the others. Automated tests prove the internal machinery works. Reading through the journeys shows the dead ends, those places where everything works but the user gets nowhere. And only hardware tells you whether a real board takes what is sent to it. The third one has no support other than a document someone follows, watching."
+    },
 
-</div>
+    pied: "TinyRail · Xptrucks. Trial files are downloaded from the protocols that have them. None of them contains a pairing key: that key is obtained by physically pressing the BOOT button on the board, and cannot be transferred."
+  }
+};
+
+Essais.sommaire(SOMMAIRE);
+</script>
 </body>
 </html>
