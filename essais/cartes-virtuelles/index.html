@@ -47,7 +47,7 @@ const PROTOCOLE = {
     },
     essais: [
       {
-        phase: "Créer une carte",
+        phase: "Créer une carte, et la voir apparaître",
         lede: "L'entrée est rangée sous « Développement » dans les réglages, parce que ce qu'on y fait touche aux vraies données de l'app.",
         id: "banc-allumage",
         titre: "Créer une première carte, sortie d'usine",
@@ -96,7 +96,7 @@ const PROTOCOLE = {
       },
 
       {
-        phase: "Adopter la carte",
+        phase: "Appairer, comme sur du matériel",
         lede: "Une carte ne se commande qu'après un appairage, qui exige un appui physique sur son bouton BOOT. Les cartes simulées appliquent la même règle.",
         id: "appairage-refus",
         titre: "Essayer d'appairer sans avoir appuyé sur BOOT",
@@ -141,10 +141,10 @@ const PROTOCOLE = {
       },
 
       {
-        phase: "Configurer une carte neuve",
+        phase: "Configurer une carte neuve de bout en bout",
         lede: "C'est la partie la plus longue, et c'est exactement ce que fait un installateur le jour où il pose une carte : nommer, typer, régler, seuiller.",
         id: "usine-releve",
-        titre: "Regarder ce qu'annonce une carte neuve",
+        titre: "Relever l'état d'une carte jamais configurée",
         pourquoi: "Ces valeurs sont copiées de ce que le firmware pose réellement au premier démarrage. Si elles étaient seulement vraisemblables, on éprouverait un premier démarrage qui n'existe pas.",
         faire: [
           "Ouvrez <span class='path'>Configuration des sorties</span>, puis <span class='path'>Configuration des entrées</span>."
@@ -218,7 +218,7 @@ const PROTOCOLE = {
       },
       {
         id: "relecture",
-        titre: "Tout relire après coup",
+        titre: "Relire tous les réglages, la session fermée puis rouverte",
         pourquoi: "Qu'une commande soit acceptée ne prouve pas qu'elle a été rangée au bon endroit. Seule la relecture, la session fermée puis rouverte, le prouve.",
         faire: [
           "Éteignez l'interrupteur « Annoncer les cartes virtuelles », rallumez-le, et laissez la carte se reconnecter.",
@@ -231,7 +231,7 @@ const PROTOCOLE = {
       },
 
       {
-        phase: "Plusieurs cartes, et des pages",
+        phase: "Trois cartes dans une installation, et des pages qui les mêlent",
         lede: "Un van équipé porte souvent deux ou trois cartes, et des pages qui mêlent leurs sorties.",
         id: "multi-cartes",
         titre: "Ajouter deux cartes déjà équipées",
@@ -293,7 +293,7 @@ const PROTOCOLE = {
       },
 
       {
-        phase: "Ce qui survit, ce qui tombe",
+        phase: "Redémarrer, remettre à zéro, débrancher",
         lede: "Une carte simulée doit se comporter comme du matériel qu'on redémarre, qu'on remet à zéro, ou qu'on débranche.",
         id: "redemarrage",
         titre: "Fermer l'app pour de bon, puis la rouvrir",
@@ -368,7 +368,7 @@ const PROTOCOLE = {
 
       {
         phase: "Ce que ces essais ne prouvent pas",
-        lede: "Cette réponse s'écrit en toutes lettres, elle ne se coche pas.",
+        lede: "Une seule réponse, écrite en toutes lettres : une case à cocher n'aurait rien à dire ici.",
         id: "limites",
         titre: "Ce qui ne ressemble pas à du matériel",
         pourquoi: "Rien de la radio n'est en jeu ici : ni portée, ni autorisations, ni coupure franche, ni vraie mise à jour. Un banc trop confortable donne confiance à tort.",
@@ -381,8 +381,8 @@ const PROTOCOLE = {
       },
 
       {
-        phase: "Jugement",
-        lede: "Ces deux réponses se remplissent en toutes lettres.",
+        phase: "Ce que les cases à cocher ne disent pas",
+        lede: "Deux questions sans verdict à cocher. Ce sont elles qui remontent les défauts d'usage, ceux qu'aucun essai ne fait tomber en panne.",
         id: "hesitations",
         titre: "Ce qui a demandé de réfléchir",
         pourquoi: "Une étape qu'on relit deux fois est un défaut, au même titre qu'une panne.",
@@ -392,7 +392,7 @@ const PROTOCOLE = {
       {
         id: "confiance",
         titre: "Qu'iriez-vous quand même vérifier sur une vraie carte ?",
-        pourquoi: "",
+        pourquoi: "Ces essais servent à éviter d'avoir à tout refaire sur matériel. Ce que vous refaites quand même dit ce qui manque au banc pour mériter votre confiance.",
         faire: ["Répondez, et dites ce qui vous manquerait pour ne pas avoir à le refaire."],
         attendu: ["« Tout, par principe » est une réponse utile : dites alors dans quel ordre."]
       }
@@ -431,7 +431,7 @@ const PROTOCOLE = {
     },
     essais: [
       {
-        phase: "Creating a board",
+        phase: "Creating a board, and seeing it appear",
         lede: "The entry sits under “Development” in the settings, because what you do there touches the app's real data.",
         id: "banc-allumage",
         titre: "Create a first board, out of the box",
@@ -480,7 +480,7 @@ const PROTOCOLE = {
       },
 
       {
-        phase: "Adopting the board",
+        phase: "Pairing, exactly as on hardware",
         lede: "A board can only be commanded once paired, and pairing needs a physical press on its BOOT button. Simulated boards follow the same rule.",
         id: "appairage-refus",
         titre: "Try to pair without pressing BOOT",
@@ -525,10 +525,10 @@ const PROTOCOLE = {
       },
 
       {
-        phase: "Configuring a brand new board",
+        phase: "Configuring a brand new board, end to end",
         lede: "This is the longest part, and it is exactly what a fitter does the day a board goes in: name, type, set, threshold.",
         id: "usine-releve",
-        titre: "Look at what a brand new board announces",
+        titre: "Read the state of a board that has never been configured",
         pourquoi: "These values are copied from what the firmware actually sets on first start. Were they merely plausible, you would be testing a first start that does not exist.",
         faire: [
           "Open <span class='path'>Configure outputs</span>, then <span class='path'>Configure inputs</span>."
@@ -602,7 +602,7 @@ const PROTOCOLE = {
       },
       {
         id: "relecture",
-        titre: "Read everything back afterwards",
+        titre: "Read every setting back, session closed then reopened",
         pourquoi: "A command being accepted does not prove it was stored in the right place. Only reading it back, with the session closed and reopened, proves that.",
         faire: [
           "Turn the “Announce virtual boards” switch off, turn it back on, and let the board reconnect.",
@@ -615,7 +615,7 @@ const PROTOCOLE = {
       },
 
       {
-        phase: "Several boards, and pages",
+        phase: "Three boards in one installation, and pages that mix them",
         lede: "A fitted van often carries two or three boards, and pages that mix their outputs.",
         id: "multi-cartes",
         titre: "Add two boards that arrive fitted",
@@ -677,7 +677,7 @@ const PROTOCOLE = {
       },
 
       {
-        phase: "What survives, what drops",
+        phase: "Restarting, resetting, unplugging",
         lede: "A simulated board has to behave like hardware you restart, reset, or unplug.",
         id: "redemarrage",
         titre: "Close the app for good, then reopen it",
@@ -752,7 +752,7 @@ const PROTOCOLE = {
 
       {
         phase: "What these trials do not prove",
-        lede: "This answer is written out, not ticked.",
+        lede: "One single answer, written out in full: a tick box would have nothing to say here.",
         id: "limites",
         titre: "What does not feel like hardware",
         pourquoi: "Nothing of the radio is involved here: no range, no permissions, no abrupt cut, no real update. A bench that is too comfortable gives confidence it has not earned.",
@@ -765,8 +765,8 @@ const PROTOCOLE = {
       },
 
       {
-        phase: "Judgement",
-        lede: "These two answers are written out in full.",
+        phase: "What the tick boxes do not say",
+        lede: "Two questions with no verdict to tick. These are the ones that surface usability defects, the kind no trial ever breaks on.",
         id: "hesitations",
         titre: "What made you stop and think",
         pourquoi: "A step you read twice is a defect, just as much as a failure is.",
@@ -776,7 +776,7 @@ const PROTOCOLE = {
       {
         id: "confiance",
         titre: "What would you still check on a real board?",
-        pourquoi: "",
+        pourquoi: "These trials exist so that everything need not be done again on hardware. Whatever you would redo anyway says what the bench is missing to earn your trust.",
         faire: ["Answer, and say what you would need in order not to have to check it again."],
         attendu: ["“All of it, on principle” is a useful answer: then say in which order."]
       }

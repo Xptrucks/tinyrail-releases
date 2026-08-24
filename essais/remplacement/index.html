@@ -37,7 +37,7 @@ const PROTOCOLE = {
     ],
     besoin: {
       titre: "Ce qu'il vous faut",
-      lede: "",
+      lede: "Réunissez tout avant de commencer : une carte manquante à l'essai 11 arrête la session pour de bon.",
       points: [
         "<b>Deux cartes TinyRail alimentées</b>, appelées ici A et B, et de quoi couper l'alimentation de l'une d'elles en cours d'essai.",
         "Un téléphone avec l'app, et de quoi chronométrer.",
@@ -59,8 +59,8 @@ const PROTOCOLE = {
     },
     essais: [
       {
-        phase: "Poser la base de test",
-        lede: "À faire avant tout le reste, dans une installation neuve pour ne pas toucher à votre van.",
+        phase: "Mettre les deux cartes dans un état connu",
+        lede: "Aucun essai ne veut dire grand-chose si l'on ne sait pas ce que les cartes portaient au départ. À faire dans une installation neuve, pour laisser votre van tranquille.",
         id: "installation",
         titre: "Créer une installation d'essai avec les deux cartes",
         pourquoi: "Tout ce qui suit modifie des cartes et des pages. Une installation à part tient votre van hors du chemin, et donne à tous les essais le même point de départ.",
@@ -137,8 +137,8 @@ const PROTOCOLE = {
       },
       {
         id: "remise-soute",
-        titre: "Remettre B dans un état propre",
-        pourquoi: "Les essais suivants partent d'une carte B saine.",
+        titre: "Recharger la configuration simple de B avant la suite",
+        pourquoi: "Les deux essais précédents ont laissé B avec des valeurs extrêmes et un réglage refusé. Tout ce qui suit part d'une carte saine, et d'une configuration dont vous connaissez le contenu.",
         faire: [
           "Sur B : appliquez <code>config-soute.json</code>."
         ],
@@ -146,10 +146,10 @@ const PROTOCOLE = {
       },
 
       {
-        phase: "Le remplacement lui-même",
-        lede: "La carte A répond encore : c'est le meilleur cas, sa configuration peut être relevée à l'instant.",
+        phase: "Remplacer une carte qui répond encore",
+        lede: "Le cas le plus favorable : l'ancienne carte parle encore, sa configuration est donc relevée à l'instant, juste avant d'être recopiée sur la neuve.",
         id: "remplacement",
-        titre: "Remplacer A par B, la carte A étant vivante",
+        titre: "Lancer le remplacement de A par B",
         pourquoi: "Le remplacement écrit sur la carte neuve tout ce que portait l'ancienne, puis fait suivre les pages. On cherche ce qui ne suit pas : une tuile restée sur l'ancienne carte, un bouton de groupe amputé d'une sortie.",
         faire: [
           "Ouvrez A, puis <span class='path'>… → Remplacer cette carte</span>.",
@@ -179,7 +179,7 @@ const PROTOCOLE = {
       },
       {
         id: "ancienne",
-        titre: "Regarder ce qu'est devenue la carte A",
+        titre: "Vérifier que A est bien revenue d'usine",
         pourquoi: "Sans remise à zéro, deux cartes porteraient les mêmes noms de sorties et seraient indiscernables lors d'une recherche.",
         faire: [
           "Réappairez A (appui de trois secondes sur BOOT), puis regardez ses réglages."
@@ -199,8 +199,8 @@ const PROTOCOLE = {
       },
 
       {
-        phase: "Quand ça se passe mal",
-        lede: "Provoquez les pannes franchement. Rechargez le modèle (essai 02) si la base a été défaite en route.",
+        phase: "Interrompre un remplacement en cours de route",
+        lede: "Trois façons de couper une écriture en cours : la carte, l'app, et la panne pour de bon. Provoquez-les franchement, et rechargez le modèle (essai 02) si la base a été défaite en route.",
         id: "coupure",
         titre: "Couper l'alimentation en pleine écriture",
         pourquoi: "Un remplacement enchaîne une quarantaine de commandes. Si la carte disparaît au milieu, l'app doit s'arrêter vite, dire ce qui manque, et savoir reprendre là où elle s'est arrêtée.",
@@ -245,8 +245,8 @@ const PROTOCOLE = {
       },
 
       {
-        phase: "Sauvegarder et refaire ailleurs",
-        lede: "Ce qui rend un remplacement possible : un relevé récent, et un modèle réutilisable.",
+        phase: "Sauvegarder avant la panne, et refaire le van ailleurs",
+        lede: "Un remplacement ne vaut que ce que vaut le dernier relevé de la carte morte. Voici les deux choses qui le préparent : la sauvegarde proposée après chaque changement, et le modèle qu'on remonte chez quelqu'un d'autre.",
         id: "proposition",
         titre: "La proposition de sauvegarde après une modification",
         pourquoi: "Sans relevé récent, un remplacement repart d'une configuration ancienne. L'app propose donc d'en faire un après chaque changement. Mais une proposition qui revient sans raison finit par se chasser sans se lire.",
@@ -277,8 +277,8 @@ const PROTOCOLE = {
       },
 
       {
-        phase: "Jugement",
-        lede: "Ces deux réponses se remplissent en toutes lettres.",
+        phase: "Ce que les cases à cocher ne disent pas",
+        lede: "Deux questions sans verdict à cocher. Ce sont elles qui remontent les défauts d'usage, ceux qu'aucun essai ne fait tomber en panne.",
         id: "hesitations",
         titre: "Ce qui a demandé de réfléchir",
         pourquoi: "Une étape qu'on relit deux fois est un défaut, au même titre qu'une panne.",
@@ -288,7 +288,7 @@ const PROTOCOLE = {
       {
         id: "confiance",
         titre: "Le feriez-vous sur le van d'un client ?",
-        pourquoi: "",
+        pourquoi: "Un remplacement se joue chez quelqu'un, sur une installation qui doit remarcher le soir même. Ce que vous n'oseriez pas faire là-bas est un défaut, même si tous les essais ci-dessus sont conformes.",
         faire: ["Répondez, et dites ce qui manque pour que ce soit oui."],
         attendu: ["« Oui, mais je vérifierais tout derrière » est une réponse utile."]
       }
@@ -317,7 +317,7 @@ const PROTOCOLE = {
     ],
     besoin: {
       titre: "What you need",
-      lede: "",
+      lede: "Gather it all before you start: a board missing at trial 11 ends the session for good.",
       points: [
         "<b>Two powered TinyRail boards</b>, called A and B here, and a way to cut the power to one of them mid trial.",
         "A phone with the app, and something to time with.",
@@ -339,8 +339,8 @@ const PROTOCOLE = {
     },
     essais: [
       {
-        phase: "Setting up the test base",
-        lede: "Do this before anything else, in a fresh installation so your own van stays untouched.",
+        phase: "Bringing both boards to a known state",
+        lede: "No trial means much unless you know what the boards held to begin with. Do this in a fresh installation, so your own van stays untouched.",
         id: "installation",
         titre: "Create a test installation with both boards",
         pourquoi: "Everything that follows changes boards and pages. A separate installation keeps your van out of the way, and gives every trial the same starting point.",
@@ -417,8 +417,8 @@ const PROTOCOLE = {
       },
       {
         id: "remise-soute",
-        titre: "Put board B back in a clean state",
-        pourquoi: "The trials that follow start from a healthy board B.",
+        titre: "Reload B's simple configuration before moving on",
+        pourquoi: "The two previous trials left B with extreme values and a refused setting. Everything that follows starts from a healthy board, holding a configuration whose contents you know.",
         faire: [
           "On B: apply <code>config-soute.json</code>."
         ],
@@ -426,10 +426,10 @@ const PROTOCOLE = {
       },
 
       {
-        phase: "The replacement itself",
-        lede: "Board A still answers: the best case, since its configuration can be read there and then.",
+        phase: "Replacing a board that still answers",
+        lede: "The most favourable case: the old board is still talking, so its configuration is read there and then, moments before being copied onto the new one.",
         id: "remplacement",
-        titre: "Replace A with B, board A still alive",
+        titre: "Start the replacement of A with B",
         pourquoi: "The replacement writes onto the new board everything the old one held, then moves the pages over. We are looking for what fails to follow: a tile left pointing at the old board, a group button short of an output.",
         faire: [
           "Open A, then <span class='path'>… → Replace this board</span>.",
@@ -459,7 +459,7 @@ const PROTOCOLE = {
       },
       {
         id: "ancienne",
-        titre: "Look at what became of board A",
+        titre: "Check that A really went back to factory settings",
         pourquoi: "Without the reset, two boards would carry the same output names and be indistinguishable in a search.",
         faire: [
           "Pair A again (hold BOOT for three seconds), then look at its settings."
@@ -479,8 +479,8 @@ const PROTOCOLE = {
       },
 
       {
-        phase: "When it goes wrong",
-        lede: "Cause the failures properly. Reload the template (trial 02) if the base got undone along the way.",
+        phase: "Interrupting a replacement halfway through",
+        lede: "Three ways of cutting a write short: the board, the app, and a failure for good. Cause them properly, and reload the template (trial 02) if the base got undone along the way.",
         id: "coupure",
         titre: "Cut the power mid write",
         pourquoi: "A replacement chains some forty commands. If the board disappears halfway, the app has to stop quickly, say what is missing, and be able to resume where it stopped.",
@@ -525,8 +525,8 @@ const PROTOCOLE = {
       },
 
       {
-        phase: "Backing up and rebuilding elsewhere",
-        lede: "What makes a replacement possible in the first place: a recent reading, and a reusable template.",
+        phase: "Backing up before the failure, and rebuilding the van elsewhere",
+        lede: "A replacement is only ever as good as the last reading of the dead board. Here are the two things that prepare it: the backup offered after every change, and the template you lay down at someone else's.",
         id: "proposition",
         titre: "The backup prompt after a change",
         pourquoi: "Without a recent reading, a replacement starts from an old configuration. So the app offers to take one after every change. But a prompt that comes back for no reason ends up being dismissed unread.",
@@ -557,8 +557,8 @@ const PROTOCOLE = {
       },
 
       {
-        phase: "Judgement",
-        lede: "These two answers are written out in full.",
+        phase: "What the tick boxes do not say",
+        lede: "Two questions with no verdict to tick. These are the ones that surface usability defects, the kind no trial ever breaks on.",
         id: "hesitations",
         titre: "What made you stop and think",
         pourquoi: "A step you read twice is a defect, just as much as a failure is.",
@@ -568,7 +568,7 @@ const PROTOCOLE = {
       {
         id: "confiance",
         titre: "Would you do this on a customer's van?",
-        pourquoi: "",
+        pourquoi: "A replacement happens at someone's place, on an installation that has to work again by the evening. Whatever you would not dare do there is a defect, even if every trial above passed.",
         faire: ["Answer, and say what is missing for that to be a yes."],
         attendu: ["“Yes, but I would check everything afterwards” is a useful answer."]
       }
