@@ -35,7 +35,8 @@
     "CMD":           { "suffix": "20", "props": "W",   "max_size": 34 },
     "RESP":          { "suffix": "21", "props": "RN" },
     "OTA_STATUS":    { "suffix": "31", "props": "RN",  "size": 12 },
-    "OTA_DATA":      { "suffix": "30", "props": "WNR" }
+    "OTA_DATA":      { "suffix": "30", "props": "WNR" },
+    "HIST_DATA":     { "suffix": "40", "props": "N" }
   },
 
   "_ota_comment": [
@@ -140,7 +141,11 @@
     "GET_INPUT_SCALE": 93,
     "SET_INPUT_SCALE": 94,
     "GET_INPUT_ALARM": 106,
-    "SET_INPUT_ALARM": 107
+    "SET_INPUT_ALARM": 107,
+    "SET_TIME": 108,
+    "HIST_INFO": 109,
+    "HIST_READ": 110,
+    "HIST_CLEAR": 111
   },
 
   "_opcodes_not_dispatched": ["NOP"],
@@ -151,7 +156,8 @@
     "BAD_OPCODE": 2,
     "BAD_INDEX": 3,
     "BAD_PAYLOAD": 4,
-    "TRUNCATED": 5
+    "TRUNCATED": 5,
+    "BUSY": 6
   },
 
   "_output_kinds_comment": [
@@ -175,7 +181,8 @@
     { "id": 10, "en": "Compressor",      "fr": "Compresseur",         "dimmable": false },
     { "id": 11, "en": "Antenna / TV",    "fr": "Antenne / TV",        "dimmable": false },
     { "id": 12, "en": "Siren",           "fr": "Sirène",              "dimmable": false },
-    { "id": 13, "en": "Valve",           "fr": "Électrovanne",        "dimmable": false }
+    { "id": 13, "en": "Valve",           "fr": "Électrovanne",        "dimmable": false },
+    { "id": 14, "en": "Light (on/off)",           "fr": "Éclairage tout ou rien",        "dimmable": false }
   ],
 
   "input_kinds": [
@@ -283,6 +290,10 @@
     "pairing_window_s": 30,
     "ota_window_bytes": 4096,
     "alarm_threshold_max_tenths": 5000,
-    "input_scale_max_cv": 3000
+    "input_scale_max_cv": 3000,
+    "hist_levels": 5,
+    "hist_record_bytes": 156,
+    "hist_level_seconds": [900, 3600, 86400, 604800, 2419200],
+    "hist_level_depth": [8, 48, 14, 9, 14]
   }
 }
