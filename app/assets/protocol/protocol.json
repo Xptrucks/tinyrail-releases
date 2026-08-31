@@ -157,7 +157,8 @@
     "BAD_INDEX": 3,
     "BAD_PAYLOAD": 4,
     "TRUNCATED": 5,
-    "BUSY": 6
+    "BUSY": 6,
+    "DRIVEN": 7
   },
 
   "_output_kinds_comment": [
