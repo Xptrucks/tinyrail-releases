@@ -1,0 +1,35 @@
+{
+  "_comment": [
+    "Ce que cette version du firmware exige autour d'elle.",
+    "",
+    "Ce fichier répond à une question qu'aucun outil ne savait traiter :",
+    "quelle version de l'app va avec quelle version du firmware, et sur",
+    "quelle révision de carte. Elle se posait pourtant déjà, puisque le",
+    "firmware cible la Rev 0.2 (PCA9555, 4 entrées universelles, VBUS sur",
+    "GPIO4) et refuse la Rev 0.1 : même adresse I2C 0x20, composants",
+    "différents, aucune auto-détection possible.",
+    "",
+    "⚠️ `firmware` vaut null ICI et se remplit à la publication, par",
+    "scripts/manifests.sh, avec la version réellement compilée. Un numéro",
+    "écrit à la main dans ce fichier serait un numéro qu'on oublierait de",
+    "changer, et le premier à mentir.",
+    "",
+    "⚠️ `protocole` doit égaler le champ `version` de protocol.json.",
+    "scripts/manifests.sh le vérifie et refuse de publier sinon : une",
+    "compatibilité annoncée sur un protocole qui a bougé est pire que pas",
+    "de compatibilité annoncée du tout.",
+    "",
+    "Publié à chaque release sur https://ota.tinyrail.xptrucks.fr/compat.json",
+    "(canal bêta : compat-beta.json)."
+  ],
+  "firmware": "0.14.0-beta.7",
+  "protocole": 2,
+  "cartes": [
+    "0.2"
+  ],
+  "app_minimale": "1.9.0",
+  "_notes": {
+    "cartes": "Révisions de carte sur lesquelles ce firmware est vérifié. Une Rev 0.1 reste en v0.5.0 ; ce sont des cartes de développement, aucune n'est chez un client.",
+    "app_minimale": "Version d'app en dessous de laquelle une fonction du firmware n'a pas de contrepartie côté client. 1.9.2 a apporté l'historique embarqué ; 1.9.0 reste le plancher du protocole 2."
+  }
+}
