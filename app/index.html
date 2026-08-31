@@ -199,7 +199,54 @@
       #screen { border-radius: 0; }
       .legende { display: none; }
     }
+
+    /* Le même plein écran, forcé par `?plein` dans l'adresse.
+       Sert à capturer les écrans pour les fiches des magasins, et à intégrer
+       la démonstration dans une page sans son châssis.
+
+       ⚠️ CES RÈGLES SONT LA COPIE DE CELLES DU BLOC CI-DESSUS, et il n'existe
+       pas de façon d'écrire les deux en une seule : la media query est une
+       condition d'environnement, la classe une condition de document, et le
+       CSS ne sait pas appliquer une classe. Les faire porter par le script
+       aurait supprimé la copie, mais le plein écran d'un vrai téléphone aurait
+       alors dépendu du JavaScript, alors qu'il ne dépend aujourd'hui de rien.
+       Modifier l'un des deux blocs demande donc de modifier l'autre. */
+    body.plein { padding: 0; gap: 0; display: block; background: #05070a; overflow: hidden; }
+    body.plein .scene { width: 100%; height: 100dvh; }
+    body.plein .phone {
+      width: 100%;
+      height: 100dvh;
+      padding: 0;
+      border-radius: 0;
+      transform: none;
+      background: none;
+      box-shadow: none;
+    }
+    body.plein #screen { border-radius: 0; }
+    body.plein .legende { display: none; }
   </style>
+  <script>
+    // ⚠️ Dans le `<head>`, et volontairement : la classe doit être posée AVANT
+    // le premier rendu, sinon le cadre apparaît puis disparaît, et une capture
+    // prise trop tôt l'attrape.
+    //
+    // ⚠️ Et hors de tout `DOMContentLoaded` : `document.body` n'existe pas
+    // encore ici, d'où la classe posée sur `documentElement` puis reportée.
+    // Le CSS vise `body.plein` parce que c'est là que vivent les règles.
+    (function () {
+      try {
+        var p = new URLSearchParams(location.search);
+        if (!p.has('plein') || p.get('plein') === '0') return;
+        document.addEventListener('DOMContentLoaded', function () {
+          document.body.classList.add('plein');
+        });
+      } catch (e) {
+        // Une adresse illisible ne doit pas empêcher la démonstration de
+        // s'afficher : sans classe, le cadre reste, et c'est le comportement
+        // normal.
+      }
+    })();
+  </script>
 </head>
 <body>
   <div class="scene">
