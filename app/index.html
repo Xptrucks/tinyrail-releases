@@ -105,6 +105,22 @@
          `overflow` seul ne retient pas. Flutter n'en pose pas aujourd'hui,
          mais la scène montée ici ne nous appartient pas. */
       contain: paint;
+
+      /* ⚠️ ET `clip-path`, parce que sur Gecko (Firefox, Zen) NI `overflow`
+         NI `contain` ne retiennent la couche composée de CanvasKit : l'app se
+         peignait PAR-DESSUS le châssis, bandeau et barre d'onglets compris,
+         et le téléphone passait derrière l'app.
+
+         ⚠️ La géométrie n'y était pour rien, et c'est ce qui rend le défaut
+         trompeur : mesuré dans Gecko, `flutter-view` fait exactement 390 × 844
+         et ne déborde d'aucun pixel. Le débordement est à la peinture, pas à
+         la mise en page, si bien qu'aucune correction de taille n'y aurait
+         changé quoi que ce soit.
+
+         `clip-path` s'applique, lui, au moment du compositing. Le rayon répète
+         celui de `border-radius` juste au-dessus : les deux valeurs doivent
+         rester égales. Sans effet là où le clipping fonctionnait déjà. */
+      clip-path: inset(0 round 41px);
     }
 
     /* ⚠️ Firefox ne clippe pas une couche composée (le canvas WebGL de
