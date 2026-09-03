@@ -95,6 +95,74 @@
     { "id": 9, "en": "Aborted",        "fr": "Annulée" }
   ],
 
+  "_mqtt_comment": [
+    "TRANSPORT MQTT — le même protocole, un autre chemin.",
+    "",
+    "La carte publie sur un broker les trames QU'ELLE PRODUIT DÉJÀ pour le",
+    "GATT, octet pour octet : une caractéristique, un topic. Rien n'est",
+    "réencodé, donc un client qui sait lire le BLE sait lire le MQTT.",
+    "",
+    "⚠️ Mais la copie ne peut pas être nue. Le GATT n'a pas d'horodatage parce",
+    "que le BLE est synchrone : on lit, c'est frais. En MQTT la donnée est",
+    "RETENUE et peut venir de deux sources, la carte en WiFi et le pont",
+    "téléphonique. D'où une enveloppe, puis un chiffrement.",
+    "",
+    "⚠️ TOUT est chiffré, dans les deux sens. TLS protège le trajet et l'ACL",
+    "protège l'accès, mais qui tient le broker lirait l'installation et",
+    "pourrait la piloter. La clé est celle de l'appairage (OP_GET_KEY) : le",
+    "broker ne l'a jamais."
+  ],
+  "mqtt": {
+    "topics": {
+      "state": { "from": "STATE", "retain": true, "direction": "board_to_client", "periodic": true },
+      "telemetry": { "from": "TELEMETRY", "retain": true, "direction": "board_to_client", "periodic": true },
+      "inputs": { "from": "INPUTS", "retain": true, "direction": "board_to_client", "periodic": true },
+      "faults": { "from": "FAULTS", "retain": true, "direction": "board_to_client", "periodic": true },
+      "status": { "from": null, "retain": true, "direction": "board_to_client",
+                  "values": ["online", "offline"],
+                  "note": "birth et testament, en clair : il ne dit rien de l'installation" },
+      "cmd": { "from": "CMD", "retain": false, "direction": "client_to_board" },
+      "resp": { "from": "RESP", "retain": false, "direction": "board_to_client",
+                "note": "réponse à une commande, chiffrée comme le reste ; non retenue, elle ne vaut que pour la commande qui l'a provoquée" },
+      "req": { "from": null, "retain": false, "direction": "client_to_board",
+               "note": "demande de republication ; une LECTURE, donc permise même sans droit de commande" }
+    },
+    "topic_prefix": "nom de la carte, suffixe MAC compris, qui est AUSSI son compte sur le broker",
+    "envelope": {
+      "order": ["t_u32_le", "flags_u8", "gatt_frame"],
+      "header_size": 5,
+      "flags": { "time_is_sure": 1, "via_phone_bridge": 2 }
+    },
+    "encryption": {
+      "algorithm": "AES-256-GCM",
+      "key": "clé d'appairage, 32 o, celle d'OP_GET_KEY",
+      "layout": ["version_u8", "nonce_12", "ciphertext", "tag_16"],
+      "version": 1,
+      "aad": "le nom du topic, sans le préfixe",
+      "overhead": 29
+    },
+    "publish_when": ["connexion", "changement", "demande sur req"],
+    "rate_limit": {
+      "state": { "burst": 5, "refill_ms": 5000 },
+      "faults": { "burst": 5, "refill_ms": 5000 },
+      "telemetry": { "burst": 1, "refill_ms": 10000 },
+      "inputs": { "burst": 1, "refill_ms": 10000 }
+    },
+    "_allowed_opcodes_comment": [
+      "⚠️ Ce que le broker a le droit de commander, et rien de plus.",
+      "Le dispatcheur sait tout faire, y compris redémarrer la carte, effacer",
+      "l'historique ou la remettre en sortie d'usine. Ce qui est acceptable au",
+      "bout d'un lien BLE, à portée de main, ne l'est pas depuis Internet.",
+      "Les lectures sont ouvertes, les écritures qui changent la configuration",
+      "ne le sont pas."
+    ],
+    "allowed_opcodes": [
+      "SET_CHANNEL", "SET_ALL", "SET_TIME",
+      "GET_CH_CONFIG", "GET_OVERCURRENT", "GET_THERMAL", "GET_LABEL",
+      "GET_CH_META", "GET_INPUT", "GET_INPUT_META", "GET_INFO"
+    ]
+  },
+
   "opcodes": {
     "NOP": 0,
     "SET_CHANNEL": 1,
@@ -145,7 +213,15 @@
     "SET_TIME": 108,
     "HIST_INFO": 109,
     "HIST_READ": 110,
-    "HIST_CLEAR": 111
+    "HIST_CLEAR": 111,
+
+    "GET_MQTT": 112,
+    "SET_MQTT": 113,
+    "CLEAR_MQTT": 114,
+
+    "GET_WIFI": 115,
+    "SET_WIFI": 116,
+    "CLEAR_WIFI": 117
   },
 
   "_opcodes_not_dispatched": ["NOP"],
