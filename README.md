@@ -10,7 +10,7 @@ commutation de puissance 8 canaux DC pour camping-cars et vans aménagés.
 
 | | Adresse du produit | Miroir (ce dépôt) |
 |---|---|---|
-| Installer la carte | https://flash.tinyrail.xptrucks.fr/ | https://chpeps.github.io/tinyrail-releases/ |
+| Installer la carte | https://flash.tinyrail.xptrucks.fr/ | https://xptrucks.github.io/tinyrail-releases/ |
 | Console Bluetooth | https://flash.tinyrail.xptrucks.fr/console/ | …/console/ |
 | Manifest OTA | https://ota.tinyrail.xptrucks.fr/manifest.json | …/manifest.json |
 | Démonstration de l'app | https://demo.tinyrail.xptrucks.fr/ | …/app/ |
