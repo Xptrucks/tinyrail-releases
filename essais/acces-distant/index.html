@@ -1,0 +1,757 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Accès distant · TinyRail</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Source+Sans+3:ital,wght@0,400;0,600;1,400&display=swap">
+<link rel="stylesheet" href="../essais.css">
+</head>
+<body>
+<div id="app"></div>
+<script src="../essais.js"></script>
+<script>
+
+const PROTOCOLE = {
+  cle: "acces-distant",
+
+  fr: {
+    nom: "Accès distant",
+    eyebrow: "TinyRail · essais avec matériel",
+    titre: "Piloter sa carte de loin, par Internet",
+    intro: [
+      "Hors de portée Bluetooth, la carte reste joignable par Internet : elle publie son état sur un serveur, et l'app lui envoie des commandes. Tout est chiffré de bout en bout — le serveur achemine sans pouvoir lire ni commander.",
+      "Ce protocole cherche les endroits où l'app dirait une chose et en ferait une autre : une commande qui part sans effet, un écran qui annonce une panne là où il n'y a qu'un autre chemin, une valeur ancienne qui passe pour fraîche. Ce sont des défauts qui ne se voient pas sur un banc : il faut deux réseaux, une vraie carte, et de la patience.",
+      "Comptez une heure et demie. Les essais sont dans l'ordre : chacun s'appuie sur le précédent."
+    ],
+    identLabel: "Identification de la session d'essai",
+    champs: [
+      { cle: "who", label: "Testeur", exemple: "" },
+      { cle: "when", label: "Date", exemple: "2026-09-05" },
+      { cle: "app", label: "Version de l'app", exemple: "Réglages → À propos" },
+      { cle: "fw", label: "Version du firmware", exemple: "Écran de la carte, en bas" },
+      { cle: "phone", label: "Téléphone", exemple: "iPhone 14, iOS 26.6" },
+      { cle: "reseau", label: "Réseau de la carte", exemple: "Wi-Fi du van, box, partage de connexion" },
+      { cle: "loin", label: "Comment vous êtes « loin »", exemple: "Bluetooth coupé, ou vraiment à distance" }
+    ],
+    besoin: {
+      titre: "Avant de commencer",
+      lede: "Il faut du matériel, et surtout DEUX chemins réseau distincts.",
+      points: [
+        "Une carte TinyRail alimentée, en firmware 0.14.0-beta.12 ou plus récent, avec un Wi-Fi qu'elle peut joindre.",
+        "Un téléphone avec l'app en version 1.11.0 ou plus récente, déjà appairé à cette carte.",
+        "Un accès Internet pour le téléphone qui ne dépende PAS du Wi-Fi de la carte : les données mobiles font l'affaire. Sur le même réseau, on ne prouve rien de ce qui se passe vraiment de loin.",
+        "Une charge sur au moins une sortie — une lampe suffit — et de quoi voir le courant qu'elle tire.",
+        "De quoi chronométrer : neuf essais demandent une durée."
+      ],
+      avis: "<b>Ce protocole commande une vraie sortie de puissance.</b> Choisissez une sortie dont l'allumage intempestif n'a aucune conséquence, et surtout pas une pompe, un chauffage ou quoi que ce soit qui chauffe sans surveillance. Vous allez l'allumer et l'éteindre depuis un autre lieu."
+    },
+    essais: [
+      {
+        phase: "Armer l'accès distant, à portée",
+        lede: "Tout se règle en Bluetooth, carte sous la main. C'est voulu : ce qui ouvre un accès depuis Internet ne se règle pas depuis Internet.",
+        id: "reseau-lecture",
+        titre: "Lire l'écran Réseau sans rien changer",
+        pourquoi: "Cet écran est la destination de tous les pictogrammes de l'app : quelqu'un qui y arrive vient de toucher une marque qu'il ne comprenait pas. Il doit répondre à « pourquoi ça ne marche pas » avant de proposer quoi que ce soit à régler.",
+        faire: [
+          "Ouvrez la carte, puis <span class='path'>menu → Réseau</span>.",
+          "Lisez tout l'écran de haut en bas, sans toucher aux interrupteurs.",
+          "Descendez jusqu'à « Ce que veulent dire les pictogrammes »."
+        ],
+        attendu: [
+          "En tête, un pictogramme, un titre et <b>une seule phrase</b> qui dit où en est la liaison.",
+          "Aucune adresse de serveur, aucun terme technique dans cette phrase.",
+          "La légende montre les quatre pictogrammes avec leur couleur réelle et une description de chacun.",
+          "<b>À noter :</b> une phrase que vous avez dû relire, ou un mot que vous n'auriez pas employé."
+        ]
+      },
+      {
+        id: "reseau-armer",
+        titre: "Autoriser la carte à publier, et à obéir",
+        pourquoi: "Ce sont deux autorisations distinctes, et ce n'est pas du zèle : on peut vouloir suivre sa carte de loin sans lui laisser la moindre prise.",
+        faire: [
+          "Dans la section « Accès distant », activez <b>la publication</b>, puis attendez.",
+          "Activez ensuite <b>les commandes</b>.",
+          "Enfin, activez <b>« Utiliser la connexion à distance »</b> — celui-là est le réglage de CE téléphone, pas de la carte.",
+          "Chronométrez le temps entre l'activation de la publication et la mention d'un lien établi."
+        ],
+        attendu: [
+          "Chaque bascule affiche qu'elle travaille, puis se confirme.",
+          "Une ligne finit par dire que le lien avec le serveur est établi. <b>À noter :</b> combien de secondes.",
+          "Si la carte n'a pas de Wi-Fi, l'écran le dit — armé ne veut pas dire joint.",
+          "Rien ne vous demande d'identifiant ni de mot de passe : le compte se déduit du nom de la carte."
+        ]
+      },
+      {
+        phase: "Basculer sur Internet",
+        lede: "Le Bluetooth passe toujours avant. Le distant n'est qu'un repli, et il ne doit s'ouvrir qu'une fois la radio tombée.",
+        id: "bascule",
+        titre: "Couper le Bluetooth, et regarder l'écran",
+        pourquoi: "C'est la seconde où l'app change de chemin. Si elle laisse un trou, il se voit ici : des tuiles qui se grisent, un « connexion perdue » en rouge, des mesures qui disparaissent.",
+        faire: [
+          "Restez sur l'écran de la carte, toutes les tuiles visibles.",
+          "<b>Coupez le Bluetooth du téléphone</b> et ne quittez pas l'écran des yeux.",
+          "Chronométrez jusqu'à ce que les tuiles portent le nuage."
+        ],
+        attendu: [
+          "Le bandeau du haut passe à « jointe à distance », en couleur douce et non en rouge.",
+          "Chaque tuile porte un <b>nuage</b> à côté de sa référence de voie.",
+          "<b>À noter :</b> combien de secondes, et si quelque chose s'est grisé, éteint ou affolé pendant la bascule, ne serait-ce qu'un instant."
+        ]
+      },
+      {
+        id: "mesures-vivantes",
+        titre: "Les mesures continuent-elles de vivre ?",
+        pourquoi: "Par Internet, la carte ne publie que ce qui CHANGE, et pas plus d'une fois toutes les dix secondes. Un écran figé sur des valeurs anciennes qui auraient l'air fraîches serait le pire des mensonges.",
+        faire: [
+          "Allumez ou éteignez la charge à la main, sur la carte ou au disjoncteur.",
+          "Regardez la tension et le courant à l'écran.",
+          "Chronométrez le délai entre le geste et le changement affiché."
+        ],
+        attendu: [
+          "Les valeurs finissent par suivre. <b>À noter :</b> combien de secondes.",
+          "Elles ne se figent pas indéfiniment : si plus rien n'arrive pendant longtemps, la marque doit passer au lien brisé plutôt que de laisser croire à une mesure fraîche.",
+          "<b>À noter :</b> si vous avez vu un lien brisé alors que tout allait bien."
+        ]
+      },
+      {
+        phase: "Commander de loin",
+        lede: "Le cœur du sujet. Et la seule preuve qui compte est le COURANT, jamais l'état affiché : l'app peut très bien montrer une sortie allumée qui ne l'est pas.",
+        id: "commande",
+        titre: "Allumer une sortie chargée, depuis Internet",
+        pourquoi: "C'est ce qui n'a jamais fonctionné jusqu'à la version 1.11.0 : la pastille s'affichait sur une application incapable d'envoyer quoi que ce soit.",
+        faire: [
+          "Touchez la tuile d'une sortie sur laquelle une charge est branchée.",
+          "Chronométrez jusqu'à ce que la carte confirme.",
+          "<b>Vérifiez le courant</b>, à l'ampèremètre ou en regardant la charge elle-même."
+        ],
+        attendu: [
+          "La sortie s'allume pour de vrai. <b>La charge doit consommer.</b>",
+          "<b>À noter :</b> combien de secondes entre l'appui et la confirmation.",
+          "Le courant mesuré apparaît ensuite sur la tuile.",
+          "<b>À noter :</b> tout écart entre ce que l'app montre et ce que fait la charge."
+        ]
+      },
+      {
+        id: "serpent",
+        titre: "La tuile refuse-t-elle un second appui ?",
+        pourquoi: "Une commande distante met plusieurs secondes. Sans blocage, on n'voit rien venir, on appuie une deuxième fois, et on obtient l'inverse de ce qu'on voulait.",
+        faire: [
+          "Éteignez la sortie, et <b>essayez d'appuyer de nouveau tout de suite</b>.",
+          "Regardez le contour de la tuile pendant l'attente.",
+          "Chronométrez la durée du blocage."
+        ],
+        attendu: [
+          "Un trait néon <b>tourne autour de la tuile</b> tant que la carte n'a pas répondu.",
+          "Le second appui ne fait rien : la tuile est bloquée.",
+          "Elle se débloque dès que la carte confirme, pas au bout d'un délai fixe.",
+          "<b>À noter :</b> la durée du blocage, et s'il vous a paru long ou rassurant."
+        ]
+      },
+      {
+        id: "tout-eteindre",
+        titre: "Tout allumer, puis tout éteindre",
+        pourquoi: "Une commande de groupe touche huit sorties d'un coup, et le serveur limite le débit des confirmations. C'est le cas où l'écran a le plus de raisons de se désynchroniser.",
+        faire: [
+          "<span class='path'>menu → Tout allumer</span>, puis <span class='path'>Tout éteindre</span>.",
+          "Regardez les huit tuiles pendant que les confirmations arrivent."
+        ],
+        attendu: [
+          "Les huit finissent dans le bon état.",
+          "<b>À noter :</b> si l'une d'elles est restée en attente plus longtemps que les autres, ou n'a jamais suivi."
+        ]
+      },
+      {
+        phase: "Ce qui ne passe pas par Internet",
+        lede: "La carte n'ouvre que onze commandes à distance ; c'est elle qui décide, pas l'app. Ce qui est acceptable à portée de main ne l'est pas depuis n'importe où.",
+        id: "grisage",
+        titre: "Le menu grise ce qui demande le Bluetooth",
+        pourquoi: "Griser en expliquant vaut mieux qu'une fonction qu'on lance et qui échoue sans dire pourquoi.",
+        faire: [
+          "Ouvrez le menu de la carte et lisez-le en entier.",
+          "Touchez « Configurer les sorties », puis « Système », puis « Mise à jour du firmware »."
+        ],
+        attendu: [
+          "Ces entrées sont grisées et portent un <b>nuage barré</b>.",
+          "Les toucher affiche un message qui dit de se rapprocher de la carte — et n'ouvre pas l'écran.",
+          "« Réseau » n'est <b>pas</b> grisé : c'est justement là qu'on va voir pourquoi.",
+          "<b>À noter :</b> une entrée grisée qui devrait marcher, ou l'inverse."
+        ]
+      },
+      {
+        id: "appui-long",
+        titre: "L'appui long sur une tuile, lui aussi",
+        pourquoi: "C'est un raccourci vers la configuration : s'il échappait à la règle, on arriverait sur un écran où chaque réglage part vers un refus silencieux.",
+        faire: [
+          "Appui long sur une tuile de sortie.",
+          "Puis appui long sur une jauge d'entrée."
+        ],
+        attendu: [
+          "Aucun écran de configuration ne s'ouvre.",
+          "Un message dit pourquoi, et il est le même que dans le menu."
+        ]
+      },
+      {
+        id: "historique",
+        titre: "L'historique s'ouvre, et dit ce qu'il ne peut pas faire",
+        pourquoi: "Ce qui est déjà rapatrié vit sur le téléphone : l'écran doit s'ouvrir, sinon il serait vide précisément quand on cherche à comprendre une panne.",
+        faire: [
+          "<span class='path'>menu → Historique</span>.",
+          "Essayez le bouton de rafraîchissement."
+        ],
+        attendu: [
+          "L'écran s'ouvre et montre ce qui avait été rapatrié auparavant.",
+          "Une ligne dit que le rapatriement demande le Bluetooth.",
+          "<b>À noter :</b> si vous avez cru à une panne avant de lire cette ligne."
+        ]
+      },
+      {
+        phase: "Ouvrir l'app en étant déjà loin",
+        lede: "Le cas pour lequel l'accès distant existe, et celui qui n'a jamais fonctionné avant la version 1.11.0 : on rentre chez soi, on ouvre l'app, et elle doit joindre la carte toute seule.",
+        id: "demarrage-loin",
+        titre: "Tuer l'app, Bluetooth coupé, et la rouvrir",
+        pourquoi: "Une carte n'était adoptée que si la recherche Bluetooth la trouvait. Hors de portée au lancement, elle n'existait pour personne — donc aucun repli ne pouvait s'ouvrir.",
+        faire: [
+          "Bluetooth toujours coupé, <b>fermez complètement l'application</b> (glissez-la hors du sélecteur d'apps).",
+          "Rouvrez-la et <b>déclenchez le chronomètre</b>.",
+          "Attendez sans rien toucher. Le repli se donne quelques secondes de retard, exprès, pour laisser au Bluetooth une chance de gagner."
+        ],
+        attendu: [
+          "La carte finit par apparaître comme jointe, avec le nuage, sans aucune action de votre part.",
+          "<b>À noter :</b> combien de secondes exactement.",
+          "Dans <span class='path'>menu → Journal</span>, une ligne dit que la carte a été jointe à distance.",
+          "<b>À noter :</b> si vous avez cru, pendant l'attente, que ça ne marcherait pas."
+        ]
+      },
+      {
+        id: "commande-apres-demarrage",
+        titre: "Commander depuis cet état",
+        pourquoi: "Joindre n'est pas commander : le lien peut être ouvert sans que l'envoi fonctionne, et c'était exactement le défaut d'origine.",
+        faire: [
+          "Allumez la sortie chargée.",
+          "Vérifiez le courant."
+        ],
+        attendu: [
+          "La charge consomme.",
+          "<b>À noter :</b> le délai, et s'il diffère de celui mesuré plus haut."
+        ]
+      },
+      {
+        phase: "Revenir à portée",
+        lede: "Le passage inverse. Il a longtemps été le plus laid : l'app basculait sur un lien qui n'était pas encore en service.",
+        id: "retour-bt",
+        titre: "Rallumer le Bluetooth, et ne pas quitter l'écran des yeux",
+        pourquoi: "Le lien est « connecté » bien avant d'être utilisable : il reste l'échange de sécurité et l'abonnement aux mesures. Basculer trop tôt grise toutes les tuiles pendant plusieurs secondes.",
+        faire: [
+          "Revenez à portée de la carte.",
+          "<b>Rallumez le Bluetooth</b> en gardant l'écran de la carte sous les yeux.",
+          "Chronométrez jusqu'à ce que les tuiles portent la rune Bluetooth.",
+          "Refaites-le <b>trois fois</b> : ce défaut n'apparaissait pas à tous les coups."
+        ],
+        attendu: [
+          "Aucune tuile ne se grise, ne s'éteint ni ne clignote pendant la reprise.",
+          "Le bandeau ne passe pas par « connexion perdue » en rouge.",
+          "Les nuages deviennent des runes Bluetooth. <b>À noter :</b> combien de secondes, sur chacun des trois essais.",
+          "<b>À noter :</b> tout scintillement, même bref."
+        ]
+      },
+      {
+        id: "commande-apres-retour",
+        titre: "Commander tout de suite après le retour",
+        pourquoi: "Une écriture partie sur une radio qu'on vient d'éteindre pouvait rester coincée et condamner toutes les commandes suivantes — l'app restait vivante et muette, définitivement.",
+        faire: [
+          "Sans attendre, allumez puis éteignez la sortie chargée.",
+          "Vérifiez le courant à chaque fois.",
+          "Répétez après chacun des trois allers-retours de l'essai précédent."
+        ],
+        attendu: [
+          "Chaque commande aboutit, et la charge suit.",
+          "La réponse est quasi immédiate : par Bluetooth, la carte confirme en une demi-seconde.",
+          "<b>À noter :</b> toute commande restée sans effet, et ce qu'il a fallu faire pour retrouver la main."
+        ]
+      },
+      {
+        phase: "Quand ça ne marche pas",
+        lede: "Un produit se juge autant sur ses pannes que sur son fonctionnement. Ces essais provoquent exprès ce qui va mal.",
+        id: "carte-eteinte",
+        titre: "Éteindre la carte pendant que vous êtes loin",
+        pourquoi: "« Le serveur répond mais la carte ne s'est pas manifestée » et « vous êtes hors de portée » sont deux pannes différentes, qui appellent deux gestes différents. L'app doit les distinguer.",
+        faire: [
+          "Repassez en distant (Bluetooth coupé), carte jointe.",
+          "<b>Coupez l'alimentation de la carte.</b>",
+          "Attendez, puis lisez l'écran de la carte et l'écran Réseau."
+        ],
+        attendu: [
+          "L'app finit par dire que la carte ne s'est pas manifestée, et suggère qu'elle est peut-être hors tension.",
+          "Elle ne dit pas « approchez-vous », ce qui serait un mauvais conseil.",
+          "<b>À noter :</b> combien de temps avant que le message change, et si vous auriez su quoi faire en le lisant."
+        ]
+      },
+      {
+        id: "carte-rallumee",
+        titre: "La rallumer, et attendre sans rien toucher",
+        pourquoi: "Le retour doit se faire seul. Si l'utilisateur doit fermer l'app ou rebasculer un interrupteur, la fonction n'est pas finie.",
+        faire: [
+          "Rebranchez la carte.",
+          "Attendez, sans toucher à l'app.",
+          "Chronométrez."
+        ],
+        attendu: [
+          "La carte redevient joignable toute seule.",
+          "<b>À noter :</b> combien de secondes, et si vous avez été tenté d'intervenir avant."
+        ]
+      },
+      {
+        id: "arriere-plan",
+        titre: "Mettre l'app en arrière-plan, puis revenir",
+        pourquoi: "Le téléphone suspend les connexions d'une app qu'on ne regarde plus. Le lien distant se ferme donc exprès, et doit se rouvrir au retour.",
+        faire: [
+          "En distant, passez l'app en arrière-plan pendant <b>deux bonnes minutes</b> (verrouillez le téléphone).",
+          "Revenez dans l'app et chronométrez.",
+          "Commandez une sortie."
+        ],
+        attendu: [
+          "Le lien se rouvre sans intervention.",
+          "L'application ne s'est pas fermée toute seule pendant l'absence.",
+          "<b>À noter :</b> le délai avant de retrouver la main, et tout redémarrage de l'app."
+        ]
+      },
+      {
+        phase: "Plusieurs cartes",
+        lede: "À sauter si vous n'avez qu'une carte — et le dire dans le rapport, car ce cas n'a jamais été éprouvé sur du matériel.",
+        id: "multi-marques",
+        titre: "Une carte à portée, une carte loin",
+        pourquoi: "Sur une page qui mélange les deux, chaque tuile doit dire par où ELLE parle. Un indicateur global ne peut pas dire si ce bouton-ci répond encore.",
+        faire: [
+          "Deux cartes appairées, l'une à portée Bluetooth, l'autre non — éteignez le Wi-Fi de la seconde, ou éloignez-la.",
+          "Composez une page mélangeant des tuiles des deux cartes.",
+          "Comparez les marques."
+        ],
+        attendu: [
+          "Les tuiles de la carte proche portent la rune Bluetooth, celles de l'autre le nuage ou le lien brisé.",
+          "Une tuile « tout le van » prend l'état le plus mauvais des deux, jamais le meilleur.",
+          "<b>À noter :</b> toute tuile dont la marque ne correspond pas à sa carte."
+        ]
+      },
+      {
+        id: "multi-appareils",
+        titre: "La liste des appareils, ligne par ligne",
+        pourquoi: "C'est le seul endroit qui montre toutes les cartes ensemble : chacune doit y porter son propre état, sans qu'aucune soit annoncée hors de portée alors qu'elle répond.",
+        faire: [
+          "Ouvrez <span class='path'>Appareils</span>.",
+          "Lisez la ligne d'état de chaque carte."
+        ],
+        attendu: [
+          "Aucune carte jointe par Internet n'est annoncée « hors de portée ».",
+          "Chaque ligne porte sa propre marque, et la toucher mène à l'écran Réseau de CETTE carte.",
+          "<b>À noter :</b> toute ligne qui dit le contraire de ce que fait la carte."
+        ]
+      },
+      {
+        phase: "Ce que ces essais ne prouvent pas",
+        lede: "Une seule réponse, à écrire : la liste de ce qui reste inconnu après cette session.",
+        id: "limites",
+        titre: "Ce que vous n'avez pas pu regarder",
+        pourquoi: "Un protocole qui ne dit pas ses angles morts laisse croire qu'il n'en a pas.",
+        faire: [
+          "Notez ce que vous avez sauté, et pourquoi : une seule carte, pas d'ampèremètre, pas de vraie distance, pas de mauvais réseau."
+        ],
+        attendu: [
+          "Chaque manque noté est une chose à reprendre avant de la croire acquise."
+        ]
+      },
+      {
+        phase: "Ce que les cases ne disent pas",
+        lede: "Deux questions sans verdict à cocher. Ce sont celles qui remontent les défauts d'usage, ceux sur lesquels aucun essai n'échoue.",
+        id: "hesitations",
+        titre: "Où avez-vous hésité ?",
+        pourquoi: "Une étape qu'on relit est un défaut, autant qu'un échec.",
+        faire: ["Où avez-vous cherché un bouton, relu une phrase, douté de ce que l'app disait ?"],
+        attendu: ["Notez chaque hésitation, même celles qui vous paraissent bêtes."]
+      },
+      {
+        id: "confiance",
+        titre: "Laisseriez-vous un client piloter son van comme ça ?",
+        pourquoi: "C'est la seule question qui juge la fonction plutôt que le logiciel. Une réponse négative, avec sa raison, vaut tous les essais de cette page.",
+        faire: ["Répondez, et dites ce qui manque pour que la réponse soit oui."],
+        attendu: ["« Non, parce que je ne saurais pas si la commande est passée » est une réponse utile : dites alors ce qui vous manquerait pour le savoir."]
+      }
+    ],
+    rapportTitre: "TinyRail essais accès distant",
+    pied: "Un essai « non fait » n'est pas un échec : dites-le tel quel. Et rappelez-vous que la seule preuve d'une commande est le COURANT mesuré, jamais l'état affiché — c'est toute la différence entre une app qui marche et une app qui en a l'air."
+  },
+
+  en: {
+    nom: "Remote access",
+    eyebrow: "TinyRail · trials with hardware",
+    titre: "Driving your board from far away",
+    intro: [
+      "Out of Bluetooth range, the board stays reachable over the Internet: it publishes its state to a server, and the app sends it commands. Everything is encrypted end to end — the server carries without being able to read or command.",
+      "This protocol looks for the places where the app would say one thing and do another: a command that leaves with no effect, a screen calling a failure where there is only another path, an old value passing for a fresh one. These defects do not show on a bench: it takes two networks, a real board, and patience.",
+      "Allow an hour and a half. Run the trials in order: each one builds on the previous."
+    ],
+    identLabel: "Trial session identification",
+    champs: [
+      { cle: "who", label: "Tester", exemple: "" },
+      { cle: "when", label: "Date", exemple: "2026-09-05" },
+      { cle: "app", label: "App version", exemple: "Settings → About" },
+      { cle: "fw", label: "Firmware version", exemple: "Board screen, at the bottom" },
+      { cle: "phone", label: "Phone", exemple: "iPhone 14, iOS 26.6" },
+      { cle: "reseau", label: "Board network", exemple: "Van Wi-Fi, router, hotspot" },
+      { cle: "loin", label: "How you are “far”", exemple: "Bluetooth off, or genuinely away" }
+    ],
+    besoin: {
+      titre: "Before you start",
+      lede: "You need hardware, and above all TWO separate network paths.",
+      points: [
+        "A powered TinyRail board on firmware 0.14.0-beta.12 or newer, with a Wi-Fi it can reach.",
+        "A phone with the app at version 1.11.0 or newer, already paired with that board.",
+        "Internet access for the phone that does NOT depend on the board's Wi-Fi: mobile data will do. On the same network you prove nothing about what really happens from afar.",
+        "A load on at least one output — a lamp is enough — and a way to see the current it draws.",
+        "A stopwatch: nine trials ask for a duration."
+      ],
+      avis: "<b>This protocol switches a real power output.</b> Pick one whose unexpected switching has no consequence, and certainly not a pump, a heater or anything that heats unattended. You are going to turn it on and off from somewhere else."
+    },
+    essais: [
+      {
+        phase: "Arming remote access, in range",
+        lede: "Everything is set over Bluetooth, board in hand. That is deliberate: what opens an access from the Internet is not set from the Internet.",
+        id: "reseau-lecture",
+        titre: "Read the Network screen without changing anything",
+        pourquoi: "This screen is where every icon in the app leads: someone arriving here has just touched a mark they did not understand. It must answer “why is this not working” before offering anything to set.",
+        faire: [
+          "Open the board, then <span class='path'>menu → Network</span>.",
+          "Read the whole screen top to bottom, without touching any switch.",
+          "Scroll down to “What the icons mean”."
+        ],
+        attendu: [
+          "At the top: one icon, one title and <b>one single sentence</b> saying where the link stands.",
+          "No server address, no technical term in that sentence.",
+          "The legend shows the four icons in their real colour with a description of each.",
+          "<b>Note:</b> any sentence you had to read twice, or a word you would not have used."
+        ]
+      },
+      {
+        id: "reseau-armer",
+        titre: "Allow the board to publish, and to obey",
+        pourquoi: "These are two separate permissions, and it is not fussiness: you may want to watch your board from afar without giving it away.",
+        faire: [
+          "In the “Remote access” section, switch on <b>publishing</b>, then wait.",
+          "Then switch on <b>commands</b>.",
+          "Finally switch on <b>“Use the remote connection”</b> — that one belongs to THIS phone, not to the board.",
+          "Time the gap between switching on publishing and the mention of an established link."
+        ],
+        attendu: [
+          "Each switch shows that it is working, then confirms.",
+          "A line eventually says the link with the server is established. <b>Note:</b> how many seconds.",
+          "If the board has no Wi-Fi, the screen says so — armed does not mean joined.",
+          "Nothing asks you for a login or a password: the account is derived from the board's name."
+        ]
+      },
+      {
+        phase: "Switching to the Internet",
+        lede: "Bluetooth always comes first. Remote is only a fallback, and it must open only once the radio is gone.",
+        id: "bascule",
+        titre: "Turn Bluetooth off, and watch the screen",
+        pourquoi: "This is the second where the app changes path. If it leaves a hole, it shows here: tiles greying out, a red “connection lost”, readings disappearing.",
+        faire: [
+          "Stay on the board screen with all tiles visible.",
+          "<b>Turn the phone's Bluetooth off</b> and do not look away.",
+          "Time it until the tiles show the cloud."
+        ],
+        attendu: [
+          "The top banner moves to “reached remotely”, in a soft colour and not in red.",
+          "Every tile carries a <b>cloud</b> next to its channel reference.",
+          "<b>Note:</b> how many seconds, and whether anything greyed out, went dark or flickered during the switch, even briefly."
+        ]
+      },
+      {
+        id: "mesures-vivantes",
+        titre: "Do the readings stay alive?",
+        pourquoi: "Over the Internet the board only publishes what CHANGES, and no more than once every ten seconds. A screen frozen on old values that looked fresh would be the worst kind of lie.",
+        faire: [
+          "Switch the load on or off by hand, at the board or at the breaker.",
+          "Watch the voltage and current on screen.",
+          "Time the gap between the action and the change on screen."
+        ],
+        attendu: [
+          "The values do follow eventually. <b>Note:</b> how many seconds.",
+          "They do not freeze forever: if nothing arrives for a long time, the mark must turn to a broken link rather than let you believe in a fresh reading.",
+          "<b>Note:</b> whether you saw a broken link while everything was fine."
+        ]
+      },
+      {
+        phase: "Commanding from afar",
+        lede: "The heart of it. And the only proof that counts is the CURRENT, never the displayed state: the app can perfectly well show an output as on when it is not.",
+        id: "commande",
+        titre: "Switch on a loaded output, over the Internet",
+        pourquoi: "This is what never worked until version 1.11.0: the badge showed on an application unable to send anything at all.",
+        faire: [
+          "Tap the tile of an output with a load on it.",
+          "Time it until the board confirms.",
+          "<b>Check the current</b>, with a meter or by looking at the load itself."
+        ],
+        attendu: [
+          "The output really switches on. <b>The load must draw current.</b>",
+          "<b>Note:</b> how many seconds between the tap and the confirmation.",
+          "The measured current then appears on the tile.",
+          "<b>Note:</b> any gap between what the app shows and what the load does."
+        ]
+      },
+      {
+        id: "serpent",
+        titre: "Does the tile refuse a second tap?",
+        pourquoi: "A remote command takes several seconds. With no blocking, you see nothing happen, you tap again, and you get the opposite of what you wanted.",
+        faire: [
+          "Switch the output off, and <b>try to tap again straight away</b>.",
+          "Watch the outline of the tile while you wait.",
+          "Time how long it stays blocked."
+        ],
+        attendu: [
+          "A neon trace <b>runs around the tile</b> until the board answers.",
+          "The second tap does nothing: the tile is blocked.",
+          "It unblocks as soon as the board confirms, not after a fixed delay.",
+          "<b>Note:</b> how long it lasted, and whether it felt long or reassuring."
+        ]
+      },
+      {
+        id: "tout-eteindre",
+        titre: "All on, then all off",
+        pourquoi: "A group command touches eight outputs at once, and the server throttles confirmations. This is where the screen has the most reasons to fall out of step.",
+        faire: [
+          "<span class='path'>menu → All on</span>, then <span class='path'>All off</span>.",
+          "Watch the eight tiles as the confirmations arrive."
+        ],
+        attendu: [
+          "All eight end up in the right state.",
+          "<b>Note:</b> whether one stayed pending longer than the others, or never followed."
+        ]
+      },
+      {
+        phase: "What does not travel over the Internet",
+        lede: "The board only opens eleven commands remotely; it decides, not the app. What is acceptable within arm's reach is not acceptable from anywhere.",
+        id: "grisage",
+        titre: "The menu greys out what needs Bluetooth",
+        pourquoi: "Greying out with an explanation beats a feature you launch that fails without saying why.",
+        faire: [
+          "Open the board menu and read it all.",
+          "Tap “Configure outputs”, then “System”, then “Firmware update”."
+        ],
+        attendu: [
+          "Those entries are greyed out and carry a <b>crossed-out cloud</b>.",
+          "Tapping them shows a message telling you to get closer to the board — and does not open the screen.",
+          "“Network” is <b>not</b> greyed out: that is exactly where you go to see why.",
+          "<b>Note:</b> any greyed entry that should work, or the other way round."
+        ]
+      },
+      {
+        id: "appui-long",
+        titre: "Long-press on a tile, too",
+        pourquoi: "It is a shortcut into configuration: if it escaped the rule, you would land on a screen where every setting goes to a silent refusal.",
+        faire: [
+          "Long-press an output tile.",
+          "Then long-press an input gauge."
+        ],
+        attendu: [
+          "No configuration screen opens.",
+          "A message says why, and it is the same as in the menu."
+        ]
+      },
+      {
+        id: "historique",
+        titre: "History opens, and says what it cannot do",
+        pourquoi: "What has already been fetched lives on the phone: the screen must open, otherwise it would be empty exactly when you are trying to understand a fault.",
+        faire: [
+          "<span class='path'>menu → History</span>.",
+          "Try the refresh button."
+        ],
+        attendu: [
+          "The screen opens and shows what had been fetched before.",
+          "A line says that fetching needs Bluetooth.",
+          "<b>Note:</b> whether you believed something was broken before reading that line."
+        ]
+      },
+      {
+        phase: "Opening the app while already away",
+        lede: "The case remote access exists for, and the one that never worked before version 1.11.0: you come home, you open the app, and it must reach the board on its own.",
+        id: "demarrage-loin",
+        titre: "Kill the app, Bluetooth off, and reopen it",
+        pourquoi: "A board was only adopted if the Bluetooth scan found it. Out of range at launch, it existed for nobody — so no fallback could open.",
+        faire: [
+          "With Bluetooth still off, <b>close the application completely</b> (swipe it out of the app switcher).",
+          "Reopen it and <b>start the stopwatch</b>.",
+          "Wait without touching anything. The fallback deliberately holds back a few seconds, to give Bluetooth a chance to win.",
+        ],
+        attendu: [
+          "The board eventually shows as reached, with the cloud, with no action from you.",
+          "<b>Note:</b> exactly how many seconds.",
+          "In <span class='path'>menu → Log</span>, a line says the board was reached remotely.",
+          "<b>Note:</b> whether, during the wait, you thought it would not work."
+        ]
+      },
+      {
+        id: "commande-apres-demarrage",
+        titre: "Command from that state",
+        pourquoi: "Reaching is not commanding: the link can be open while sending does not work, and that was exactly the original defect.",
+        faire: [
+          "Switch the loaded output on.",
+          "Check the current."
+        ],
+        attendu: [
+          "The load draws current.",
+          "<b>Note:</b> the delay, and whether it differs from the one measured above."
+        ]
+      },
+      {
+        phase: "Coming back in range",
+        lede: "The reverse switch. It was long the ugliest: the app moved onto a link that was not yet in service.",
+        id: "retour-bt",
+        titre: "Turn Bluetooth back on, and do not look away",
+        pourquoi: "The link is “connected” well before it is usable: the security exchange and the subscription to readings still have to happen. Switching too early greys out every tile for several seconds.",
+        faire: [
+          "Come back within range of the board.",
+          "<b>Turn Bluetooth back on</b> while watching the board screen.",
+          "Time it until the tiles carry the Bluetooth rune.",
+          "Do it <b>three times</b>: this defect did not show every time."
+        ],
+        attendu: [
+          "No tile greys out, goes dark or flickers during the handover.",
+          "The banner does not pass through a red “connection lost”.",
+          "The clouds become Bluetooth runes. <b>Note:</b> how many seconds, on each of the three runs.",
+          "<b>Note:</b> any flicker, however brief."
+        ]
+      },
+      {
+        id: "commande-apres-retour",
+        titre: "Command immediately after the handover",
+        pourquoi: "A write sent to a radio you have just switched off could stay stuck and condemn every later command — the app stayed alive and mute, for good.",
+        faire: [
+          "Without waiting, switch the loaded output on then off.",
+          "Check the current each time.",
+          "Repeat after each of the three round trips in the previous trial."
+        ],
+        attendu: [
+          "Every command lands, and the load follows.",
+          "The answer is almost immediate: over Bluetooth the board confirms in half a second.",
+          "<b>Note:</b> any command with no effect, and what you had to do to regain control."
+        ]
+      },
+      {
+        phase: "When it does not work",
+        lede: "A product is judged as much on its failures as on its working state. These trials deliberately cause what goes wrong.",
+        id: "carte-eteinte",
+        titre: "Power the board down while you are away",
+        pourquoi: "“The server answers but the board has not shown up” and “you are out of range” are two different failures, calling for two different actions. The app must tell them apart.",
+        faire: [
+          "Go back to remote (Bluetooth off), board reached.",
+          "<b>Cut power to the board.</b>",
+          "Wait, then read the board screen and the Network screen."
+        ],
+        attendu: [
+          "The app eventually says the board has not shown up, and suggests it may be powered off.",
+          "It does not say “get closer”, which would be bad advice.",
+          "<b>Note:</b> how long before the message changed, and whether you would have known what to do from reading it."
+        ]
+      },
+      {
+        id: "carte-rallumee",
+        titre: "Power it back up, and wait without touching anything",
+        pourquoi: "The return must happen on its own. If the user has to close the app or flip a switch again, the feature is not finished.",
+        faire: [
+          "Plug the board back in.",
+          "Wait, without touching the app.",
+          "Time it."
+        ],
+        attendu: [
+          "The board becomes reachable again on its own.",
+          "<b>Note:</b> how many seconds, and whether you were tempted to step in first."
+        ]
+      },
+      {
+        id: "arriere-plan",
+        titre: "Send the app to the background, then come back",
+        pourquoi: "The phone suspends the connections of an app you are no longer looking at. The remote link is therefore closed on purpose, and must reopen on return.",
+        faire: [
+          "While remote, put the app in the background for <b>a good two minutes</b> (lock the phone).",
+          "Come back into the app and time it.",
+          "Command an output."
+        ],
+        attendu: [
+          "The link reopens with no intervention.",
+          "The application did not close by itself while you were away.",
+          "<b>Note:</b> the delay before regaining control, and any restart of the app."
+        ]
+      },
+      {
+        phase: "Several boards",
+        lede: "Skip this if you only have one board — and say so in the report, because this case has never been tried on hardware.",
+        id: "multi-marques",
+        titre: "One board in range, one board away",
+        pourquoi: "On a page mixing the two, every tile must say how IT is reached. A global indicator cannot say whether this particular button still answers.",
+        faire: [
+          "Two paired boards, one within Bluetooth range, the other not — switch off the second one's Wi-Fi, or move it away.",
+          "Build a page mixing tiles from both boards.",
+          "Compare the marks."
+        ],
+        attendu: [
+          "Tiles of the near board carry the Bluetooth rune, those of the other a cloud or a broken link.",
+          "A “whole van” tile takes the worse of the two states, never the better.",
+          "<b>Note:</b> any tile whose mark does not match its board."
+        ]
+      },
+      {
+        id: "multi-appareils",
+        titre: "The device list, line by line",
+        pourquoi: "It is the only place showing every board together: each must carry its own state there, with none announced out of range while it is answering.",
+        faire: [
+          "Open <span class='path'>Devices</span>.",
+          "Read the status line of each board."
+        ],
+        attendu: [
+          "No board reached over the Internet is announced as “out of range”.",
+          "Every line carries its own mark, and touching it leads to the Network screen of THAT board.",
+          "<b>Note:</b> any line saying the opposite of what the board does."
+        ]
+      },
+      {
+        phase: "What these trials do not prove",
+        lede: "One single answer, to be written: the list of what remains unknown after this session.",
+        id: "limites",
+        titre: "What you could not look at",
+        pourquoi: "A protocol that does not state its blind spots suggests it has none.",
+        faire: [
+          "Write down what you skipped, and why: only one board, no ammeter, no real distance, no bad network."
+        ],
+        attendu: [
+          "Every gap you note is something to pick up before believing it settled."
+        ]
+      },
+      {
+        phase: "What the tick boxes do not say",
+        lede: "Two questions with no verdict to tick. These are the ones that surface usability defects, the kind no trial ever breaks on.",
+        id: "hesitations",
+        titre: "Where did you hesitate?",
+        pourquoi: "A step you read twice is a defect, just as much as a failure is.",
+        faire: ["Where did you hunt for a button, read a sentence again, doubt what the app was telling you?"],
+        attendu: ["Note every hesitation, even the ones that feel silly."]
+      },
+      {
+        id: "confiance",
+        titre: "Would you let a customer drive their van like this?",
+        pourquoi: "It is the only question that judges the feature rather than the software. A no, with its reason, is worth every trial on this page.",
+        faire: ["Answer, and say what is missing for the answer to be yes."],
+        attendu: ["“No, because I would not know whether the command got through” is a useful answer: then say what you would need in order to know."]
+      }
+    ],
+    rapportTitre: "TinyRail remote access trials",
+    pied: "A trial marked “not done” is not a failure: say so as it is. And remember that the only proof of a command is the measured CURRENT, never the displayed state — that is the whole difference between an app that works and an app that looks like it does."
+  }
+
+};
+
+Essais.protocole(PROTOCOLE);
+</script>
+</body>
+</html>
