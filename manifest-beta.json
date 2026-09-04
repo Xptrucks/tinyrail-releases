@@ -6,7 +6,7 @@
       "chipFamily": "ESP32-C3",
       "ota": {
         "path": "https://ota.tinyrail.xptrucks.fr/firmware-beta.bin",
-        "md5": "cd5f287633996ab55c503a9682c5c83a",
+        "md5": "525e85341be13b97bf37ebd57ae1a486",
         "summary": "Voir les notes de release sur GitHub",
         "release_url": "https://github.com/Xptrucks/tinyrail-releases/releases/tag/v0.14.0-beta.10"
       }
