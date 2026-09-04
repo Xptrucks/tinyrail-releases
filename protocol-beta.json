@@ -221,7 +221,9 @@
 
     "GET_WIFI": 115,
     "SET_WIFI": 116,
-    "CLEAR_WIFI": 117
+    "CLEAR_WIFI": 117,
+    "GET_REMOTE": 118,
+    "SET_REMOTE": 119
   },
 
   "_opcodes_not_dispatched": ["NOP"],
