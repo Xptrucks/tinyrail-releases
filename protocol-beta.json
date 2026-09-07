@@ -320,27 +320,38 @@
       }
     },
     "_allowed_opcodes_comment": [
-      "⚠️ Ce que le broker a le droit de commander, et rien de plus.",
-      "Le dispatcheur sait tout faire, y compris redémarrer la carte, effacer",
-      "l'historique ou la remettre en sortie d'usine. Ce qui est acceptable au",
-      "bout d'un lien BLE, à portée de main, ne l'est pas depuis Internet.",
-      "Les lectures sont ouvertes, les écritures qui changent la configuration",
-      "ne le sont pas.",
-      "⚠️ GET_REMOTE ouvert le 2026-09-05 : c'est une LECTURE, et son absence faisait afficher « inconnu » à l'app pour un état qu'elle avait le droit de connaître. Il ne rend que les deux autorisations et l'état du lien — aucun secret, contrairement à GET_WIFI (le nom du réseau) et GET_MQTT (le compte), qui restent fermés."
+      "⚠️ LA RÈGLE S'EST INVERSÉE LE 2026-09-07. Elle était une liste blanche de",
+      "douze opcodes ; elle est désormais une liste NOIRE : tout ce que le",
+      "dispatcheur sait faire passe par le broker, SAUF ce qui est nommé ici.",
+      "Ce qui le rend défendable : une commande venue du broker est chiffrée avec",
+      "la clé d'appairage, que seul un téléphone appairé possède. Le broker ne",
+      "peut ni la lire ni en forger une.",
+      "Restent fermés : les options d'accès à distance (Wi-Fi, compte du broker,",
+      "SET_REMOTE) — s'en servir depuis le lien qu'elles portent le couperait ;",
+      "GET_KEY, parce que la clé d'appairage ne sort jamais par le réseau ;",
+      "FACTORY_RESET, qui efface cette clé et rend la carte injoignable pour de",
+      "bon ; SET_BOARD_NAME, parce que le nom EST le compte du broker (D-137) ;",
+      "SAFE_MODE et les opcodes d'OTA, qui n'ont pas de sens par ce chemin.",
+      "⚠️ GET_REMOTE reste OUVERT : c'est une lecture, et sans elle l'écran",
+      "affiche « inconnu » pour un état qu'on a le droit de connaître."
     ],
-    "allowed_opcodes": [
-      "SET_CHANNEL",
-      "SET_ALL",
-      "SET_TIME",
-      "GET_CH_CONFIG",
-      "GET_OVERCURRENT",
-      "GET_THERMAL",
-      "GET_LABEL",
-      "GET_CH_META",
-      "GET_INPUT",
-      "GET_INPUT_META",
-      "GET_INFO",
-      "GET_REMOTE"
+    "denied_opcodes": [
+      "NOP",
+      "GET_KEY",
+      "SAFE_MODE",
+      "FACTORY_RESET",
+      "OTA_BEGIN",
+      "OTA_END",
+      "OTA_ABORT",
+      "OTA_STATUS",
+      "SET_BOARD_NAME",
+      "GET_MQTT",
+      "SET_MQTT",
+      "CLEAR_MQTT",
+      "GET_WIFI",
+      "SET_WIFI",
+      "CLEAR_WIFI",
+      "SET_REMOTE"
     ]
   },
   "opcodes": {
