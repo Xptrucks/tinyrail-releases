@@ -801,5 +801,16 @@
       9,
       14
     ]
-  }
+  },
+  "_network_comment": [
+    "⚠️ SET_REMOTE accepte 2 ou 3 octets depuis le 2026-09-06 : [accès, commandes]",
+    "ou [accès, commandes, réseau]. GET_REMOTE rend 4 octets :",
+    "[accès, commandes, connecté, réseau].",
+    "réseau : 0 = aucun, 1 = broker Xptrucks, 2 = Victron (Cerbo GX local).",
+    "⚠️ Les deux profils MQTT S'EXCLUENT : deux clients armés ensemble mettent la",
+    "carte en boucle de redémarrage (mesuré : heap libre 3 580 o, creux 212).",
+    "⚠️ Le champ est ajouté À LA FIN : une application ancienne lit ce qu'elle",
+    "connaît et ignore le reste. Une application à jour face à un firmware ancien",
+    "reçoit BAD_PAYLOAD sur trois octets, et peut se rabattre sur deux."
+  ]
 }
