@@ -268,6 +268,21 @@
         "retain": false,
         "direction": "client_to_board",
         "note": "demande de republication ; une LECTURE, donc permise même sans droit de commande"
+      },
+      "meta": {
+        "sens": "carte → clients",
+        "retain": true,
+        "format": "[n_sorties u8]{kind u8, len u8, libellé…}×n [n_entrees u8]{kind u8, len u8, libellé…}×n",
+        "publie": "à la connexion, sur `req`, et à chaque changement de libellé ou de type",
+        "_comment": [
+          "⚠️ SEUL SUJET SANS ÉQUIVALENT GATT, et c'est une exception assumée au",
+          "décalque « une caractéristique par sujet ». Il agrège ce que le BLE lit en",
+          "douze allers-retours (GET_CH_META ×8, GET_INPUT_META ×4) : gratuit en",
+          "Bluetooth, mais mesuré à 1 050 ms par aller-retour par le broker, soit",
+          "treize secondes avant que les noms apparaissent.",
+          "⚠️ RETENU : un client a les noms dès son abonnement, avant toute réponse de",
+          "la carte, et même si elle est éteinte."
+        ]
       }
     },
     "topic_prefix": "nom de la carte, suffixe MAC compris, qui est AUSSI son compte sur le broker",
@@ -352,6 +367,59 @@
       "SET_WIFI",
       "CLEAR_WIFI",
       "SET_REMOTE"
+    ],
+    "_open_opcodes_comment": [
+      "⚠️ CETTE LISTE N'EST PAS LA RÈGLE, C'EST SA PREUVE. La règle reste la liste",
+      "NOIRE : tout passe sauf `denied_opcodes`. Mais une liste noire ouvre par",
+      "défaut, et un opcode ajouté demain passerait sans que personne ne l'ait",
+      "décidé — vérifié le 2026-09-08 en ajoutant GET_DIAG, que le test natif n'a",
+      "pas vu, sa propre liste étant recopiée à la main.",
+      "check-protocol.py exige donc que `open_opcodes ∪ denied_opcodes` couvre TOUS",
+      "les opcodes de ble_protocol.h. Ajouter un opcode oblige à dire, une fois, de",
+      "quel côté il tombe. C'est la seule façon qu'un oubli se voie."
+    ],
+    "open_opcodes": [
+      "GET_BATTERY",
+      "GET_BOARD_NAME",
+      "GET_CH_CONFIG",
+      "GET_CH_META",
+      "GET_DIAG",
+      "GET_INFO",
+      "GET_INPUT",
+      "GET_INPUT_ALARM",
+      "GET_INPUT_META",
+      "GET_INPUT_SCALE",
+      "GET_LABEL",
+      "GET_LINK",
+      "GET_OVERCURRENT",
+      "GET_REMOTE",
+      "GET_SENDER",
+      "GET_SHED",
+      "GET_THERMAL",
+      "HIST_CLEAR",
+      "HIST_INFO",
+      "HIST_READ",
+      "RESTART",
+      "SET_ALL",
+      "SET_AUTO_OFF",
+      "SET_AUTO_ON",
+      "SET_BATTERY",
+      "SET_CHANNEL",
+      "SET_CH_KIND",
+      "SET_INPUT_ALARM",
+      "SET_INPUT_KIND",
+      "SET_INPUT_LABEL",
+      "SET_INPUT_MODE",
+      "SET_INPUT_SCALE",
+      "SET_LABEL",
+      "SET_LINK",
+      "SET_OC_DELAY",
+      "SET_OC_THRESHOLD",
+      "SET_PAIR",
+      "SET_SENDER",
+      "SET_SHED",
+      "SET_THERMAL",
+      "SET_TIME"
     ]
   },
   "opcodes": {
@@ -410,7 +478,8 @@
     "SET_WIFI": 116,
     "CLEAR_WIFI": 117,
     "GET_REMOTE": 118,
-    "SET_REMOTE": 119
+    "SET_REMOTE": 119,
+    "GET_DIAG": 120
   },
   "_opcodes_not_dispatched": [
     "NOP"
