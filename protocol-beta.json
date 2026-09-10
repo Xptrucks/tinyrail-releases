@@ -56,7 +56,7 @@
     "FAULTS": {
       "suffix": "13",
       "props": "RN",
-      "size": 4,
+      "size": 5,
       "min_size": 2
     },
     "CMD": {
@@ -492,7 +492,8 @@
     "BAD_PAYLOAD": 4,
     "TRUNCATED": 5,
     "BUSY": 6,
-    "DRIVEN": 7
+    "DRIVEN": 7,
+    "LOCKED": 8
   },
   "_output_kinds_comment": [
     "L'index EST la valeur du protocole ET celle rangée en NVS : un décalage",
@@ -684,7 +685,19 @@
     "L'index est stocké en NVS et transporté tel quel : les actions ne",
     "s'ajoutent qu'en fin de liste. Les actions 1 et 2 réimposent l'état de la",
     "sortie toutes les 200 ms — une commande manuelle y est reprise dans la",
-    "seconde, ce qu'un client doit signaler."
+    "seconde, ce qu'un client doit signaler.",
+    "",
+    "TOUTE action vise autant de sorties qu'on veut : le 5e octet de GET/SET_LINK",
+    "porte leur masque (bit 0 = CH1), et `target`, uni, gardé pour les cartes en",
+    "service et les automatisations Home Assistant, s'y AJOUTE. Les sorties",
+    "d'une liaison sont l'union des deux ; GET rend cette union déjà faite.",
+    "",
+    "Les actions 6 et 7 ne commandent RIEN : elles VERROUILLENT leurs sorties,",
+    "qui ne peuvent alors plus être allumées : ni par le protocole, qui répond",
+    "LOCKED, ni par Home Assistant, repris en 200 ms, ni par les boutons de",
+    "façade. Éteindre reste permis, une sortie déjà allumée quand le verrou se",
+    "ferme le reste, et les sécurités passent toujours. Le masque des sorties",
+    "effectivement verrouillées est le 5e octet de FAULTS."
   ],
   "link_actions": [
     {
@@ -696,38 +709,54 @@
     },
     {
       "id": 1,
-      "en": "Contact — follow",
-      "fr": "Contact — suit l'état",
+      "en": "Contact: follow",
+      "fr": "Contact : suit l'état",
       "overrides": true,
       "needs_threshold": false
     },
     {
       "id": 2,
-      "en": "Contact — follow inverted",
-      "fr": "Contact — suit l'état inversé",
+      "en": "Contact: follow inverted",
+      "fr": "Contact : suit l'état inversé",
       "overrides": true,
       "needs_threshold": false
     },
     {
       "id": 3,
-      "en": "Contact — toggle",
-      "fr": "Contact — bascule",
+      "en": "Contact: toggle",
+      "fr": "Contact : bascule",
       "overrides": false,
       "needs_threshold": false
     },
     {
       "id": 4,
-      "en": "Voltage — above threshold",
-      "fr": "Tension — au-dessus du seuil",
+      "en": "Voltage: above threshold",
+      "fr": "Tension : au-dessus du seuil",
       "overrides": false,
       "needs_threshold": true
     },
     {
       "id": 5,
-      "en": "Voltage — below threshold",
-      "fr": "Tension — en dessous du seuil",
+      "en": "Voltage: below threshold",
+      "fr": "Tension : en dessous du seuil",
       "overrides": false,
       "needs_threshold": true
+    },
+    {
+      "id": 6,
+      "en": "Lock: above threshold",
+      "fr": "Verrouillage : au-dessus du seuil",
+      "overrides": false,
+      "needs_threshold": true,
+      "locks": true
+    },
+    {
+      "id": 7,
+      "en": "Lock: below threshold",
+      "fr": "Verrouillage : en dessous du seuil",
+      "overrides": false,
+      "needs_threshold": true,
+      "locks": true
     }
   ],
   "sender_profiles": [
