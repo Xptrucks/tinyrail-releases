@@ -56,7 +56,7 @@
     "FAULTS": {
       "suffix": "13",
       "props": "RN",
-      "size": 4,
+      "size": 5,
       "min_size": 2
     },
     "CMD": {
@@ -418,6 +418,7 @@
       "SET_PAIR",
       "SET_SENDER",
       "SET_SHED",
+      "SET_START_MODE",
       "SET_THERMAL",
       "SET_TIME"
     ]
@@ -431,6 +432,7 @@
     "SET_AUTO_OFF": 17,
     "SET_AUTO_ON": 18,
     "SET_PAIR": 19,
+    "SET_START_MODE": 20,
     "GET_OVERCURRENT": 32,
     "SET_OC_THRESHOLD": 33,
     "SET_OC_DELAY": 34,
@@ -492,7 +494,8 @@
     "BAD_PAYLOAD": 4,
     "TRUNCATED": 5,
     "BUSY": 6,
-    "DRIVEN": 7
+    "DRIVEN": 7,
+    "LOCKED": 8
   },
   "_output_kinds_comment": [
     "L'index EST la valeur du protocole ET celle rangée en NVS : un décalage",
@@ -680,11 +683,40 @@
       "unit": "boolean"
     }
   ],
+  "_start_modes_comment": [
+    "Ce que devient une sortie au démarrage de la carte. ⚠️ L'INDEX EST UNE VALEUR",
+    "DE PROTOCOLE ET DE NVS : toute addition se fait EN FIN DE LISTE, sinon les",
+    "sorties déjà réglées changeraient de comportement au démarrage, en silence.",
+    "`restores` distingue le seul mode qui écrit dans la flash."
+  ],
+  "start_modes": [
+    {"id": 0, "en": "Off", "fr": "Éteinte", "restores": false},
+    {"id": 1, "en": "On", "fr": "Allumée", "restores": false},
+    {"id": 2, "en": "Restore", "fr": "Comme avant la coupure", "restores": true}
+  ],
   "_link_actions_comment": [
     "L'index est stocké en NVS et transporté tel quel : les actions ne",
     "s'ajoutent qu'en fin de liste. Les actions 1 et 2 réimposent l'état de la",
     "sortie toutes les 200 ms — une commande manuelle y est reprise dans la",
-    "seconde, ce qu'un client doit signaler."
+    "seconde, ce qu'un client doit signaler.",
+    "",
+    "TOUTE action vise autant de sorties qu'on veut : le 5e octet de GET/SET_LINK",
+    "porte leur masque (bit 0 = CH1), et `target`, uni, gardé pour les cartes en",
+    "service et les automatisations Home Assistant, s'y AJOUTE. Les sorties",
+    "d'une liaison sont l'union des deux ; GET rend cette union déjà faite.",
+    "",
+    "L'action 3 (bascule) porte sur le GROUPE : si une seule de ses sorties est",
+    "éteinte, l'impulsion les éteint toutes, la suivante les rallume. Et sur un",
+    "groupe dont au moins une sortie se grade, elle fait défiler la luminosité",
+    "(25 %, 50 %, 100 %, puis éteint) au lieu du tout ou rien. La carte en décide",
+    "d'après le type des sorties : le protocole, lui, ne change pas.",
+    "",
+    "Les actions 6 et 7 ne commandent RIEN : elles VERROUILLENT leurs sorties,",
+    "qui ne peuvent alors plus être allumées : ni par le protocole, qui répond",
+    "LOCKED, ni par Home Assistant, repris en 200 ms, ni par les boutons de",
+    "façade. Éteindre reste permis, une sortie déjà allumée quand le verrou se",
+    "ferme le reste, et les sécurités passent toujours. Le masque des sorties",
+    "effectivement verrouillées est le 5e octet de FAULTS."
   ],
   "link_actions": [
     {
@@ -696,38 +728,54 @@
     },
     {
       "id": 1,
-      "en": "Contact — follow",
-      "fr": "Contact — suit l'état",
+      "en": "Contact: follow",
+      "fr": "Contact : suit l'état",
       "overrides": true,
       "needs_threshold": false
     },
     {
       "id": 2,
-      "en": "Contact — follow inverted",
-      "fr": "Contact — suit l'état inversé",
+      "en": "Contact: follow inverted",
+      "fr": "Contact : suit l'état inversé",
       "overrides": true,
       "needs_threshold": false
     },
     {
       "id": 3,
-      "en": "Contact — toggle",
-      "fr": "Contact — bascule",
+      "en": "Contact: toggle",
+      "fr": "Contact : bascule",
       "overrides": false,
       "needs_threshold": false
     },
     {
       "id": 4,
-      "en": "Voltage — above threshold",
-      "fr": "Tension — au-dessus du seuil",
+      "en": "Voltage: above threshold",
+      "fr": "Tension : au-dessus du seuil",
       "overrides": false,
       "needs_threshold": true
     },
     {
       "id": 5,
-      "en": "Voltage — below threshold",
-      "fr": "Tension — en dessous du seuil",
+      "en": "Voltage: below threshold",
+      "fr": "Tension : en dessous du seuil",
       "overrides": false,
       "needs_threshold": true
+    },
+    {
+      "id": 6,
+      "en": "Lock: above threshold",
+      "fr": "Verrouillage : au-dessus du seuil",
+      "overrides": false,
+      "needs_threshold": true,
+      "locks": true
+    },
+    {
+      "id": 7,
+      "en": "Lock: below threshold",
+      "fr": "Verrouillage : en dessous du seuil",
+      "overrides": false,
+      "needs_threshold": true,
+      "locks": true
     }
   ],
   "sender_profiles": [
