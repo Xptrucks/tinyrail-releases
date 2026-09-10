@@ -418,6 +418,7 @@
       "SET_PAIR",
       "SET_SENDER",
       "SET_SHED",
+      "SET_START_MODE",
       "SET_THERMAL",
       "SET_TIME"
     ]
@@ -431,6 +432,7 @@
     "SET_AUTO_OFF": 17,
     "SET_AUTO_ON": 18,
     "SET_PAIR": 19,
+    "SET_START_MODE": 20,
     "GET_OVERCURRENT": 32,
     "SET_OC_THRESHOLD": 33,
     "SET_OC_DELAY": 34,
@@ -680,6 +682,17 @@
       "fr": "Contact sec",
       "unit": "boolean"
     }
+  ],
+  "_start_modes_comment": [
+    "Ce que devient une sortie au démarrage de la carte. ⚠️ L'INDEX EST UNE VALEUR",
+    "DE PROTOCOLE ET DE NVS : toute addition se fait EN FIN DE LISTE, sinon les",
+    "sorties déjà réglées changeraient de comportement au démarrage, en silence.",
+    "`restores` distingue le seul mode qui écrit dans la flash."
+  ],
+  "start_modes": [
+    {"id": 0, "en": "Off", "fr": "Éteinte", "restores": false},
+    {"id": 1, "en": "On", "fr": "Allumée", "restores": false},
+    {"id": 2, "en": "Restore", "fr": "Comme avant la coupure", "restores": true}
   ],
   "_link_actions_comment": [
     "L'index est stocké en NVS et transporté tel quel : les actions ne",
