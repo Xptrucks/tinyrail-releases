@@ -14,7 +14,7 @@
 <script src="../essais.js"></script>
 <script>
 
-// Le catalogue des fonctions du produit — carte, firmware, application.
+// Le catalogue des fonctions du produit : carte, firmware, application.
 //
 // ⚠️ **CE FICHIER EST LA LISTE, il n'y en a pas d'autre.** Toute fonction qui
 // arrive chez un utilisateur s'y ajoute, en français ET en anglais, avec son
@@ -34,9 +34,9 @@ const FONCTIONS = {
     repere: {
       titre: "Comment lire ce catalogue",
       texte: [
-        "Les fonctions sont rangées par <b>thème</b>, du geste le plus courant — allumer une sortie — au plus rare — remplacer une carte en panne. Les raccourcis sous la barre de recherche mènent directement à un thème.",
+        "Les fonctions sont rangées par <b>thème</b>, du geste le plus courant, allumer une sortie, au plus rare, remplacer une carte en panne. Les raccourcis sous la barre de recherche mènent directement à un thème.",
         "Sous chaque fiche, une ou deux étiquettes disent <b>où</b> la fonction se trouve : sur la <b>carte</b> (elle marche sans téléphone), dans l'<b>app</b>, dans <b>Home Assistant</b>, ou <b>à distance</b> par Internet.",
-        "Quelques fiches portent « <b>à éprouver</b> » : la fonction est écrite et testée en automatique, mais elle n'a pas encore tourné sur du matériel. C'est une information, pas une réserve commerciale — et elle disparaît le jour où l'essai est fait."
+        "Quelques fiches portent « <b>à éprouver</b> » : la fonction est écrite et testée en automatique, mais elle n'a pas encore tourné sur du matériel. C'est une information, pas une réserve commerciale, et elle disparaît le jour où l'essai est fait."
       ]
     },
 
@@ -49,7 +49,7 @@ const FONCTIONS = {
           {
             ico: "eclair",
             titre: "Huit sorties de 10 A",
-            texte: "Huit circuits indépendants, chacun commuté par son propre composant de puissance, de 9 à 30 V continu. Marche, arrêt, et pour certaines charges la gradation.",
+            texte: "Huit circuits que l'on commande séparément : marche, arrêt, et gradation pour les charges qui l'acceptent. Chacun tient 10 A en continu, de quoi couvrir tout ce qu'un van porte en 12 ou 24 V.",
             exemple: " les six éclairages d'une cellule, la pompe à eau et le frigo sur une seule carte, chacun sur son interrupteur.",
             ou: ["carte"]
           },
@@ -63,13 +63,13 @@ const FONCTIONS = {
           {
             ico: "etiquette",
             titre: "Type de charge par sortie",
-            texte: "Quinze types — éclairage intérieur ou extérieur, pompe, ventilation, frigo, chauffage, chauffe-eau, prise, motorisation, compresseur, antenne, sirène, électrovanne, éclairage tout ou rien, générique. Le type décide de l'icône, du curseur, et de ce que Home Assistant affiche.",
+            texte: "Quinze types : éclairage intérieur ou extérieur, pompe, ventilation, frigo, chauffage, chauffe-eau, prise, motorisation, compresseur, antenne, sirène, électrovanne, éclairage tout ou rien, générique. Le type décide de l'icône, du curseur, et de ce que Home Assistant affiche.",
             exemple: " une sortie réglée sur « Réfrigérateur » se présente en interrupteur, jamais en gradateur.",
             ou: ["carte", "app", "Home Assistant"]
           },
           {
             ico: "plafond",
-            titre: "Les charges non gradables sont protégées",
+            titre: "Pas de demi-consigne sur une pompe",
             texte: "Sur une pompe, un compresseur ou une résistance, une consigne intermédiaire est relevée à 100 % par la carte elle-même. Le garde-fou est unique : il vaut pour l'app, Home Assistant, les boutons de façade et les entrées.",
             exemple: " un curseur laissé à 40 % par erreur sur la pompe à eau ne la fait pas vibrer : elle tourne à plein.",
             ou: ["carte"]
@@ -90,7 +90,7 @@ const FONCTIONS = {
           },
           {
             ico: "reglages",
-            titre: "Pas de gradation réglable",
+            titre: "Le pas du cycle de gradation",
             texte: "De combien la luminosité avance à chaque cran d'un appui tenu : 5, 10, 20 ou 25 %, pour toute la carte. Le balayage complet dure toujours environ 2,8 secondes.",
             exemple: " un pas de 5 % pour viser finement l'éclairage d'ambiance d'un plafond de cellule.",
             ou: ["carte", "app"]
@@ -101,13 +101,6 @@ const FONCTIONS = {
             texte: "Un geste coupe ou rallume les huit sorties d'une carte. Dans l'app, le geste traverse toutes les cartes de l'installation.",
             exemple: " « tout éteindre » en fermant la porte du van, sans faire le tour des pages.",
             ou: ["app", "Home Assistant"]
-          },
-          {
-            ico: "groupe",
-            titre: "Interrupteur de groupe",
-            texte: "Chaque sous-groupe d'une page porte son propre interrupteur, avec le compte de ce qui est allumé (« 2/3 »). S'il reste quelque chose d'allumé, il éteint ; sinon il allume. Il traverse les cartes.",
-            exemple: " le groupe « Éclairages » éteint d'un coup les trois plafonniers, qu'ils soient sur une carte ou sur deux.",
-            ou: ["app"]
           },
           {
             ico: "exclusif",
@@ -133,7 +126,7 @@ const FONCTIONS = {
           {
             ico: "demarrage",
             titre: "État au démarrage",
-            texte: "Ce que devient chaque sortie quand la carte est mise sous tension : éteinte, allumée, ou comme avant la coupure — niveau de gradation compris.",
+            texte: "Ce que devient chaque sortie quand la carte est mise sous tension : éteinte, allumée, ou comme avant la coupure, niveau de gradation compris.",
             exemple: " après une coupure du coupe-batterie, le frigo redémarre seul et l'éclairage reste éteint.",
             ou: ["carte", "app", "Home Assistant"]
           },
@@ -143,27 +136,13 @@ const FONCTIONS = {
             texte: "Chaque sortie porte son libellé, rangé dans la carte et non dans le téléphone. Un second téléphone retrouve les mêmes noms sans rien recopier.",
             exemple: " « Pompe à eau » plutôt que « Canal 3 », partout : app, Home Assistant, journal d'alertes.",
             ou: ["carte", "app", "Home Assistant"]
-          },
-          {
-            ico: "carteNom",
-            titre: "Un nom pour la carte",
-            texte: "Le nom que le propriétaire donne à la carte — « Cellule », « Soute », « Bateau » — est rangé dans la carte elle-même.",
-            exemple: " deux cartes dans un van, nommées « Cellule » et « Soute », reconnues telles quelles sur n'importe quel téléphone.",
-            ou: ["carte", "app", "Home Assistant"]
-          },
-          {
-            ico: "led",
-            titre: "Un témoin rouge par sortie",
-            texte: "Une LED par canal, en façade, pilotée par la tension de sortie elle-même et non par le logiciel. Elle dit ce que la sortie fait réellement.",
-            exemple: " un fusible fondu se voit à l'œil : la commande est donnée, le témoin reste éteint.",
-            ou: ["matériel"]
           }
         ]
       },
 
       {
         titre: "Mesurer et comprendre",
-        chapeau: "Le différenciateur du produit : on ne voit pas seulement ce qui est allumé, on voit ce que ça consomme — maintenant, et depuis un an.",
+        chapeau: "Le différenciateur du produit : on ne voit pas seulement ce qui est allumé, on voit ce que ça consomme, maintenant et depuis un an.",
         fiches: [
           {
             ico: "ampere",
@@ -175,7 +154,7 @@ const FONCTIONS = {
           {
             ico: "somme",
             titre: "Le courant total",
-            texte: "La somme des huit sorties d'une carte, et, dans l'app, le cumul de toutes les cartes de l'installation.",
+            texte: "La somme des huit sorties d'une carte, publiée comme une mesure à part entière. L'app sait en plus cumuler toutes les cartes d'une installation.",
             exemple: " avant de lancer le chauffe-eau, on regarde ce que le van consomme déjà.",
             ou: ["carte", "app", "Home Assistant"]
           },
@@ -224,7 +203,7 @@ const FONCTIONS = {
           {
             ico: "filigrane",
             titre: "Sept jours en filigrane sur la tuile",
-            texte: "Chaque tuile de sortie porte la forme de sa consommation des sept derniers jours, en arrière-plan. Elle dit un usage — régulier, en pointe, absent — sans qu'on ouvre un écran.",
+            texte: "Chaque tuile de sortie porte la forme de sa consommation des sept derniers jours, en arrière-plan. Elle dit un usage (régulier, en pointe, absent) sans qu'on ouvre un écran.",
             exemple: " la tuile du chauffage montre deux pics par jour : matin et soir, comme prévu.",
             ou: ["app"]
           },
@@ -238,7 +217,7 @@ const FONCTIONS = {
           {
             ico: "horlogeSync",
             titre: "L'heure remise sans réseau",
-            texte: "Une carte démarre sans savoir la date. La première source qui parle — le téléphone par Bluetooth, ou le Wi-Fi — recale l'historique sans perdre les mesures déjà accumulées.",
+            texte: "Une carte démarre sans savoir la date. La première source qui parle, le téléphone par Bluetooth ou le Wi-Fi, recale l'historique sans perdre les mesures déjà accumulées.",
             exemple: " une carte rebranchée après l'hiver retrouve l'heure dès qu'on ouvre l'app à côté.",
             ou: ["carte", "app"]
           },
@@ -253,8 +232,8 @@ const FONCTIONS = {
       },
 
       {
-        titre: "Protéger l'installation",
-        chapeau: "La sécurité en cascade : le composant coupe, la carte coupe, le réglage coupe. Rien ne dépend du téléphone.",
+        titre: "Protéger, et remettre d'aplomb",
+        chapeau: "La sécurité en cascade : le composant coupe, la carte coupe, le réglage coupe, et rien de tout cela ne dépend du téléphone. Puis ce qu'il faut pour relever une carte qui s'est bloquée, sans la démonter.",
         fiches: [
           {
             ico: "bouclierEclair",
@@ -336,7 +315,7 @@ const FONCTIONS = {
           {
             ico: "usine",
             titre: "Retour aux réglages d'usine",
-            texte: "Tout ce que la carte a en mémoire — libellés, types, seuils, clé d'appairage — s'efface d'un geste confirmé.",
+            texte: "Tout ce que la carte a en mémoire, libellés, types, seuils et clé d'appairage, s'efface d'un geste confirmé.",
             exemple: " on remet une carte d'occasion à neuf avant de la poser dans un autre véhicule.",
             ou: ["carte", "app", "Home Assistant"]
           }
@@ -345,7 +324,7 @@ const FONCTIONS = {
 
       {
         titre: "Les quatre entrées universelles",
-        chapeau: "Quatre bornes qui savent lire une tension, une sonde de réservoir ou un simple contact — et agir en conséquence.",
+        chapeau: "Quatre bornes qui savent lire une tension, une sonde de réservoir ou un simple contact, et agir en conséquence.",
         fiches: [
           {
             ico: "prise",
@@ -364,7 +343,7 @@ const FONCTIONS = {
           {
             ico: "courbe",
             titre: "Courbe de sonde",
-            texte: "Quatre profils du marché — VDO, Europe, US, GM — et deux bornes en ohms modifiables à la main. Les sondes inversées, où le vide mesure plus que le plein, sont prises en charge.",
+            texte: "Quatre profils du marché (VDO, Europe, US, GM) et deux bornes en ohms modifiables à la main. Les sondes inversées, où le vide mesure plus que le plein, sont prises en charge.",
             exemple: " la jauge d'eau affiche 0 à 100 % sur une sonde américaine 240-33 Ω sans rien calculer.",
             ou: ["carte", "app"]
           },
@@ -406,7 +385,7 @@ const FONCTIONS = {
           {
             ico: "cloche",
             titre: "Seuils d'alerte par entrée",
-            texte: "Deux seuils par entrée — avertissement et critique — et un sens : alerter quand ça manque, ou quand ça déborde. L'alerte est signalée, jamais agie : aucune sortie n'est coupée.",
+            texte: "Deux seuils par entrée, avertissement et critique, et un sens : alerter quand ça manque, ou quand ça déborde. L'alerte est signalée, jamais agie : aucune sortie n'est coupée.",
             exemple: " l'eau propre passe sous 20 % : l'app prévient, sans rien éteindre.",
             ou: ["carte", "app", "Home Assistant"]
           },
@@ -448,22 +427,29 @@ const FONCTIONS = {
           {
             ico: "redimensionner",
             titre: "Une grille qui suit l'écran",
-            texte: "Chaque tuile a une taille — petite, moyenne, grande — et le nombre de tuiles par ligne suit la largeur de l'écran. Le même tableau de bord se lit sur un téléphone tenu à une main comme sur une tablette fixée à la cloison.",
+            texte: "Chaque tuile a une taille (petite, moyenne, grande) et le nombre de tuiles par ligne suit la largeur de l'écran. Le même tableau de bord se lit sur un téléphone tenu à une main comme sur une tablette fixée à la cloison.",
             exemple: " la tablette murale de la cellule affiche la même page que le téléphone, en plus large.",
             ou: ["app"]
           },
           {
             ico: "van",
-            titre: "Des mesures qui parlent du van entier",
-            texte: "Des tuiles cumulent toute l'installation : courant total, tension la plus basse, carte la plus chaude, défauts attribués à leur carte.",
+            titre: "Des tuiles qui cumulent tout le van",
+            texte: "Quatre tuiles ne parlent d'aucune carte en particulier : le courant de toute l'installation, la tension la plus basse, la carte la plus chaude, et les défauts avec le nom de la carte qui les porte.",
             exemple: " une seule tuile en haut de page dit ce que consomme le van, toutes cartes confondues.",
             ou: ["app"]
           },
           {
             ico: "groupe",
-            titre: "Des boutons d'action qui traversent les cartes",
-            texte: "Une tuile d'action de groupe éteint ce qu'on lui a désigné, où que ce soit dans l'installation.",
-            exemple: " « tout éteindre en partant » ne s'arrête pas à la carte de la cellule.",
+            titre: "Interrupteur de groupe",
+            texte: "Chaque sous-groupe d'une page porte son propre interrupteur, avec le compte de ce qui est allumé (« 2/3 »). S'il reste quelque chose d'allumé, il éteint ; sinon il allume. Il traverse les cartes.",
+            exemple: " le groupe « Éclairages » éteint d'un coup les trois plafonniers, qu'ils soient sur une carte ou sur deux.",
+            ou: ["app"]
+          },
+          {
+            ico: "groupe",
+            titre: "Une tuile qui éteint une liste choisie",
+            texte: "On pose une tuile d'action, on lui désigne les sorties à couper, et elle les coupe toutes d'un appui. La liste se choisit une fois pour toutes, sur n'importe quelle carte.",
+            exemple: " la tuile « En partant » coupe les cinq sorties qu'on a nommées, et laisse le frigo allumé.",
             ou: ["app"]
           },
           {
@@ -518,7 +504,7 @@ const FONCTIONS = {
           {
             ico: "cloche",
             titre: "Notifications même app fermée",
-            texte: "Les défauts — surintensité, coupure batterie, seuil thermique — arrivent en notification système. Volontairement, rien d'autre : une perte de lien Bluetooth ne réveille personne.",
+            texte: "Les défauts, surintensité, coupure batterie et seuil thermique, arrivent en notification système. Volontairement, rien d'autre : une perte de lien Bluetooth ne réveille personne.",
             exemple: " la coupure batterie de 4 h du matin est lue au réveil, pas découverte trois jours plus tard.",
             ou: ["app"]
           },
@@ -544,13 +530,6 @@ const FONCTIONS = {
             ou: ["app"]
           },
           {
-            ico: "megaphone",
-            titre: "L'app annonce ses propres mises à jour",
-            texte: "Les magasins ne préviennent personne d'une nouvelle version. L'app le fait elle-même et renvoie au magasin ; elle ne s'installe jamais toute seule.",
-            exemple: " un testeur apprend qu'une version corrige son problème, le jour où elle sort.",
-            ou: ["app"]
-          },
-          {
             ico: "lecture",
             titre: "Mode démonstration",
             texte: "L'app complète, branchée sur deux cartes simulées, avec un van crédible : éclairages gradables, pompe, frigo qui tourne, réservoirs dont l'eau propre baisse quand la pompe tourne. Des scénarios provoquent surintensité, coupure batterie, délestage, ouverture de porte, perte de lien.",
@@ -560,7 +539,7 @@ const FONCTIONS = {
           {
             ico: "etabli",
             titre: "Cartes virtuelles",
-            texte: "Des cartes simulées qui apparaissent dans la recherche normale, s'appairent et se configurent comme du vrai matériel — Bluetooth éteint ou en mode avion — et dont les réglages survivent au redémarrage de l'app.",
+            texte: "Des cartes simulées qui apparaissent dans la recherche normale, s'appairent et se configurent comme du vrai matériel, Bluetooth éteint ou en mode avion, et dont les réglages survivent au redémarrage de l'app.",
             exemple: " préparer les pages d'un chantier dans le train, sans avoir la carte avec soi.",
             ou: ["app"]
           },
@@ -586,6 +565,13 @@ const FONCTIONS = {
             ou: ["app"]
           },
           {
+            ico: "carteNom",
+            titre: "Un nom pour la carte",
+            texte: "Le nom que le propriétaire donne à la carte (« Cellule », « Soute », « Bateau ») est rangé dans la carte elle-même.",
+            exemple: " deux cartes dans un van, nommées « Cellule » et « Soute », reconnues telles quelles sur n'importe quel téléphone.",
+            ou: ["carte", "app", "Home Assistant"]
+          },
+          {
             ico: "ecrire",
             titre: "On saisit, puis on écrit",
             texte: "Rien ne part à chaque frappe : on remplit, puis on touche « Écrire », et la carte dit si elle accepte. Les champs refusent d'avance les valeurs que le firmware rejetterait.",
@@ -602,7 +588,7 @@ const FONCTIONS = {
           {
             ico: "listeEchec",
             titre: "Ce qui n'a pas été écrit est dit",
-            texte: "Quand une écriture ne passe pas entièrement, la liste de ce qui manque s'affiche en clair — quel réglage, et pourquoi — et le reste se reprend d'un geste.",
+            texte: "Quand une écriture ne passe pas entièrement, la liste de ce qui manque s'affiche en clair, quel réglage et pourquoi, et le reste se reprend d'un geste.",
             exemple: " « Pompe à eau · seuil de surintensité, valeur hors des bornes admises » : on sait quoi refaire.",
             ou: ["app"]
           },
@@ -616,7 +602,7 @@ const FONCTIONS = {
           {
             ico: "plan",
             titre: "Modèles d'installation",
-            texte: "Une installation entière — plusieurs cartes, leurs réglages et les pages qui vont avec — s'enregistre en modèle. Un modèle nomme des rôles, « Cellule », « Soute », jamais des cartes précises ; à l'installation, on dit qui tient quel rôle.",
+            texte: "Une installation entière, plusieurs cartes avec leurs réglages et les pages qui vont avec, s'enregistre en modèle. Un modèle nomme des rôles, « Cellule », « Soute », jamais des cartes précises ; à l'installation, on dit qui tient quel rôle.",
             exemple: " le modèle « fourgon aménagé L2H2 » se pose sur un van neuf en dix minutes.",
             ou: ["app"]
           },
@@ -654,13 +640,6 @@ const FONCTIONS = {
             texte: "Une copie des pages est mise de côté à chaque import : si ce n'était pas le bon fichier, on restaure. Le bouton n'apparaît que lorsqu'il y a quelque chose à annuler.",
             exemple: " l'import a écrasé les pages : deux gestes suffisent à revenir comme avant.",
             ou: ["app"]
-          },
-          {
-            ico: "cle",
-            titre: "Exporter et importer la clé d'appairage",
-            texte: "La clé d'une carte se relit en hexadécimal et se réinstalle sur un autre téléphone, sans retourner appuyer sur le bouton de la carte.",
-            exemple: " le second téléphone du couple pilote la même carte, sans démonter l'habillage.",
-            ou: ["app"]
           }
         ]
       },
@@ -691,6 +670,13 @@ const FONCTIONS = {
             ou: ["app"]
           },
           {
+            ico: "cle",
+            titre: "Exporter et importer la clé d'appairage",
+            texte: "La clé d'une carte se relit en hexadécimal et se réinstalle sur un autre téléphone, sans retourner appuyer sur le bouton de la carte.",
+            exemple: " le second téléphone du couple pilote la même carte, sans démonter l'habillage.",
+            ou: ["app"]
+          },
+          {
             ico: "wifi",
             titre: "Poser le Wi-Fi depuis l'app",
             texte: "Le réseau Wi-Fi de la carte se saisit en Bluetooth, depuis l'app. Rien n'est enregistré tant que la connexion n'a pas réussi : une carte ne redémarre jamais sur un réseau injoignable.",
@@ -707,7 +693,7 @@ const FONCTIONS = {
           {
             ico: "badgeCompte",
             titre: "Aucun compte à créer",
-            texte: "L'accès au serveur se déduit du nom de la carte. Rien à saisir, rien à retenir, rien à re-synchroniser — et rien à perdre.",
+            texte: "L'accès au serveur se déduit du nom de la carte. Rien à saisir, rien à retenir, rien à re-synchroniser, et rien à perdre.",
             exemple: " l'accès distant s'arme d'un interrupteur, sans formulaire d'inscription.",
             ou: ["carte", "app"]
           },
@@ -735,7 +721,7 @@ const FONCTIONS = {
           {
             ico: "interdit",
             titre: "Ce qui ne se fait jamais de loin",
-            texte: "Les réglages qui couperaient le lien — réseau, nom de la carte, remise à zéro, mise à jour, lecture de la clé — sont fermés à distance, par construction.",
+            texte: "Les réglages qui couperaient le lien (réseau, nom de la carte, remise à zéro, mise à jour, lecture de la clé) sont fermés à distance, par construction.",
             exemple: " personne ne peut couper le Wi-Fi d'une carte depuis l'autre bout du pays.",
             ou: ["carte"]
           },
@@ -756,7 +742,7 @@ const FONCTIONS = {
           {
             ico: "maison",
             titre: "Home Assistant, sans passerelle",
-            texte: "La carte est découverte toute seule sur le réseau local et apparaît dans Home Assistant avec toutes ses entités — commandes, mesures, réglages, diagnostics. Ni intégration tierce, ni cloud, ni abonnement.",
+            texte: "La carte est découverte toute seule sur le réseau local et apparaît dans Home Assistant avec toutes ses entités : commandes, mesures, réglages, diagnostics. Ni intégration tierce, ni cloud, ni abonnement.",
             exemple: " une automatisation coupe l'eau quand personne n'est à bord.",
             ou: ["carte", "Home Assistant"]
           },
@@ -794,13 +780,6 @@ const FONCTIONS = {
             texte: "Ces charges sont décrites par leur type sur la carte et se promeuvent, côté Home Assistant, vers l'entité correspondante.",
             exemple: " l'électrovanne de gaz apparaît comme une vanne, avec l'icône qui va avec.",
             ou: ["Home Assistant"]
-          },
-          {
-            ico: "bus",
-            titre: "Un seul bus interne, cinq périphériques",
-            texte: "Toute l'intelligence de la carte passe par deux fils : commande des sorties, mesure des courants, lecture des entrées, boutons de façade et température.",
-            exemple: " un seul bus à diagnostiquer, et deux broches du processeur mobilisées.",
-            ou: ["matériel"]
           }
         ]
       },
@@ -832,8 +811,8 @@ const FONCTIONS = {
           },
           {
             ico: "insigne",
-            titre: "Une pastille partout où l'on regarde une carte",
-            texte: "Quand une version plus récente existe, l'app le dit à l'endroit où l'on regarde la carte — aux couleurs de la marque, jamais à celles d'un défaut. Un firmware disponible n'est pas une panne.",
+            titre: "Une carte en retard le dit d'elle-même",
+            texte: "Quand une version plus récente existe, l'app le dit à l'endroit où l'on regarde la carte, aux couleurs de la marque et jamais à celles d'un défaut. Un firmware disponible n'est pas une panne.",
             exemple: " on voit qu'une carte est en retard sans ouvrir l'écran de mise à jour.",
             ou: ["app"]
           },
@@ -842,6 +821,13 @@ const FONCTIONS = {
             titre: "Une mise à jour réussie se prouve deux fois",
             texte: "L'empreinte de l'image est vérifiée avant que le premier octet ne parte, et « réussi » demande à la fois l'acceptation de la carte et son retour en annonçant une autre version.",
             exemple: " un téléchargement tronqué est arrêté avant deux minutes de transfert inutile.",
+            ou: ["app"]
+          },
+          {
+            ico: "megaphone",
+            titre: "L'app annonce ses propres mises à jour",
+            texte: "Les magasins ne préviennent personne d'une nouvelle version. L'app le fait elle-même et renvoie au magasin ; elle ne s'installe jamais toute seule.",
+            exemple: " un testeur apprend qu'une version corrige son problème, le jour où elle sort.",
             ou: ["app"]
           },
           {
@@ -866,10 +852,24 @@ const FONCTIONS = {
             ou: ["matériel"]
           },
           {
+            ico: "led",
+            titre: "Un témoin rouge par sortie",
+            texte: "Une LED par canal, en façade, pilotée par la tension de sortie elle-même et non par le logiciel. Elle dit ce que la sortie fait réellement.",
+            exemple: " un fusible fondu se voit à l'œil : la commande est donnée, le témoin reste éteint.",
+            ou: ["matériel"]
+          },
+          {
             ico: "alim",
             titre: "De 9 à 30 volts",
             texte: "La même carte fonctionne sur un réseau 12 V et sur un réseau 24 V, sans variante ni cavalier.",
             exemple: " un poids lourd en 24 V et un van en 12 V prennent la même référence.",
+            ou: ["matériel"]
+          },
+          {
+            ico: "bus",
+            titre: "Tout passe par deux fils",
+            texte: "Commande des sorties, mesure des courants, lecture des entrées, boutons de façade et température : les cinq périphériques de la carte sont sur un seul bus interne.",
+            exemple: " un seul bus à diagnostiquer si une mesure devient fantaisiste, au lieu de cinq liaisons séparées.",
             ou: ["matériel"]
           },
           {
@@ -895,9 +895,9 @@ const FONCTIONS = {
           },
           {
             ico: "couches",
-            titre: "Plusieurs cartes chaînées",
-            texte: "Une installation peut en compter plusieurs, réparties dans le véhicule, et l'application les tient toutes ensemble.",
-            exemple: " une carte en cellule et une en soute, vues comme un seul tableau de bord.",
+            titre: "Des cartes qui ne se câblent pas entre elles",
+            texte: "Rien ne relie deux cartes : ni bus, ni maître, ni esclave. Chacune a son alimentation, son nom et ses huit sorties, et on en ajoute une là où le besoin apparaît.",
+            exemple: " la soute est aménagée un an après la cellule : on y pose une seconde carte sans toucher à la première.",
             ou: ["matériel", "app"]
           }
         ]
@@ -919,9 +919,9 @@ const FONCTIONS = {
     repere: {
       titre: "How to read this catalogue",
       texte: [
-        "Features are grouped by <b>theme</b>, from the most common gesture — switching an output on — to the rarest — replacing a failed board. The shortcuts under the search box jump straight to a theme.",
+        "Features are grouped by <b>theme</b>, from the most common gesture, switching an output on, to the rarest, replacing a failed board. The shortcuts under the search box jump straight to a theme.",
         "Under each card, one or two labels say <b>where</b> the feature lives: on the <b>board</b> (it works with no phone at all), in the <b>app</b>, in <b>Home Assistant</b>, or <b>remotely</b> over the Internet.",
-        "A few cards carry “<b>to be trialled</b>”: the feature is written and covered by automated tests, but has not yet run on real hardware. That is information, not a commercial caveat — and it goes away the day the trial is run."
+        "A few cards carry “<b>to be trialled</b>”: the feature is written and covered by automated tests, but has not yet run on real hardware. That is information, not a commercial caveat, and it goes away the day the trial is run."
       ]
     },
 
@@ -934,7 +934,7 @@ const FONCTIONS = {
           {
             ico: "eclair",
             titre: "Eight 10 A outputs",
-            texte: "Eight independent circuits, each switched by its own power device, from 9 to 30 V DC. On, off, and dimming for the loads that take it.",
+            texte: "Eight circuits driven separately: on, off, and dimming for the loads that take it. Each carries 10 A continuous, enough for anything a van runs on 12 or 24 V.",
             exemple: " the six lights of a camper cabin, the water pump and the fridge on one board, each on its own switch.",
             ou: ["board"]
           },
@@ -948,13 +948,13 @@ const FONCTIONS = {
           {
             ico: "etiquette",
             titre: "A load type per output",
-            texte: "Fifteen types — interior or exterior light, pump, fan, fridge, heater, water heater, socket, motor, compressor, antenna, siren, valve, on/off light, generic. The type decides the icon, the slider, and what Home Assistant shows.",
+            texte: "Fifteen types: interior or exterior light, pump, fan, fridge, heater, water heater, socket, motor, compressor, antenna, siren, valve, on/off light, generic. The type decides the icon, the slider, and what Home Assistant shows.",
             exemple: " an output set to “Fridge” shows up as a switch, never as a dimmer.",
             ou: ["board", "app", "Home Assistant"]
           },
           {
             ico: "plafond",
-            titre: "Non-dimmable loads are protected",
+            titre: "No half setpoint on a pump",
             texte: "On a pump, a compressor or a heating element, an intermediate setpoint is pulled back to 100 % by the board itself. The guard is single: it covers the app, Home Assistant, the front panel buttons and the inputs.",
             exemple: " a slider left at 40 % by mistake on the water pump does not make it buzz: it runs at full.",
             ou: ["board"]
@@ -988,13 +988,6 @@ const FONCTIONS = {
             ou: ["app", "Home Assistant"]
           },
           {
-            ico: "groupe",
-            titre: "Group switch",
-            texte: "Each sub-group of a page carries its own switch, with the count of what is on (“2/3”). If anything is still on, it switches off; otherwise it switches on. It crosses boards.",
-            exemple: " the “Lighting” group kills all three ceiling lights at once, whether they sit on one board or two.",
-            ou: ["app"]
-          },
-          {
             ico: "exclusif",
             titre: "Exclusive pairs",
             texte: "Two neighbouring outputs that can never be on together: switching one on cuts the other, break before make.",
@@ -1018,7 +1011,7 @@ const FONCTIONS = {
           {
             ico: "demarrage",
             titre: "State at power-up",
-            texte: "What each output becomes when the board is powered: off, on, or the way it was before the cut — dimming level included.",
+            texte: "What each output becomes when the board is powered: off, on, or the way it was before the cut, dimming level included.",
             exemple: " after the battery isolator is switched back on, the fridge restarts by itself and the lights stay off.",
             ou: ["board", "app", "Home Assistant"]
           },
@@ -1028,27 +1021,13 @@ const FONCTIONS = {
             texte: "Each output carries its label, stored in the board and not in the phone. A second phone finds the same names without copying anything.",
             exemple: " “Water pump” rather than “Channel 3”, everywhere: app, Home Assistant, alert log.",
             ou: ["board", "app", "Home Assistant"]
-          },
-          {
-            ico: "carteNom",
-            titre: "A name for the board",
-            texte: "The name the owner gives the board — “Cabin”, “Garage”, “Boat” — is stored in the board itself.",
-            exemple: " two boards in a van, named “Cabin” and “Garage”, recognised as such on any phone.",
-            ou: ["board", "app", "Home Assistant"]
-          },
-          {
-            ico: "led",
-            titre: "A red indicator per output",
-            texte: "One LED per channel, on the front, driven by the output voltage itself rather than by software. It says what the output really does.",
-            exemple: " a blown fuse shows at a glance: the command is given, the indicator stays dark.",
-            ou: ["hardware"]
           }
         ]
       },
 
       {
         titre: "Measuring and understanding",
-        chapeau: "The product's differentiator: you do not just see what is on, you see what it draws — now, and over the past year.",
+        chapeau: "The product's differentiator: you do not just see what is on, you see what it draws, now and over the past year.",
         fiches: [
           {
             ico: "ampere",
@@ -1060,7 +1039,7 @@ const FONCTIONS = {
           {
             ico: "somme",
             titre: "Total current",
-            texte: "The sum of a board's eight outputs, and, in the app, the total across every board of the installation.",
+            texte: "The sum of a board's eight outputs, published as a measurement in its own right. The app can also total every board of an installation.",
             exemple: " before running the water heater, you look at what the van already draws.",
             ou: ["board", "app", "Home Assistant"]
           },
@@ -1109,7 +1088,7 @@ const FONCTIONS = {
           {
             ico: "filigrane",
             titre: "Seven days as a watermark",
-            texte: "Each output tile carries the shape of its last seven days of consumption in the background. It tells a pattern — steady, peaky, absent — without opening a screen.",
+            texte: "Each output tile carries the shape of its last seven days of consumption in the background. It tells a pattern (steady, peaky, absent) without opening a screen.",
             exemple: " the heater tile shows two peaks a day: morning and evening, as expected.",
             ou: ["app"]
           },
@@ -1123,7 +1102,7 @@ const FONCTIONS = {
           {
             ico: "horlogeSync",
             titre: "The clock set without a network",
-            texte: "A board starts with no idea of the date. The first source that speaks — the phone over Bluetooth, or Wi-Fi — realigns the history without losing what was already recorded.",
+            texte: "A board starts with no idea of the date. The first source that speaks, the phone over Bluetooth or Wi-Fi, realigns the history without losing what was already recorded.",
             exemple: " a board powered up after winter finds the time as soon as you open the app next to it.",
             ou: ["board", "app"]
           },
@@ -1138,8 +1117,8 @@ const FONCTIONS = {
       },
 
       {
-        titre: "Protecting the installation",
-        chapeau: "Safety in cascade: the device cuts, the board cuts, the setting cuts. Nothing depends on the phone.",
+        titre: "Protecting, and recovering",
+        chapeau: "Safety in cascade: the device cuts, the board cuts, the setting cuts, and none of it depends on the phone. Then what it takes to bring a stuck board back, without removing it.",
         fiches: [
           {
             ico: "bouclierEclair",
@@ -1221,7 +1200,7 @@ const FONCTIONS = {
           {
             ico: "usine",
             titre: "Factory reset",
-            texte: "Everything the board holds — labels, types, thresholds, pairing key — is erased in one confirmed gesture.",
+            texte: "Everything the board holds, labels, types, thresholds and pairing key, is erased in one confirmed gesture.",
             exemple: " you bring a second-hand board back to new before fitting it in another vehicle.",
             ou: ["board", "app", "Home Assistant"]
           }
@@ -1230,7 +1209,7 @@ const FONCTIONS = {
 
       {
         titre: "The four universal inputs",
-        chapeau: "Four terminals that can read a voltage, a tank sender or a plain contact — and act on it.",
+        chapeau: "Four terminals that can read a voltage, a tank sender or a plain contact, and act on it.",
         fiches: [
           {
             ico: "prise",
@@ -1249,7 +1228,7 @@ const FONCTIONS = {
           {
             ico: "courbe",
             titre: "Sender curve",
-            texte: "Four market profiles — VDO, Europe, US, GM — and two resistance bounds you can edit. Inverted senders, where empty reads higher than full, are supported.",
+            texte: "Four market profiles (VDO, Europe, US, GM) and two resistance bounds you can edit. Inverted senders, where empty reads higher than full, are supported.",
             exemple: " the water gauge reads 0 to 100 % on a US 240-33 Ω sender with no maths.",
             ou: ["board", "app"]
           },
@@ -1291,7 +1270,7 @@ const FONCTIONS = {
           {
             ico: "cloche",
             titre: "Alert thresholds per input",
-            texte: "Two thresholds per input — warning and critical — and a direction: alert when it runs short, or when it overflows. An alert is reported, never acted on: no output is cut.",
+            texte: "Two thresholds per input, warning and critical, and a direction: alert when it runs short, or when it overflows. An alert is reported, never acted on: no output is cut.",
             exemple: " fresh water drops below 20 %: the app warns, without switching anything off.",
             ou: ["board", "app", "Home Assistant"]
           },
@@ -1333,22 +1312,29 @@ const FONCTIONS = {
           {
             ico: "redimensionner",
             titre: "A grid that follows the screen",
-            texte: "Each tile has a size — small, medium, large — and the number of tiles per row follows the screen width. The same dashboard reads on a phone held in one hand and on a tablet fixed to the wall.",
+            texte: "Each tile has a size (small, medium, large) and the number of tiles per row follows the screen width. The same dashboard reads on a phone held in one hand and on a tablet fixed to the wall.",
             exemple: " the cabin wall tablet shows the same page as the phone, only wider.",
             ou: ["app"]
           },
           {
             ico: "van",
-            titre: "Measurements about the whole van",
-            texte: "Some tiles aggregate the whole installation: total current, lowest voltage, hottest board, faults attributed to their board.",
+            titre: "Tiles that add up the whole van",
+            texte: "Four tiles speak of no board in particular: the current of the whole installation, the lowest voltage, the hottest board, and faults with the name of the board carrying them.",
             exemple: " a single tile at the top of the page says what the van draws, all boards together.",
             ou: ["app"]
           },
           {
             ico: "groupe",
-            titre: "Action buttons that cross boards",
-            texte: "A group action tile switches off whatever it was given, wherever it sits in the installation.",
-            exemple: " “all off when leaving” does not stop at the cabin board.",
+            titre: "Group switch",
+            texte: "Each sub-group of a page carries its own switch, with the count of what is on (“2/3”). If anything is still on, it switches off; otherwise it switches on. It crosses boards.",
+            exemple: " the “Lighting” group kills all three ceiling lights at once, whether they sit on one board or two.",
+            ou: ["app"]
+          },
+          {
+            ico: "groupe",
+            titre: "A tile that switches off a chosen list",
+            texte: "You drop an action tile, you tell it which outputs to cut, and it cuts them all in one press. The list is chosen once and for all, across any board.",
+            exemple: " the “Leaving” tile cuts the five outputs you named, and leaves the fridge on.",
             ou: ["app"]
           },
           {
@@ -1403,7 +1389,7 @@ const FONCTIONS = {
           {
             ico: "cloche",
             titre: "Notifications even with the app closed",
-            texte: "Faults — overcurrent, battery cutoff, thermal threshold — arrive as system notifications. Deliberately nothing else: a lost Bluetooth link wakes nobody.",
+            texte: "Faults, overcurrent, battery cutoff and thermal threshold, arrive as system notifications. Deliberately nothing else: a lost Bluetooth link wakes nobody.",
             exemple: " the 4 a.m. battery cutoff is read on waking, not discovered three days later.",
             ou: ["app"]
           },
@@ -1429,13 +1415,6 @@ const FONCTIONS = {
             ou: ["app"]
           },
           {
-            ico: "megaphone",
-            titre: "The app announces its own updates",
-            texte: "Stores notify nobody of a new version. The app does it itself and points at the store; it never installs anything on its own.",
-            exemple: " a tester learns that a release fixes their problem, the day it ships.",
-            ou: ["app"]
-          },
-          {
             ico: "lecture",
             titre: "Demonstration mode",
             texte: "The full app, wired to two simulated boards, with a believable van: dimmable lights, pump, fridge already cycling, tanks whose fresh water drops as the pump runs. Scenarios trigger overcurrent, battery cutoff, shedding, a door opening, a lost link.",
@@ -1445,7 +1424,7 @@ const FONCTIONS = {
           {
             ico: "etabli",
             titre: "Virtual boards",
-            texte: "Simulated boards that show up in the normal search, pair and configure exactly like real hardware — Bluetooth off or in flight mode — and whose settings survive restarting the app.",
+            texte: "Simulated boards that show up in the normal search, pair and configure exactly like real hardware, Bluetooth off or in flight mode, and whose settings survive restarting the app.",
             exemple: " preparing a job's pages on the train, without the board with you.",
             ou: ["app"]
           },
@@ -1471,6 +1450,13 @@ const FONCTIONS = {
             ou: ["app"]
           },
           {
+            ico: "carteNom",
+            titre: "A name for the board",
+            texte: "The name the owner gives the board (“Cabin”, “Garage”, “Boat”) is stored in the board itself.",
+            exemple: " two boards in a van, named “Cabin” and “Garage”, recognised as such on any phone.",
+            ou: ["board", "app", "Home Assistant"]
+          },
+          {
             ico: "ecrire",
             titre: "You type, then you write",
             texte: "Nothing leaves on each keystroke: you fill in, you touch “Write”, and the board says whether it accepts. Fields refuse up front the values the firmware would reject.",
@@ -1487,7 +1473,7 @@ const FONCTIONS = {
           {
             ico: "listeEchec",
             titre: "What was not written is told",
-            texte: "When a write does not go through entirely, the list of what is missing is shown plainly — which setting, and why — and the rest is retried in one gesture.",
+            texte: "When a write does not go through entirely, the list of what is missing is shown plainly, which setting and why, and the rest is retried in one gesture.",
             exemple: " “Water pump · overcurrent threshold, value out of allowed bounds”: you know what to redo.",
             ou: ["app"]
           },
@@ -1501,7 +1487,7 @@ const FONCTIONS = {
           {
             ico: "plan",
             titre: "Installation templates",
-            texte: "A whole installation — several boards, their settings and the pages that go with them — saves as a template. A template names roles, “Cabin”, “Garage”, never specific boards; on install, you say who plays which role.",
+            texte: "A whole installation, several boards with their settings and the pages that go with them, saves as a template. A template names roles, “Cabin”, “Garage”, never specific boards; on install, you say who plays which role.",
             exemple: " the “L2H2 camper conversion” template is laid onto a new van in ten minutes.",
             ou: ["app"]
           },
@@ -1539,13 +1525,6 @@ const FONCTIONS = {
             texte: "A copy of the pages is set aside at each import: if it was not the right file, you restore. The button only appears when there is something to undo.",
             exemple: " the import overwrote the pages: two gestures put them back.",
             ou: ["app"]
-          },
-          {
-            ico: "cle",
-            titre: "Export and import the pairing key",
-            texte: "A board's key can be read out in hexadecimal and installed on another phone, without going back to press the board's button.",
-            exemple: " the couple's second phone drives the same board, without removing the trim.",
-            ou: ["app"]
           }
         ]
       },
@@ -1576,6 +1555,13 @@ const FONCTIONS = {
             ou: ["app"]
           },
           {
+            ico: "cle",
+            titre: "Export and import the pairing key",
+            texte: "A board's key can be read out in hexadecimal and installed on another phone, without going back to press the board's button.",
+            exemple: " the couple's second phone drives the same board, without removing the trim.",
+            ou: ["app"]
+          },
+          {
             ico: "wifi",
             titre: "Setting Wi-Fi from the app",
             texte: "The board's Wi-Fi network is entered over Bluetooth, from the app. Nothing is stored until the connection has succeeded: a board never restarts onto an unreachable network.",
@@ -1592,7 +1578,7 @@ const FONCTIONS = {
           {
             ico: "badgeCompte",
             titre: "No account to create",
-            texte: "Access to the server is derived from the board's name. Nothing to type, nothing to remember, nothing to re-synchronise — and nothing to lose.",
+            texte: "Access to the server is derived from the board's name. Nothing to type, nothing to remember, nothing to re-synchronise, and nothing to lose.",
             exemple: " remote access arms with a switch, with no sign-up form.",
             ou: ["board", "app"]
           },
@@ -1620,7 +1606,7 @@ const FONCTIONS = {
           {
             ico: "interdit",
             titre: "What is never done from afar",
-            texte: "The settings that would cut the link — network, board name, reset, update, reading the key — are closed remotely, by construction.",
+            texte: "The settings that would cut the link (network, board name, reset, update, reading the key) are closed remotely, by construction.",
             exemple: " nobody can cut a board's Wi-Fi from the other side of the country.",
             ou: ["board"]
           },
@@ -1641,7 +1627,7 @@ const FONCTIONS = {
           {
             ico: "maison",
             titre: "Home Assistant, with no bridge",
-            texte: "The board is discovered by itself on the local network and appears in Home Assistant with all its entities — controls, measurements, settings, diagnostics. No third-party integration, no cloud, no subscription.",
+            texte: "The board is discovered by itself on the local network and appears in Home Assistant with all its entities: controls, measurements, settings, diagnostics. No third-party integration, no cloud, no subscription.",
             exemple: " an automation cuts the water when nobody is on board.",
             ou: ["board", "Home Assistant"]
           },
@@ -1679,13 +1665,6 @@ const FONCTIONS = {
             texte: "These loads are described by their type on the board and are promoted, on the Home Assistant side, to the matching entity.",
             exemple: " the gas solenoid appears as a valve, with the icon that goes with it.",
             ou: ["Home Assistant"]
-          },
-          {
-            ico: "bus",
-            titre: "One internal bus, five peripherals",
-            texte: "All of the board's intelligence runs over two wires: driving the outputs, measuring currents, reading inputs, front panel buttons and temperature.",
-            exemple: " one bus to diagnose, and two processor pins used.",
-            ou: ["hardware"]
           }
         ]
       },
@@ -1717,8 +1696,8 @@ const FONCTIONS = {
           },
           {
             ico: "insigne",
-            titre: "A badge wherever you look at a board",
-            texte: "When a newer version exists, the app says so where you look at the board — in the brand colour, never in a fault colour. An available firmware is not a failure.",
+            titre: "A board that is behind says so",
+            texte: "When a newer version exists, the app says so where you look at the board, in the brand colour and never in a fault colour. An available firmware is not a failure.",
             exemple: " you see that a board is behind without opening the update screen.",
             ou: ["app"]
           },
@@ -1727,6 +1706,13 @@ const FONCTIONS = {
             titre: "A successful update is proven twice",
             texte: "The image's fingerprint is checked before the first byte leaves, and “succeeded” requires both the board's acceptance and its return announcing a different version.",
             exemple: " a truncated download is stopped before two minutes of pointless transfer.",
+            ou: ["app"]
+          },
+          {
+            ico: "megaphone",
+            titre: "The app announces its own updates",
+            texte: "Stores notify nobody of a new version. The app does it itself and points at the store; it never installs anything on its own.",
+            exemple: " a tester learns that a release fixes their problem, the day it ships.",
             ou: ["app"]
           },
           {
@@ -1751,10 +1737,24 @@ const FONCTIONS = {
             ou: ["hardware"]
           },
           {
+            ico: "led",
+            titre: "A red indicator per output",
+            texte: "One LED per channel, on the front, driven by the output voltage itself rather than by software. It says what the output really does.",
+            exemple: " a blown fuse shows at a glance: the command is given, the indicator stays dark.",
+            ou: ["hardware"]
+          },
+          {
             ico: "alim",
             titre: "From 9 to 30 volts",
             texte: "The same board works on a 12 V and on a 24 V system, with no variant and no jumper.",
             exemple: " a 24 V truck and a 12 V van order the same part.",
+            ou: ["hardware"]
+          },
+          {
+            ico: "bus",
+            titre: "Everything runs on two wires",
+            texte: "Driving the outputs, measuring currents, reading inputs, front panel buttons and temperature: the board's five peripherals all sit on a single internal bus.",
+            exemple: " one bus to diagnose if a reading turns fanciful, instead of five separate links.",
             ou: ["hardware"]
           },
           {
@@ -1780,9 +1780,9 @@ const FONCTIONS = {
           },
           {
             ico: "couches",
-            titre: "Several boards chained",
-            texte: "An installation can hold several, spread through the vehicle, and the app holds them all together.",
-            exemple: " one board in the cabin and one in the garage, seen as a single dashboard.",
+            titre: "Boards that need no wiring between them",
+            texte: "Nothing links two boards: no bus, no master, no slave. Each has its own supply, its own name and its own eight outputs, and you add one wherever the need appears.",
+            exemple: " the garage is fitted out a year after the cabin: a second board goes in without touching the first.",
             ou: ["hardware", "app"]
           }
         ]
