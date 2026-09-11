@@ -1,0 +1,1804 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ce que sait faire TinyRail</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Source+Sans+3:ital,wght@0,400;0,600;1,400&display=swap">
+<link rel="stylesheet" href="../essais.css">
+</head>
+<body>
+<div id="app"></div>
+<script src="../essais.js"></script>
+<script>
+
+// Le catalogue des fonctions du produit — carte, firmware, application.
+//
+// ⚠️ **CE FICHIER EST LA LISTE, il n'y en a pas d'autre.** Toute fonction qui
+// arrive chez un utilisateur s'y ajoute, en français ET en anglais, avec son
+// exemple d'usage. Une fonction absente d'ici n'existe pour personne : c'est la
+// raison d'être du catalogue, et la seule façon qu'il a de rester vrai.
+//
+// ⚠️ **Une fiche décrit un USAGE, pas une implémentation.** Ni opcode, ni nom
+// de fichier, ni adresse I²C : ce qui se règle, ce que ça change, et un cas où
+// l'on s'en sert. Le détail technique vit dans les dépôts.
+
+const FONCTIONS = {
+
+  fr: {
+    titre: "Ce que sait faire TinyRail",
+    lede: "Le catalogue complet des fonctions du produit : la carte, son firmware et l'application. Chaque fiche dit ce que la fonction fait, et donne un cas où l'on s'en sert. Cherchez par mot-clé, ou promenez-vous par thème.",
+
+    repere: {
+      titre: "Comment lire ce catalogue",
+      texte: [
+        "Les fonctions sont rangées par <b>thème</b>, du geste le plus courant — allumer une sortie — au plus rare — remplacer une carte en panne. Les raccourcis sous la barre de recherche mènent directement à un thème.",
+        "Sous chaque fiche, une ou deux étiquettes disent <b>où</b> la fonction se trouve : sur la <b>carte</b> (elle marche sans téléphone), dans l'<b>app</b>, dans <b>Home Assistant</b>, ou <b>à distance</b> par Internet.",
+        "Quelques fiches portent « <b>à éprouver</b> » : la fonction est écrite et testée en automatique, mais elle n'a pas encore tourné sur du matériel. C'est une information, pas une réserve commerciale — et elle disparaît le jour où l'essai est fait."
+      ]
+    },
+
+    themes: [
+
+      {
+        titre: "Commander les sorties",
+        chapeau: "Huit sorties de 10 A, pilotables au doigt, au bouton, à la voix ou par une entrée. Tout part de là.",
+        fiches: [
+          {
+            ico: "eclair",
+            titre: "Huit sorties de 10 A",
+            texte: "Huit circuits indépendants, chacun commuté par son propre composant de puissance, de 9 à 30 V continu. Marche, arrêt, et pour certaines charges la gradation.",
+            exemple: " les six éclairages d'une cellule, la pompe à eau et le frigo sur une seule carte, chacun sur son interrupteur.",
+            ou: ["carte"]
+          },
+          {
+            ico: "gradation",
+            titre: "Gradation de 0 à 100 %",
+            texte: "Les sorties qui alimentent une charge gradable acceptent un curseur, avec une découpe à 1 kHz adaptée aux LED de van.",
+            exemple: " le plafonnier à 20 % pour lire le soir sans réveiller l'autre couchette.",
+            ou: ["carte", "app", "Home Assistant"]
+          },
+          {
+            ico: "etiquette",
+            titre: "Type de charge par sortie",
+            texte: "Quinze types — éclairage intérieur ou extérieur, pompe, ventilation, frigo, chauffage, chauffe-eau, prise, motorisation, compresseur, antenne, sirène, électrovanne, éclairage tout ou rien, générique. Le type décide de l'icône, du curseur, et de ce que Home Assistant affiche.",
+            exemple: " une sortie réglée sur « Réfrigérateur » se présente en interrupteur, jamais en gradateur.",
+            ou: ["carte", "app", "Home Assistant"]
+          },
+          {
+            ico: "plafond",
+            titre: "Les charges non gradables sont protégées",
+            texte: "Sur une pompe, un compresseur ou une résistance, une consigne intermédiaire est relevée à 100 % par la carte elle-même. Le garde-fou est unique : il vaut pour l'app, Home Assistant, les boutons de façade et les entrées.",
+            exemple: " un curseur laissé à 40 % par erreur sur la pompe à eau ne la fait pas vibrer : elle tourne à plein.",
+            ou: ["carte"]
+          },
+          {
+            ico: "bouton",
+            titre: "Huit boutons en façade",
+            texte: "Un bouton par sortie, directement sur la carte. Ils marchent sans téléphone, sans réseau et sans Home Assistant.",
+            exemple: " la batterie du téléphone est vide : la lumière s'allume quand même, au bouton.",
+            ou: ["matériel"]
+          },
+          {
+            ico: "maintien",
+            titre: "Appui bref, appui tenu",
+            texte: "Un appui court bascule la sortie. Un appui maintenu fait défiler la luminosité en va-et-vient, sans jamais passer par l'extinction. Le geste vaut aussi pour un poussoir câblé sur une entrée.",
+            exemple: " on garde le doigt sur le bouton jusqu'à la luminosité voulue, puis on relâche.",
+            ou: ["carte", "matériel"]
+          },
+          {
+            ico: "reglages",
+            titre: "Pas de gradation réglable",
+            texte: "De combien la luminosité avance à chaque cran d'un appui tenu : 5, 10, 20 ou 25 %, pour toute la carte. Le balayage complet dure toujours environ 2,8 secondes.",
+            exemple: " un pas de 5 % pour viser finement l'éclairage d'ambiance d'un plafond de cellule.",
+            ou: ["carte", "app"]
+          },
+          {
+            ico: "eteindre",
+            titre: "Tout éteindre, tout allumer",
+            texte: "Un geste coupe ou rallume les huit sorties d'une carte. Dans l'app, le geste traverse toutes les cartes de l'installation.",
+            exemple: " « tout éteindre » en fermant la porte du van, sans faire le tour des pages.",
+            ou: ["app", "Home Assistant"]
+          },
+          {
+            ico: "groupe",
+            titre: "Interrupteur de groupe",
+            texte: "Chaque sous-groupe d'une page porte son propre interrupteur, avec le compte de ce qui est allumé (« 2/3 »). S'il reste quelque chose d'allumé, il éteint ; sinon il allume. Il traverse les cartes.",
+            exemple: " le groupe « Éclairages » éteint d'un coup les trois plafonniers, qu'ils soient sur une carte ou sur deux.",
+            ou: ["app"]
+          },
+          {
+            ico: "exclusif",
+            titre: "Paires exclusives",
+            texte: "Deux sorties voisines qui ne peuvent jamais être allumées ensemble : allumer l'une coupe l'autre, avec une coupure avant établissement.",
+            exemple: " les deux sens d'un vérin de lit escamotable, qu'il ne faut jamais commander en même temps.",
+            ou: ["carte", "app", "Home Assistant"]
+          },
+          {
+            ico: "inclusif",
+            titre: "Paires synchronisées",
+            texte: "Deux sorties qui se suivent : commander l'une commande l'autre, dans le même sens.",
+            exemple: " deux bandeaux LED sur deux circuits, commandés comme un seul éclairage.",
+            ou: ["carte", "app", "Home Assistant"]
+          },
+          {
+            ico: "chrono",
+            titre: "Extinction automatique",
+            texte: "Une sortie peut s'éteindre seule après un délai réglable, d'une seconde à une heure.",
+            exemple: " l'éclairage de soute s'éteint tout seul cinq minutes après qu'on l'a allumé.",
+            ou: ["carte", "app", "Home Assistant"]
+          },
+          {
+            ico: "demarrage",
+            titre: "État au démarrage",
+            texte: "Ce que devient chaque sortie quand la carte est mise sous tension : éteinte, allumée, ou comme avant la coupure — niveau de gradation compris.",
+            exemple: " après une coupure du coupe-batterie, le frigo redémarre seul et l'éclairage reste éteint.",
+            ou: ["carte", "app", "Home Assistant"]
+          },
+          {
+            ico: "nom",
+            titre: "Un nom par sortie",
+            texte: "Chaque sortie porte son libellé, rangé dans la carte et non dans le téléphone. Un second téléphone retrouve les mêmes noms sans rien recopier.",
+            exemple: " « Pompe à eau » plutôt que « Canal 3 », partout : app, Home Assistant, journal d'alertes.",
+            ou: ["carte", "app", "Home Assistant"]
+          },
+          {
+            ico: "carteNom",
+            titre: "Un nom pour la carte",
+            texte: "Le nom que le propriétaire donne à la carte — « Cellule », « Soute », « Bateau » — est rangé dans la carte elle-même.",
+            exemple: " deux cartes dans un van, nommées « Cellule » et « Soute », reconnues telles quelles sur n'importe quel téléphone.",
+            ou: ["carte", "app", "Home Assistant"]
+          },
+          {
+            ico: "led",
+            titre: "Un témoin rouge par sortie",
+            texte: "Une LED par canal, en façade, pilotée par la tension de sortie elle-même et non par le logiciel. Elle dit ce que la sortie fait réellement.",
+            exemple: " un fusible fondu se voit à l'œil : la commande est donnée, le témoin reste éteint.",
+            ou: ["matériel"]
+          }
+        ]
+      },
+
+      {
+        titre: "Mesurer et comprendre",
+        chapeau: "Le différenciateur du produit : on ne voit pas seulement ce qui est allumé, on voit ce que ça consomme — maintenant, et depuis un an.",
+        fiches: [
+          {
+            ico: "ampere",
+            titre: "Le courant, sortie par sortie",
+            texte: "Chaque canal mesure son propre ampérage, en continu. C'est ce qu'aucun tableau à fusibles ne sait montrer.",
+            exemple: " le frigo tire 3,2 A quand son compresseur tourne et 0 A entre deux cycles : on le voit sur la tuile.",
+            ou: ["carte", "app", "Home Assistant"]
+          },
+          {
+            ico: "somme",
+            titre: "Le courant total",
+            texte: "La somme des huit sorties d'une carte, et, dans l'app, le cumul de toutes les cartes de l'installation.",
+            exemple: " avant de lancer le chauffe-eau, on regarde ce que le van consomme déjà.",
+            ou: ["carte", "app", "Home Assistant"]
+          },
+          {
+            ico: "tension",
+            titre: "La tension du bus",
+            texte: "La tension d'alimentation de la carte, mesurée en permanence. C'est elle qui commande les protections de batterie.",
+            exemple: " 12,1 V au réveil : la nuit a coûté plus cher que prévu.",
+            ou: ["carte", "app", "Home Assistant"]
+          },
+          {
+            ico: "thermometre",
+            titre: "La température de la carte",
+            texte: "Un capteur sur la carte donne sa température, et sert aussi de déclencheur à la protection thermique.",
+            exemple: " une carte posée derrière une cloison mal ventilée monte à 60 °C en plein soleil : cela se lit avant que ça coupe.",
+            ou: ["carte", "app", "Home Assistant"]
+          },
+          {
+            ico: "filet",
+            titre: "Le filet de courant",
+            texte: "Sous chaque tuile de sortie, un trait dont la longueur suit l'ampérage mesuré. D'un coup d'œil sur une page, on voit ce qui consomme, pas seulement ce qui est allumé.",
+            exemple: " deux plafonniers allumés, un seul consomme : l'autre a un contact coupé.",
+            ou: ["app"]
+          },
+          {
+            ico: "archive",
+            titre: "Douze mois d'historique dans la carte",
+            texte: "La carte tient elle-même l'historique de ses mesures, par tranches de quinze minutes, d'heure, de jour, de semaine et de 28 jours. Aucun serveur, aucun abonnement, et l'app n'a même pas besoin d'être ouverte.",
+            exemple: " trois semaines sans toucher au van : tout l'historique se rattrape en quelques secondes à l'ouverture de l'app.",
+            ou: ["carte", "app"]
+          },
+          {
+            ico: "barres",
+            titre: "L'écran Énergie",
+            texte: "La consommation de toute l'installation sur 24 heures, 7 jours, 4 semaines ou 12 mois, répartie par sortie. On y choisit une durée, jamais un réglage technique.",
+            exemple: " sur quatre semaines, le frigo représente la moitié de la consommation : on sait où chercher des économies.",
+            ou: ["app"]
+          },
+          {
+            ico: "jalon",
+            titre: "Les événements posés sur la courbe",
+            texte: "Coupures de batterie, délestages, surintensités apparaissent à leur place sur la courbe de consommation.",
+            exemple: " le pic de 3 h du matin s'explique quand la coupure batterie apparaît juste après.",
+            ou: ["app"]
+          },
+          {
+            ico: "filigrane",
+            titre: "Sept jours en filigrane sur la tuile",
+            texte: "Chaque tuile de sortie porte la forme de sa consommation des sept derniers jours, en arrière-plan. Elle dit un usage — régulier, en pointe, absent — sans qu'on ouvre un écran.",
+            exemple: " la tuile du chauffage montre deux pics par jour : matin et soir, comme prévu.",
+            ou: ["app"]
+          },
+          {
+            ico: "hachure",
+            titre: "Une mesure incertaine se voit",
+            texte: "Une période pendant laquelle la carte était éteinte est hachurée, jamais pleine. Une consommation basse parce que rien ne mesurait ne se lit pas comme une économie.",
+            exemple: " la semaine où le van est resté au garage, coupe-batterie ouvert, apparaît hachurée.",
+            ou: ["app"]
+          },
+          {
+            ico: "horlogeSync",
+            titre: "L'heure remise sans réseau",
+            texte: "Une carte démarre sans savoir la date. La première source qui parle — le téléphone par Bluetooth, ou le Wi-Fi — recale l'historique sans perdre les mesures déjà accumulées.",
+            exemple: " une carte rebranchée après l'hiver retrouve l'heure dès qu'on ouvre l'app à côté.",
+            ou: ["carte", "app"]
+          },
+          {
+            ico: "effacer",
+            titre: "Effacer l'historique",
+            texte: "Tout l'historique d'une carte peut être remis à zéro d'un geste, depuis l'app.",
+            exemple: " on repart d'une page blanche après avoir refait entièrement le câblage de la cellule.",
+            ou: ["app"]
+          }
+        ]
+      },
+
+      {
+        titre: "Protéger l'installation",
+        chapeau: "La sécurité en cascade : le composant coupe, la carte coupe, le réglage coupe. Rien ne dépend du téléphone.",
+        fiches: [
+          {
+            ico: "bouclierEclair",
+            titre: "Surintensité par sortie",
+            texte: "Chaque sortie a son seuil de courant et son délai de tolérance. Au-delà, elle est coupée et le reste : c'est le rallumage qui vaut acquittement.",
+            exemple: " une prise 12 V en court-circuit coupe seule, sans faire fondre le fusible ni tomber la carte entière.",
+            ou: ["carte", "app", "Home Assistant"]
+          },
+          {
+            ico: "fusible",
+            titre: "Deux fusibles ATO par sortie",
+            texte: "Chaque sortie est protégée par deux fusibles automobiles classiques en parallèle, remplaçables partout dans le monde sans outil.",
+            exemple: " un fusible se change à une station-service, pas chez un revendeur spécialisé.",
+            ou: ["matériel"]
+          },
+          {
+            ico: "thermoCoupe",
+            titre: "Coupure thermique matérielle",
+            texte: "Au-delà d'un seuil réglable, le capteur de température coupe les sorties par voie matérielle, sans passer par le logiciel, et les rétablit en dessous du seuil de reprise.",
+            exemple: " la carte se protège même si le firmware est planté ou en cours de mise à jour.",
+            ou: ["matériel", "carte", "app"]
+          },
+          {
+            ico: "batterie",
+            titre: "Coupure générale de batterie",
+            texte: "Sous une tension réglable, maintenue pendant une temporisation, tout s'éteint et rien ne peut être rallumé tant que la tension n'est pas remontée. Des préréglages existent par chimie de batterie, plomb ou lithium.",
+            exemple: " la batterie de service ne descend jamais assez bas pour être abîmée, même si on oublie une lampe allumée trois jours.",
+            ou: ["carte", "app", "Home Assistant"]
+          },
+          {
+            ico: "cascade",
+            titre: "Délestage en cascade",
+            texte: "Chaque sortie peut recevoir son propre seuil de tension. En échelonnant les seuils, le confort tombe d'abord et le vital en dernier. Un seuil à zéro veut dire « ne jamais délester ce canal ».",
+            exemple: " à 12,0 V l'éclairage extérieur s'éteint, à 11,8 V le chauffe-eau, et le frigo tient jusqu'à la coupure générale.",
+            ou: ["carte", "app", "Home Assistant"]
+          },
+          {
+            ico: "rearmer",
+            titre: "Réarmement manuel",
+            texte: "Une sortie délestée ou disjonctée ne se rallume jamais toute seule, même quand la tension remonte. C'est un choix : une sortie qui se rallume sans qu'on le sache est une surprise, pas un service.",
+            exemple: " le treuil coupé pendant la nuit ne repart pas seul au lever du soleil.",
+            ou: ["carte"]
+          },
+          {
+            ico: "verrou",
+            titre: "Verrouillage d'une sortie",
+            texte: "Une entrée peut interdire l'allumage de certaines sorties tant qu'une condition tient. Un verrouillage ne commande rien : ce qui est déjà allumé le reste, et l'extinction reste toujours permise.",
+            exemple: " contact moteur coupé, la prise du frigo de soute refuse de s'allumer.",
+            ou: ["carte", "app", { mot: "à éprouver", neuf: true }]
+          },
+          {
+            ico: "bouclierOk",
+            titre: "Protections du composant de puissance",
+            texte: "Chaque sortie s'appuie sur un composant intelligent qui se protège lui-même : limitation de courant, coupure thermique, et une diode de roue libre dimensionnée pour les charges inductives.",
+            exemple: " une électrovanne coupée brutalement ne renvoie pas sa surtension dans la carte.",
+            ou: ["matériel"]
+          },
+          {
+            ico: "bouee",
+            titre: "Le filet de dernier recours",
+            texte: "Après plusieurs redémarrages anormaux d'affilée, la carte efface ses réglages et repart propre, plutôt que de rester bloquée dans une boucle. Les coupures normales du coupe-batterie ne comptent pas.",
+            exemple: " une carte qui ne démarrerait plus se remet d'aplomb seule, sans câble USB ni retour en atelier.",
+            ou: ["carte"]
+          },
+          {
+            ico: "clePlate",
+            titre: "Mode sans échec",
+            texte: "Un redémarrage en mode réduit, où seule la mise à jour répond. C'est le chemin de retour si un firmware se comporte mal.",
+            exemple: " on remet la carte dans un état où elle accepte une nouvelle version, sans la démonter.",
+            ou: ["carte", "app", "Home Assistant"]
+          },
+          {
+            ico: "redemarrer",
+            titre: "Redémarrage à distance",
+            texte: "La carte se redémarre depuis l'app ou Home Assistant, sans y accéder physiquement.",
+            exemple: " la carte est derrière un habillage vissé : on la redémarre depuis le téléphone.",
+            ou: ["app", "Home Assistant", "à distance"]
+          },
+          {
+            ico: "usine",
+            titre: "Retour aux réglages d'usine",
+            texte: "Tout ce que la carte a en mémoire — libellés, types, seuils, clé d'appairage — s'efface d'un geste confirmé.",
+            exemple: " on remet une carte d'occasion à neuf avant de la poser dans un autre véhicule.",
+            ou: ["carte", "app", "Home Assistant"]
+          }
+        ]
+      },
+
+      {
+        titre: "Les quatre entrées universelles",
+        chapeau: "Quatre bornes qui savent lire une tension, une sonde de réservoir ou un simple contact — et agir en conséquence.",
+        fiches: [
+          {
+            ico: "prise",
+            titre: "Trois modes de mesure",
+            texte: "Chaque entrée se règle par logiciel en tension de 0 à 30 V, en sonde résistive de 0 à 500 Ω, ou en contact sec. Aucun cavalier, aucune soudure.",
+            exemple: " la même borne lit la tension de la batterie du porteur ce mois-ci, et une sonde de réservoir le mois prochain.",
+            ou: ["carte", "app", "Home Assistant"]
+          },
+          {
+            ico: "goutte",
+            titre: "Neuf types d'entrée",
+            texte: "Eau propre, eaux grises, eaux noires, gaz, tension, contact, température, batterie, générique. Le type décide de la façon dont la mesure s'affiche : jauge, valeur ou état.",
+            exemple: " une entrée réglée sur « Réservoir eau propre » se présente en jauge, pas en nombre d'ohms.",
+            ou: ["carte", "app", "Home Assistant"]
+          },
+          {
+            ico: "courbe",
+            titre: "Courbe de sonde",
+            texte: "Quatre profils du marché — VDO, Europe, US, GM — et deux bornes en ohms modifiables à la main. Les sondes inversées, où le vide mesure plus que le plein, sont prises en charge.",
+            exemple: " la jauge d'eau affiche 0 à 100 % sur une sonde américaine 240-33 Ω sans rien calculer.",
+            ou: ["carte", "app"]
+          },
+          {
+            ico: "rampe",
+            titre: "Courbe de tension",
+            texte: "Pour les capteurs qui rendent une tension : 0-5 V, 0,5-4,5 V, 0-10 V, ou deux bornes libres.",
+            exemple: " un capteur de niveau de gaz en 0,5-4,5 V s'affiche directement en pourcentage.",
+            ou: ["carte", "app"]
+          },
+          {
+            ico: "contact",
+            titre: "Seuil du contact",
+            texte: "La tension au-dessous de laquelle un contact est considéré fermé se règle, pour s'accommoder d'un câblage long ou d'un interrupteur fatigué.",
+            exemple: " un contact de porte relié par huit mètres de fil reste lu correctement.",
+            ou: ["carte", "app"]
+          },
+          {
+            ico: "liaison",
+            titre: "Une entrée pilote des sorties",
+            texte: "Huit actions : suivre un contact, le suivre inversé, basculer à chaque impulsion, allumer au-dessus ou en dessous d'un seuil de tension, ou verrouiller dans les deux sens. Sans téléphone, sans Home Assistant.",
+            exemple: " le contact de porte de soute allume l'éclairage tant que la porte est ouverte.",
+            ou: ["carte", "app"]
+          },
+          {
+            ico: "listeNum",
+            titre: "Plusieurs sorties visées",
+            texte: "Une entrée ne commande pas qu'une sortie : la liste des canaux visés s'écrit en clair, « 1,3,5 ».",
+            exemple: " le contact du marchepied allume à la fois l'éclairage d'entrée et celui du pas de porte.",
+            ou: ["carte", "app"]
+          },
+          {
+            ico: "maintien",
+            titre: "Un poussoir qui grade",
+            texte: "En action « bascule », un contact tenu fait défiler la luminosité des sorties visées, exactement comme un bouton de façade.",
+            exemple: " le poussoir mural près du lit sert d'interrupteur ET de gradateur.",
+            ou: ["carte"]
+          },
+          {
+            ico: "cloche",
+            titre: "Seuils d'alerte par entrée",
+            texte: "Deux seuils par entrée — avertissement et critique — et un sens : alerter quand ça manque, ou quand ça déborde. L'alerte est signalée, jamais agie : aucune sortie n'est coupée.",
+            exemple: " l'eau propre passe sous 20 % : l'app prévient, sans rien éteindre.",
+            ou: ["carte", "app", "Home Assistant"]
+          },
+          {
+            ico: "nom",
+            titre: "Un nom par entrée",
+            texte: "Comme les sorties, chaque entrée porte son libellé, rangé dans la carte.",
+            exemple: " « Réservoir eau propre (AN3) » se lit sans avoir le schéma en tête.",
+            ou: ["carte", "app", "Home Assistant"]
+          }
+        ]
+      },
+
+      {
+        titre: "L'application",
+        chapeau: "Android et iOS. Bluetooth direct : ni Wi-Fi, ni compte, ni abonnement pour piloter son van.",
+        fiches: [
+          {
+            ico: "bluetooth",
+            titre: "Pilotage direct, sans rien d'autre",
+            texte: "L'app parle à la carte en Bluetooth, sans réseau, sans serveur et sans compte. C'est le chemin officiel du produit, et il répond en une demi-seconde.",
+            exemple: " un van en pleine montagne, sans aucune couverture : tout fonctionne.",
+            ou: ["app"]
+          },
+          {
+            ico: "couches",
+            titre: "Plusieurs cartes à la fois",
+            texte: "Un van en porte souvent plus d'une. L'app tient un lien ouvert par carte appairée à portée : une carte hors de portée n'empêche pas les autres de fonctionner.",
+            exemple: " la carte de la soute est hors de portée, la cellule répond quand même.",
+            ou: ["app"]
+          },
+          {
+            ico: "pages",
+            titre: "Des pages composées à la main",
+            texte: "Personne ne raisonne en « carte 2, sortie 5 ». L'utilisateur compose ses pages, avec des sections titrées et des tuiles piochées sur n'importe quelle carte.",
+            exemple: " une page « En partant » qui réunit les cinq choses à couper avant de fermer la porte.",
+            ou: ["app"]
+          },
+          {
+            ico: "redimensionner",
+            titre: "Une grille qui suit l'écran",
+            texte: "Chaque tuile a une taille — petite, moyenne, grande — et le nombre de tuiles par ligne suit la largeur de l'écran. Le même tableau de bord se lit sur un téléphone tenu à une main comme sur une tablette fixée à la cloison.",
+            exemple: " la tablette murale de la cellule affiche la même page que le téléphone, en plus large.",
+            ou: ["app"]
+          },
+          {
+            ico: "van",
+            titre: "Des mesures qui parlent du van entier",
+            texte: "Des tuiles cumulent toute l'installation : courant total, tension la plus basse, carte la plus chaude, défauts attribués à leur carte.",
+            exemple: " une seule tuile en haut de page dit ce que consomme le van, toutes cartes confondues.",
+            ou: ["app"]
+          },
+          {
+            ico: "groupe",
+            titre: "Des boutons d'action qui traversent les cartes",
+            texte: "Une tuile d'action de groupe éteint ce qu'on lui a désigné, où que ce soit dans l'installation.",
+            exemple: " « tout éteindre en partant » ne s'arrête pas à la carte de la cellule.",
+            ou: ["app"]
+          },
+          {
+            ico: "etoile",
+            titre: "Une page toute faite à la première connexion",
+            texte: "À la première carte appairée, une page est proposée d'emblée. Démarrer sur une page vide n'explique à personne à quoi servent les pages.",
+            exemple: " la carte est appairée depuis trente secondes et l'app montre déjà ses huit sorties.",
+            ou: ["app"]
+          },
+          {
+            ico: "oeil",
+            titre: "Une carte absente ne fait pas disparaître ses tuiles",
+            texte: "Hors de portée, les tuiles restent en place, grisées, avec la raison affichée. Une tuile qui s'évapore laisse croire à une page cassée.",
+            exemple: " garé à cinquante mètres, on voit ses pages complètes, simplement inertes.",
+            ou: ["app"]
+          },
+          {
+            ico: "ecrire",
+            titre: "Le raccourci vers la configuration",
+            texte: "Un appui long sur une tuile mène directement aux réglages de cette sortie ou de cette entrée.",
+            exemple: " un libellé mal orthographié se corrige depuis la page, sans traverser quatre écrans.",
+            ou: ["app"]
+          },
+          {
+            ico: "maison",
+            titre: "Plusieurs installations",
+            texte: "Van, camion, bateau, tiny house, maison : l'app tient plusieurs installations, chacune avec ses cartes et ses pages, et on passe de l'une à l'autre.",
+            exemple: " un aménageur garde l'installation de son atelier et celle du van du client sur le même téléphone.",
+            ou: ["app"]
+          },
+          {
+            ico: "palette",
+            titre: "Thème et langue",
+            texte: "Clair, sombre ou celui du système ; français ou anglais, avec la langue du téléphone par défaut.",
+            exemple: " en mode sombre, la nuit, l'écran n'éblouit pas dans la cellule.",
+            ou: ["app"]
+          },
+          {
+            ico: "vibration",
+            titre: "Retour haptique",
+            texte: "Une vibration courte confirme une commande, ce qui compte dans un véhicule qui roule ou dans le noir.",
+            exemple: " on sait qu'on a touché l'interrupteur sans regarder l'écran.",
+            ou: ["app"]
+          },
+          {
+            ico: "journal",
+            titre: "Le journal des alertes",
+            texte: "Ce qui s'est passé, dans l'ordre inverse : surintensités, coupures, délestages, liens perdus, seuils d'entrée franchis, mises à jour disponibles. Chaque ligne mène à l'endroit concerné.",
+            exemple: " « Surintensité sur Treuil » d'hier soir s'ouvre directement sur la carte et la sortie en cause.",
+            ou: ["app"]
+          },
+          {
+            ico: "cloche",
+            titre: "Notifications même app fermée",
+            texte: "Les défauts — surintensité, coupure batterie, seuil thermique — arrivent en notification système. Volontairement, rien d'autre : une perte de lien Bluetooth ne réveille personne.",
+            exemple: " la coupure batterie de 4 h du matin est lue au réveil, pas découverte trois jours plus tard.",
+            ou: ["app"]
+          },
+          {
+            ico: "arrierePlan",
+            titre: "Liaison tenue en arrière-plan",
+            texte: "Sur Android, un service garde la liaison vivante quand l'app n'est plus au premier plan. Il n'est armé que si l'on a demandé à être prévenu des défauts.",
+            exemple: " le téléphone est dans la poche pendant la randonnée, la carte continue d'être surveillée.",
+            ou: ["app"]
+          },
+          {
+            ico: "exporter",
+            titre: "Sortir le journal en texte",
+            texte: "Tout le journal se copie en texte lisible, dans la langue de celui qui l'envoie, prêt à coller dans un message.",
+            exemple: " on envoie au support ce qui s'est passé la nuit du 12, sans capture d'écran.",
+            ou: ["app"]
+          },
+          {
+            ico: "insecte",
+            titre: "Signaler un problème",
+            texte: "Un formulaire dans l'app, dans la langue de l'utilisateur, avec capture d'écran facultative. Les plantages remontent aussi tout seuls, sans données personnelles.",
+            exemple: " un testeur décrit en deux lignes ce qui ne va pas, sans quitter l'app.",
+            ou: ["app"]
+          },
+          {
+            ico: "megaphone",
+            titre: "L'app annonce ses propres mises à jour",
+            texte: "Les magasins ne préviennent personne d'une nouvelle version. L'app le fait elle-même et renvoie au magasin ; elle ne s'installe jamais toute seule.",
+            exemple: " un testeur apprend qu'une version corrige son problème, le jour où elle sort.",
+            ou: ["app"]
+          },
+          {
+            ico: "lecture",
+            titre: "Mode démonstration",
+            texte: "L'app complète, branchée sur deux cartes simulées, avec un van crédible : éclairages gradables, pompe, frigo qui tourne, réservoirs dont l'eau propre baisse quand la pompe tourne. Des scénarios provoquent surintensité, coupure batterie, délestage, ouverture de porte, perte de lien.",
+            exemple: " montrer le produit sur un salon, sans carte et sans câble.",
+            ou: ["app"]
+          },
+          {
+            ico: "etabli",
+            titre: "Cartes virtuelles",
+            texte: "Des cartes simulées qui apparaissent dans la recherche normale, s'appairent et se configurent comme du vrai matériel — Bluetooth éteint ou en mode avion — et dont les réglages survivent au redémarrage de l'app.",
+            exemple: " préparer les pages d'un chantier dans le train, sans avoir la carte avec soi.",
+            ou: ["app"]
+          },
+          {
+            ico: "serpent",
+            titre: "Ce qui est en attente se voit",
+            texte: "Un trait lumineux court sur le pourtour d'un élément tant que la carte n'a pas confirmé, ou qu'un réglage saisi n'est pas encore écrit.",
+            exemple: " on sait que l'appui a été pris en compte, même si la carte met deux secondes à répondre.",
+            ou: ["app"]
+          }
+        ]
+      },
+
+      {
+        titre: "Configurer, sauvegarder, remplacer",
+        chapeau: "Tout ce qui se règle se relit, se sauvegarde, se transporte d'une carte à l'autre et se rejoue sur dix vans.",
+        fiches: [
+          {
+            ico: "reglages",
+            titre: "Toute la configuration depuis le téléphone",
+            texte: "Sorties, entrées et carte se configurent entièrement en Bluetooth : libellés, types, seuils, minuteries, appairages, courbes de sonde, actions, protection batterie, seuils thermiques.",
+            exemple: " une carte neuve est entièrement réglée avant même d'être posée dans le van.",
+            ou: ["app"]
+          },
+          {
+            ico: "ecrire",
+            titre: "On saisit, puis on écrit",
+            texte: "Rien ne part à chaque frappe : on remplit, puis on touche « Écrire », et la carte dit si elle accepte. Les champs refusent d'avance les valeurs que le firmware rejetterait.",
+            exemple: " un seuil de 25 A est refusé dans le champ, pas trois secondes plus tard par un message obscur.",
+            ou: ["app"]
+          },
+          {
+            ico: "sablier",
+            titre: "Rien ne se touche avant la réponse de la carte",
+            texte: "Tant que les réglages sont en cours de lecture, les contrôles sont verrouillés. Écrire dans un champ encore vide effacerait le réglage réel.",
+            exemple: " impossible d'écrire un libellé vide par un appui trop rapide à l'ouverture de l'écran.",
+            ou: ["app"]
+          },
+          {
+            ico: "listeEchec",
+            titre: "Ce qui n'a pas été écrit est dit",
+            texte: "Quand une écriture ne passe pas entièrement, la liste de ce qui manque s'affiche en clair — quel réglage, et pourquoi — et le reste se reprend d'un geste.",
+            exemple: " « Pompe à eau · seuil de surintensité, valeur hors des bornes admises » : on sait quoi refaire.",
+            ou: ["app"]
+          },
+          {
+            ico: "fichier",
+            titre: "Exporter et importer la configuration d'une carte",
+            texte: "Tous les réglages d'une carte sortent dans un fichier, et se réécrivent sur une autre carte. Le fichier ne contient jamais de clé d'appairage.",
+            exemple: " un aménageur pose la même configuration sur dix vans sans ressaisir quarante réglages neuf fois.",
+            ou: ["app"]
+          },
+          {
+            ico: "plan",
+            titre: "Modèles d'installation",
+            texte: "Une installation entière — plusieurs cartes, leurs réglages et les pages qui vont avec — s'enregistre en modèle. Un modèle nomme des rôles, « Cellule », « Soute », jamais des cartes précises ; à l'installation, on dit qui tient quel rôle.",
+            exemple: " le modèle « fourgon aménagé L2H2 » se pose sur un van neuf en dix minutes.",
+            ou: ["app"]
+          },
+          {
+            ico: "echange",
+            titre: "Remplacer une carte en panne",
+            texte: "Une carte lâche, on en pose une neuve, et l'app remet la neuve dans l'état exact de l'ancienne : libellés, seuils, entrées, pages, tuiles. Une étape à la fois, avec la progression comptée, et à la fin ce qui ne suit pas est dit en clair.",
+            exemple: " en panne un dimanche, loin de tout : la carte de rechange reprend le van en un quart d'heure.",
+            ou: ["app", { mot: "à éprouver", neuf: true }]
+          },
+          {
+            ico: "photo",
+            titre: "Un cliché daté des réglages",
+            texte: "Une carte en panne ne répond plus : sa configuration doit avoir été copiée pendant qu'elle allait bien. L'app en garde un cliché daté, et sait le rafraîchir à la demande.",
+            exemple: " le cliché du mois dernier permet de reconstituer une carte devenue muette.",
+            ou: ["app"]
+          },
+          {
+            ico: "sauvegarde",
+            titre: "Le rappel de sauvegarde",
+            texte: "Le cliché vit dans le téléphone et meurt avec lui. L'app propose d'en sortir un fichier, à l'ouverture et jamais au milieu d'un réglage.",
+            exemple: " un téléphone perdu ne fait pas perdre la configuration du van.",
+            ou: ["app"]
+          },
+          {
+            ico: "partager",
+            titre: "Exporter et partager ses pages",
+            texte: "La configuration des pages s'exporte en fichier : pour la sauvegarder, ou pour la donner à quelqu'un d'autre. À l'import, l'app propose de faire correspondre les cartes citées aux cartes locales.",
+            exemple: " on envoie ses pages à un ami qui a le même aménagement, et elles marchent chez lui.",
+            ou: ["app"]
+          },
+          {
+            ico: "annuler",
+            titre: "Revenir en arrière après un import",
+            texte: "Une copie des pages est mise de côté à chaque import : si ce n'était pas le bon fichier, on restaure. Le bouton n'apparaît que lorsqu'il y a quelque chose à annuler.",
+            exemple: " l'import a écrasé les pages : deux gestes suffisent à revenir comme avant.",
+            ou: ["app"]
+          },
+          {
+            ico: "cle",
+            titre: "Exporter et importer la clé d'appairage",
+            texte: "La clé d'une carte se relit en hexadécimal et se réinstalle sur un autre téléphone, sans retourner appuyer sur le bouton de la carte.",
+            exemple: " le second téléphone du couple pilote la même carte, sans démonter l'habillage.",
+            ou: ["app"]
+          }
+        ]
+      },
+
+      {
+        titre: "Se connecter",
+        chapeau: "Bluetooth d'abord, toujours. Le Wi-Fi et Internet ne sont que des chemins de plus, et ils ne s'ouvrent que si on le demande.",
+        fiches: [
+          {
+            ico: "empreinte",
+            titre: "Appairage par un appui physique",
+            texte: "Pour appairer une carte, il faut appuyer trois secondes sur son bouton : elle ouvre alors une fenêtre de trente secondes pendant laquelle elle délivre sa clé. Être à portée ne suffit pas, il faut être devant.",
+            exemple: " un voisin ne peut pas adopter votre carte depuis le camping-car d'à côté.",
+            ou: ["carte", "app"]
+          },
+          {
+            ico: "verrou",
+            titre: "Chaque commande est signée",
+            texte: "Toutes les commandes sont authentifiées par une signature calculée avec la clé d'appairage. La carte accepte plusieurs clients en même temps, chacun avec sa propre session.",
+            exemple: " deux téléphones et une tablette pilotent la même carte, chacun authentifié.",
+            ou: ["carte", "app"]
+          },
+          {
+            ico: "reconnexion",
+            titre: "Reconnexion automatique",
+            texte: "La clé est gardée dans le téléphone, indexée sur le nom de la carte. On revient à portée, le lien se rétablit seul.",
+            exemple: " on remonte dans le van après une course : les pages sont vivantes avant même d'avoir posé les sacs.",
+            ou: ["app"]
+          },
+          {
+            ico: "wifi",
+            titre: "Poser le Wi-Fi depuis l'app",
+            texte: "Le réseau Wi-Fi de la carte se saisit en Bluetooth, depuis l'app. Rien n'est enregistré tant que la connexion n'a pas réussi : une carte ne redémarre jamais sur un réseau injoignable.",
+            exemple: " au parking d'un camping, la carte rejoint le Wi-Fi du site en deux minutes.",
+            ou: ["app"]
+          },
+          {
+            ico: "nuageCadenas",
+            titre: "Accès distant chiffré de bout en bout",
+            texte: "Quand elle a du Wi-Fi, la carte publie son état sur un serveur, et l'app lui envoie des commandes depuis n'importe où. Tout est chiffré avec la clé d'appairage : le serveur ne peut ni lire l'installation, ni la piloter.",
+            exemple: " on vérifie depuis le bureau que le chauffage du van tourne avant le départ du week-end.",
+            ou: ["carte", "app", "à distance"]
+          },
+          {
+            ico: "badgeCompte",
+            titre: "Aucun compte à créer",
+            texte: "L'accès au serveur se déduit du nom de la carte. Rien à saisir, rien à retenir, rien à re-synchroniser — et rien à perdre.",
+            exemple: " l'accès distant s'arme d'un interrupteur, sans formulaire d'inscription.",
+            ou: ["carte", "app"]
+          },
+          {
+            ico: "deuxInter",
+            titre: "Deux autorisations, séparées",
+            texte: "La carte distingue « on peut me lire à distance » de « on peut me commander à distance ». Les deux sont refusées par défaut, et se règlent indépendamment.",
+            exemple: " on autorise la lecture pour surveiller les réservoirs, sans ouvrir la commande.",
+            ou: ["carte", "app"]
+          },
+          {
+            ico: "itineraire",
+            titre: "Le Bluetooth d'abord, le distant en repli",
+            texte: "L'app prend toujours le chemin direct quand il existe. Le lien distant ne sert que lorsqu'on est hors de portée, et l'app le dit clairement quand elle travaille de loin.",
+            exemple: " à un mètre de la carte, la commande part en Bluetooth même si l'accès distant est armé.",
+            ou: ["app"]
+          },
+          {
+            ico: "pastille",
+            titre: "Ce qui ne passe pas à distance est marqué",
+            texte: "À distance, tout ne se vaut plus : allumer une sortie passe, régler un seuil ne passe pas. Chaque élément concerné porte sa propre marque, plutôt qu'un voyant global qui ne dirait pas si CE bouton marche.",
+            exemple: " la tuile de réglage est marquée « indisponible à distance » avant qu'on appuie dessus.",
+            ou: ["app", "à distance"]
+          },
+          {
+            ico: "interdit",
+            titre: "Ce qui ne se fait jamais de loin",
+            texte: "Les réglages qui couperaient le lien — réseau, nom de la carte, remise à zéro, mise à jour, lecture de la clé — sont fermés à distance, par construction.",
+            exemple: " personne ne peut couper le Wi-Fi d'une carte depuis l'autre bout du pays.",
+            ou: ["carte"]
+          },
+          {
+            ico: "navigateur",
+            titre: "Une console dans le navigateur",
+            texte: "Une console Web Bluetooth permet de piloter et de configurer une carte depuis un ordinateur, sans rien installer.",
+            exemple: " un dépannage se fait depuis le portable de l'atelier, sans téléphone.",
+            ou: ["console web"]
+          }
+        ]
+      },
+
+      {
+        titre: "S'intégrer au reste du van",
+        chapeau: "TinyRail n'est pas une application de plus : la carte s'affiche là où le propriétaire regarde déjà.",
+        fiches: [
+          {
+            ico: "maison",
+            titre: "Home Assistant, sans passerelle",
+            texte: "La carte est découverte toute seule sur le réseau local et apparaît dans Home Assistant avec toutes ses entités — commandes, mesures, réglages, diagnostics. Ni intégration tierce, ni cloud, ni abonnement.",
+            exemple: " une automatisation coupe l'eau quand personne n'est à bord.",
+            ou: ["carte", "Home Assistant"]
+          },
+          {
+            ico: "boites",
+            titre: "Un appareil par sortie et par entrée",
+            texte: "Chaque sortie et chaque entrée forme son propre appareil dans Home Assistant, dont le nom suit le libellé donné à la carte. Les réglages de la carte sont eux-mêmes rangés par sujet : batterie, thermique, paires, maintenance, réseau.",
+            exemple: " « Frigo » et ses entités se retrouvent d'un coup d'œil, au lieu d'une liste de quarante lignes.",
+            ou: ["Home Assistant"]
+          },
+          {
+            ico: "domaine",
+            titre: "Le bon type d'entité selon la charge",
+            texte: "Le type de sortie décide de ce que Home Assistant affiche : une lumière avec son gradateur, un ventilateur avec sa vitesse, ou un simple interrupteur. Le changement prend effet tout de suite.",
+            exemple: " « Ventilation de toit » apparaît comme un ventilateur, avec sa vitesse en pourcentage.",
+            ou: ["Home Assistant"]
+          },
+          {
+            ico: "oeil",
+            titre: "Seules les mesures qui ont un sens sont publiées",
+            texte: "Une entrée n'annonce que les grandeurs de son mode : une tension en mode tension, une résistance et un niveau en mode sonde, un état en contact sec. Les autres ne sont pas annoncées du tout.",
+            exemple: " la liste ne se remplit plus d'entités « inconnu » qu'on finit par ignorer.",
+            ou: ["Home Assistant"]
+          },
+          {
+            ico: "ecran",
+            titre: "Sur l'écran d'un Cerbo GX",
+            texte: "Un van équipé Victron a déjà son écran au mur. La carte sait publier vers le broker local du Cerbo, dans un format plat que tout l'écosystème Victron sait lire.",
+            exemple: " les sorties du TinyRail apparaissent à côté des batteries et du convertisseur, sur l'écran existant.",
+            ou: ["carte", { mot: "à éprouver", neuf: true }]
+          },
+          {
+            ico: "domaine",
+            titre: "Vannes, serrures, volets, sirènes",
+            texte: "Ces charges sont décrites par leur type sur la carte et se promeuvent, côté Home Assistant, vers l'entité correspondante.",
+            exemple: " l'électrovanne de gaz apparaît comme une vanne, avec l'icône qui va avec.",
+            ou: ["Home Assistant"]
+          },
+          {
+            ico: "bus",
+            titre: "Un seul bus interne, cinq périphériques",
+            texte: "Toute l'intelligence de la carte passe par deux fils : commande des sorties, mesure des courants, lecture des entrées, boutons de façade et température.",
+            exemple: " un seul bus à diagnostiquer, et deux broches du processeur mobilisées.",
+            ou: ["matériel"]
+          }
+        ]
+      },
+
+      {
+        titre: "Mettre à jour",
+        chapeau: "Trois chemins vers une carte : le téléphone, le Wi-Fi, le câble. Aucun ne demande de démonter l'habillage.",
+        fiches: [
+          {
+            ico: "bluetooth",
+            titre: "Mise à jour par Bluetooth",
+            texte: "Le téléphone télécharge la nouvelle version et la transmet à la carte en Bluetooth : c'est le téléphone qui a du réseau, pas la carte. Environ deux minutes, avec une progression donnée par la carte elle-même.",
+            exemple: " une carte sans Wi-Fi, au fond d'une soute, reçoit sa mise à jour depuis le téléphone.",
+            ou: ["app"]
+          },
+          {
+            ico: "nuageMaj",
+            titre: "Mise à jour par Wi-Fi",
+            texte: "Quand elle est sur un réseau, la carte vérifie d'elle-même toutes les six heures s'il existe une version plus récente, et l'annonce dans Home Assistant.",
+            exemple: " le panneau « Mises à jour » de Home Assistant propose la nouvelle version, on clique.",
+            ou: ["carte", "Home Assistant"]
+          },
+          {
+            ico: "usb",
+            titre: "Installation par le navigateur",
+            texte: "Une carte neuve ou muette s'installe depuis une page web, en USB-C, sans rien installer sur l'ordinateur.",
+            exemple: " une carte reçue non programmée est opérationnelle en trois minutes.",
+            ou: ["console web"]
+          },
+          {
+            ico: "insigne",
+            titre: "Une pastille partout où l'on regarde une carte",
+            texte: "Quand une version plus récente existe, l'app le dit à l'endroit où l'on regarde la carte — aux couleurs de la marque, jamais à celles d'un défaut. Un firmware disponible n'est pas une panne.",
+            exemple: " on voit qu'une carte est en retard sans ouvrir l'écran de mise à jour.",
+            ou: ["app"]
+          },
+          {
+            ico: "doubleCheck",
+            titre: "Une mise à jour réussie se prouve deux fois",
+            texte: "L'empreinte de l'image est vérifiée avant que le premier octet ne parte, et « réussi » demande à la fois l'acceptation de la carte et son retour en annonçant une autre version.",
+            exemple: " un téléchargement tronqué est arrêté avant deux minutes de transfert inutile.",
+            ou: ["app"]
+          },
+          {
+            ico: "etabli",
+            titre: "Une piste bêta",
+            texte: "L'app peut suivre les versions de firmware en préparation, pour ceux qui veulent éprouver ce qui vient.",
+            exemple: " un testeur passe sa carte d'essai en bêta, et laisse celle de la cellule en stable.",
+            ou: ["app"]
+          }
+        ]
+      },
+
+      {
+        titre: "La carte",
+        chapeau: "Ce qu'il y a dans la boîte, et ce que cela impose au reste.",
+        fiches: [
+          {
+            ico: "puce",
+            titre: "Huit canaux commutés côté plus",
+            texte: "Chaque sortie a son propre composant de puissance intelligent, capable de 10 A continus, avec diagnostic de courant intégré.",
+            exemple: " on remplace huit relais, huit porte-fusibles et leur câblage par une seule carte.",
+            ou: ["matériel"]
+          },
+          {
+            ico: "alim",
+            titre: "De 9 à 30 volts",
+            texte: "La même carte fonctionne sur un réseau 12 V et sur un réseau 24 V, sans variante ni cavalier.",
+            exemple: " un poids lourd en 24 V et un van en 12 V prennent la même référence.",
+            ou: ["matériel"]
+          },
+          {
+            ico: "bornier",
+            titre: "Borniers au pas de 5 mm",
+            texte: "Les huit sorties sortent sur deux borniers débrochables, et une barrette d'alimentation réunit les entrées de puissance.",
+            exemple: " la carte se dépose sans défaire un seul fil, en débrochant les borniers.",
+            ou: ["matériel"]
+          },
+          {
+            ico: "usb",
+            titre: "USB-C intégré",
+            texte: "Le connecteur est sur la carte : première installation, journal de mise au point et récupération passent par un câble ordinaire.",
+            exemple: " pas d'adaptateur, pas de programmateur : le même câble que le téléphone.",
+            ou: ["matériel"]
+          },
+          {
+            ico: "bouton",
+            titre: "Le bouton d'appairage",
+            texte: "Un bouton sur la carte ouvre l'appairage par un appui de trois secondes, et efface la clé par un appui de dix secondes. C'est le seul geste qui ne peut pas se faire à distance, et c'est voulu.",
+            exemple: " on retire l'accès de tous les téléphones en gardant le doigt appuyé dix secondes.",
+            ou: ["matériel"]
+          },
+          {
+            ico: "couches",
+            titre: "Plusieurs cartes chaînées",
+            texte: "Une installation peut en compter plusieurs, réparties dans le véhicule, et l'application les tient toutes ensemble.",
+            exemple: " une carte en cellule et une en soute, vues comme un seul tableau de bord.",
+            ou: ["matériel", "app"]
+          }
+        ]
+      }
+    ],
+
+    note: {
+      titre: "Ce catalogue est tenu à jour avec le produit.",
+      texte: "Une fonction qui sort chez un utilisateur s'y ajoute le jour où elle est publiée, en français et en anglais, avec son exemple d'usage. Une fonction absente d'ici n'existe pour personne : c'est la seule discipline qui garde cette page vraie, et c'est aussi ce qui la rend utilisable pour préparer une démonstration, écrire une fiche produit ou répondre à un aménageur."
+    },
+
+    pied: "TinyRail · Xptrucks. Ce catalogue décrit le produit tel qu'il est, pas ce qui est prévu. Les protocoles d'essai manuels, eux, vivent sur la page d'accueil de ce site."
+  },
+
+  en: {
+    titre: "What TinyRail can do",
+    lede: "The complete catalogue of the product's features: the board, its firmware and the app. Each card says what the feature does, and gives a case where you would use it. Search by keyword, or wander by theme.",
+
+    repere: {
+      titre: "How to read this catalogue",
+      texte: [
+        "Features are grouped by <b>theme</b>, from the most common gesture — switching an output on — to the rarest — replacing a failed board. The shortcuts under the search box jump straight to a theme.",
+        "Under each card, one or two labels say <b>where</b> the feature lives: on the <b>board</b> (it works with no phone at all), in the <b>app</b>, in <b>Home Assistant</b>, or <b>remotely</b> over the Internet.",
+        "A few cards carry “<b>to be trialled</b>”: the feature is written and covered by automated tests, but has not yet run on real hardware. That is information, not a commercial caveat — and it goes away the day the trial is run."
+      ]
+    },
+
+    themes: [
+
+      {
+        titre: "Switching outputs",
+        chapeau: "Eight 10 A outputs, driven by finger, button, voice or input. Everything starts here.",
+        fiches: [
+          {
+            ico: "eclair",
+            titre: "Eight 10 A outputs",
+            texte: "Eight independent circuits, each switched by its own power device, from 9 to 30 V DC. On, off, and dimming for the loads that take it.",
+            exemple: " the six lights of a camper cabin, the water pump and the fridge on one board, each on its own switch.",
+            ou: ["board"]
+          },
+          {
+            ico: "gradation",
+            titre: "Dimming from 0 to 100 %",
+            texte: "Outputs feeding a dimmable load take a slider, with 1 kHz switching suited to van LEDs.",
+            exemple: " the ceiling light at 20 % to read in the evening without waking the other bunk.",
+            ou: ["board", "app", "Home Assistant"]
+          },
+          {
+            ico: "etiquette",
+            titre: "A load type per output",
+            texte: "Fifteen types — interior or exterior light, pump, fan, fridge, heater, water heater, socket, motor, compressor, antenna, siren, valve, on/off light, generic. The type decides the icon, the slider, and what Home Assistant shows.",
+            exemple: " an output set to “Fridge” shows up as a switch, never as a dimmer.",
+            ou: ["board", "app", "Home Assistant"]
+          },
+          {
+            ico: "plafond",
+            titre: "Non-dimmable loads are protected",
+            texte: "On a pump, a compressor or a heating element, an intermediate setpoint is pulled back to 100 % by the board itself. The guard is single: it covers the app, Home Assistant, the front panel buttons and the inputs.",
+            exemple: " a slider left at 40 % by mistake on the water pump does not make it buzz: it runs at full.",
+            ou: ["board"]
+          },
+          {
+            ico: "bouton",
+            titre: "Eight front panel buttons",
+            texte: "One button per output, right on the board. They work with no phone, no network and no Home Assistant.",
+            exemple: " the phone battery is flat: the light still comes on, at the button.",
+            ou: ["hardware"]
+          },
+          {
+            ico: "maintien",
+            titre: "Short press, long press",
+            texte: "A short press toggles the output. A held press sweeps brightness back and forth, never passing through off. The same gesture works on a push button wired to an input.",
+            exemple: " keep your finger down until the brightness is right, then let go.",
+            ou: ["board", "hardware"]
+          },
+          {
+            ico: "reglages",
+            titre: "Adjustable dimming step",
+            texte: "How far brightness moves at each notch of a held press: 5, 10, 20 or 25 %, for the whole board. A full sweep always takes about 2.8 seconds.",
+            exemple: " a 5 % step to fine-tune the mood lighting of a cabin ceiling.",
+            ou: ["board", "app"]
+          },
+          {
+            ico: "eteindre",
+            titre: "All off, all on",
+            texte: "One gesture cuts or restores the eight outputs of a board. In the app, the gesture crosses every board of the installation.",
+            exemple: " “all off” as you close the van door, without walking through the pages.",
+            ou: ["app", "Home Assistant"]
+          },
+          {
+            ico: "groupe",
+            titre: "Group switch",
+            texte: "Each sub-group of a page carries its own switch, with the count of what is on (“2/3”). If anything is still on, it switches off; otherwise it switches on. It crosses boards.",
+            exemple: " the “Lighting” group kills all three ceiling lights at once, whether they sit on one board or two.",
+            ou: ["app"]
+          },
+          {
+            ico: "exclusif",
+            titre: "Exclusive pairs",
+            texte: "Two neighbouring outputs that can never be on together: switching one on cuts the other, break before make.",
+            exemple: " the two directions of a drop-down bed actuator, which must never be driven at once.",
+            ou: ["board", "app", "Home Assistant"]
+          },
+          {
+            ico: "inclusif",
+            titre: "Synchronised pairs",
+            texte: "Two outputs that follow each other: driving one drives the other, the same way.",
+            exemple: " two LED strips on two circuits, driven as a single light.",
+            ou: ["board", "app", "Home Assistant"]
+          },
+          {
+            ico: "chrono",
+            titre: "Automatic switch-off",
+            texte: "An output can switch itself off after an adjustable delay, from one second to one hour.",
+            exemple: " the garage light goes out on its own five minutes after being switched on.",
+            ou: ["board", "app", "Home Assistant"]
+          },
+          {
+            ico: "demarrage",
+            titre: "State at power-up",
+            texte: "What each output becomes when the board is powered: off, on, or the way it was before the cut — dimming level included.",
+            exemple: " after the battery isolator is switched back on, the fridge restarts by itself and the lights stay off.",
+            ou: ["board", "app", "Home Assistant"]
+          },
+          {
+            ico: "nom",
+            titre: "A name per output",
+            texte: "Each output carries its label, stored in the board and not in the phone. A second phone finds the same names without copying anything.",
+            exemple: " “Water pump” rather than “Channel 3”, everywhere: app, Home Assistant, alert log.",
+            ou: ["board", "app", "Home Assistant"]
+          },
+          {
+            ico: "carteNom",
+            titre: "A name for the board",
+            texte: "The name the owner gives the board — “Cabin”, “Garage”, “Boat” — is stored in the board itself.",
+            exemple: " two boards in a van, named “Cabin” and “Garage”, recognised as such on any phone.",
+            ou: ["board", "app", "Home Assistant"]
+          },
+          {
+            ico: "led",
+            titre: "A red indicator per output",
+            texte: "One LED per channel, on the front, driven by the output voltage itself rather than by software. It says what the output really does.",
+            exemple: " a blown fuse shows at a glance: the command is given, the indicator stays dark.",
+            ou: ["hardware"]
+          }
+        ]
+      },
+
+      {
+        titre: "Measuring and understanding",
+        chapeau: "The product's differentiator: you do not just see what is on, you see what it draws — now, and over the past year.",
+        fiches: [
+          {
+            ico: "ampere",
+            titre: "Current, output by output",
+            texte: "Every channel measures its own amperage, continuously. No fuse box can show that.",
+            exemple: " the fridge draws 3.2 A while its compressor runs and 0 A between cycles: you see it on the tile.",
+            ou: ["board", "app", "Home Assistant"]
+          },
+          {
+            ico: "somme",
+            titre: "Total current",
+            texte: "The sum of a board's eight outputs, and, in the app, the total across every board of the installation.",
+            exemple: " before running the water heater, you look at what the van already draws.",
+            ou: ["board", "app", "Home Assistant"]
+          },
+          {
+            ico: "tension",
+            titre: "Bus voltage",
+            texte: "The board's supply voltage, measured continuously. It is what drives the battery protections.",
+            exemple: " 12.1 V on waking: the night cost more than expected.",
+            ou: ["board", "app", "Home Assistant"]
+          },
+          {
+            ico: "thermometre",
+            titre: "Board temperature",
+            texte: "An on-board sensor gives its temperature, and also triggers the thermal protection.",
+            exemple: " a board fitted behind a poorly ventilated panel reaches 60 °C in full sun: you see it before it cuts.",
+            ou: ["board", "app", "Home Assistant"]
+          },
+          {
+            ico: "filet",
+            titre: "The current thread",
+            texte: "Under every output tile, a line whose length follows the measured amperage. At a glance on a page, you see what draws, not merely what is on.",
+            exemple: " two ceiling lights on, only one drawing: the other has a broken contact.",
+            ou: ["app"]
+          },
+          {
+            ico: "archive",
+            titre: "Twelve months of history in the board",
+            texte: "The board keeps the history of its own measurements, in slices of fifteen minutes, hours, days, weeks and 28 days. No server, no subscription, and the app does not even have to be open.",
+            exemple: " three weeks away from the van: the whole history catches up in seconds when you open the app.",
+            ou: ["board", "app"]
+          },
+          {
+            ico: "barres",
+            titre: "The Energy screen",
+            texte: "Consumption of the whole installation over 24 hours, 7 days, 4 weeks or 12 months, broken down by output. You pick a duration, never a technical setting.",
+            exemple: " over four weeks, the fridge accounts for half the consumption: you know where to look for savings.",
+            ou: ["app"]
+          },
+          {
+            ico: "jalon",
+            titre: "Events placed on the curve",
+            texte: "Battery cutoffs, load shedding and overcurrents appear where they happened on the consumption curve.",
+            exemple: " the 3 a.m. spike makes sense once the battery cutoff shows up right after it.",
+            ou: ["app"]
+          },
+          {
+            ico: "filigrane",
+            titre: "Seven days as a watermark",
+            texte: "Each output tile carries the shape of its last seven days of consumption in the background. It tells a pattern — steady, peaky, absent — without opening a screen.",
+            exemple: " the heater tile shows two peaks a day: morning and evening, as expected.",
+            ou: ["app"]
+          },
+          {
+            ico: "hachure",
+            titre: "An uncertain measurement shows as such",
+            texte: "A period during which the board was off is hatched, never solid. Low consumption because nothing was measuring must not read as a saving.",
+            exemple: " the week the van sat in the garage with the isolator open appears hatched.",
+            ou: ["app"]
+          },
+          {
+            ico: "horlogeSync",
+            titre: "The clock set without a network",
+            texte: "A board starts with no idea of the date. The first source that speaks — the phone over Bluetooth, or Wi-Fi — realigns the history without losing what was already recorded.",
+            exemple: " a board powered up after winter finds the time as soon as you open the app next to it.",
+            ou: ["board", "app"]
+          },
+          {
+            ico: "effacer",
+            titre: "Clearing the history",
+            texte: "A board's entire history can be wiped in one gesture, from the app.",
+            exemple: " you start from a clean sheet after rewiring the whole cabin.",
+            ou: ["app"]
+          }
+        ]
+      },
+
+      {
+        titre: "Protecting the installation",
+        chapeau: "Safety in cascade: the device cuts, the board cuts, the setting cuts. Nothing depends on the phone.",
+        fiches: [
+          {
+            ico: "bouclierEclair",
+            titre: "Overcurrent per output",
+            texte: "Each output has its own current threshold and tolerance delay. Beyond it, the output is cut and stays cut: switching it back on is the acknowledgement.",
+            exemple: " a shorted 12 V socket cuts on its own, without blowing a fuse or taking the whole board down.",
+            ou: ["board", "app", "Home Assistant"]
+          },
+          {
+            ico: "fusible",
+            titre: "Two ATO fuses per output",
+            texte: "Every output is protected by two ordinary automotive fuses in parallel, replaceable anywhere in the world without a tool.",
+            exemple: " a fuse is changed at a petrol station, not at a specialist dealer.",
+            ou: ["hardware"]
+          },
+          {
+            ico: "thermoCoupe",
+            titre: "Hardware thermal cutoff",
+            texte: "Above an adjustable threshold, the temperature sensor cuts the outputs through hardware, without going through software, and restores them below the recovery threshold.",
+            exemple: " the board protects itself even if the firmware has crashed or is mid-update.",
+            ou: ["hardware", "board", "app"]
+          },
+          {
+            ico: "batterie",
+            titre: "General battery cutoff",
+            texte: "Below an adjustable voltage, held for a delay, everything switches off and nothing can be switched back on until the voltage recovers. Presets exist per battery chemistry, lead or lithium.",
+            exemple: " the service battery never drops low enough to be damaged, even if a light is left on for three days.",
+            ou: ["board", "app", "Home Assistant"]
+          },
+          {
+            ico: "cascade",
+            titre: "Load shedding in cascade",
+            texte: "Each output can get its own voltage threshold. By staggering them, comfort goes first and essentials last. A threshold of zero means “never shed this channel”.",
+            exemple: " at 12.0 V the exterior light goes, at 11.8 V the water heater, and the fridge holds until the general cutoff.",
+            ou: ["board", "app", "Home Assistant"]
+          },
+          {
+            ico: "rearmer",
+            titre: "Manual re-arming",
+            texte: "A shed or tripped output never comes back on its own, even when the voltage recovers. That is a choice: an output coming back without anyone knowing is a surprise, not a service.",
+            exemple: " the winch cut during the night does not restart by itself at sunrise.",
+            ou: ["board"]
+          },
+          {
+            ico: "verrou",
+            titre: "Locking an output",
+            texte: "An input can forbid switching certain outputs on while a condition holds. A lock commands nothing: what is already on stays on, and switching off is always allowed.",
+            exemple: " with the ignition off, the garage fridge socket refuses to switch on.",
+            ou: ["board", "app", { mot: "to be trialled", neuf: true }]
+          },
+          {
+            ico: "bouclierOk",
+            titre: "Power device protections",
+            texte: "Each output relies on a smart device that protects itself: current limiting, thermal shutdown, and a freewheel diode sized for inductive loads.",
+            exemple: " a solenoid valve cut abruptly does not push its surge back into the board.",
+            ou: ["hardware"]
+          },
+          {
+            ico: "bouee",
+            titre: "The last-resort net",
+            texte: "After several abnormal restarts in a row, the board erases its settings and starts clean rather than sitting in a loop. Normal battery isolator cuts do not count.",
+            exemple: " a board that would no longer start recovers by itself, with no USB cable and no trip to a workshop.",
+            ou: ["board"]
+          },
+          {
+            ico: "clePlate",
+            titre: "Safe mode",
+            texte: "A restart into a reduced mode where only updating answers. It is the way back in if a firmware misbehaves.",
+            exemple: " you put the board back into a state where it accepts a new version, without removing it.",
+            ou: ["board", "app", "Home Assistant"]
+          },
+          {
+            ico: "redemarrer",
+            titre: "Remote restart",
+            texte: "The board restarts from the app or from Home Assistant, without physical access.",
+            exemple: " the board is behind a screwed-on panel: you restart it from the phone.",
+            ou: ["app", "Home Assistant", "remote"]
+          },
+          {
+            ico: "usine",
+            titre: "Factory reset",
+            texte: "Everything the board holds — labels, types, thresholds, pairing key — is erased in one confirmed gesture.",
+            exemple: " you bring a second-hand board back to new before fitting it in another vehicle.",
+            ou: ["board", "app", "Home Assistant"]
+          }
+        ]
+      },
+
+      {
+        titre: "The four universal inputs",
+        chapeau: "Four terminals that can read a voltage, a tank sender or a plain contact — and act on it.",
+        fiches: [
+          {
+            ico: "prise",
+            titre: "Three measurement modes",
+            texte: "Each input is set in software to voltage from 0 to 30 V, resistive sender from 0 to 500 Ω, or dry contact. No jumper, no soldering.",
+            exemple: " the same terminal reads the starter battery voltage this month, and a tank sender next month.",
+            ou: ["board", "app", "Home Assistant"]
+          },
+          {
+            ico: "goutte",
+            titre: "Nine input types",
+            texte: "Fresh water, grey water, black water, gas, voltage, contact, temperature, battery, generic. The type decides how the measurement is shown: gauge, value or state.",
+            exemple: " an input set to “Fresh water tank” shows as a gauge, not as a number of ohms.",
+            ou: ["board", "app", "Home Assistant"]
+          },
+          {
+            ico: "courbe",
+            titre: "Sender curve",
+            texte: "Four market profiles — VDO, Europe, US, GM — and two resistance bounds you can edit. Inverted senders, where empty reads higher than full, are supported.",
+            exemple: " the water gauge reads 0 to 100 % on a US 240-33 Ω sender with no maths.",
+            ou: ["board", "app"]
+          },
+          {
+            ico: "rampe",
+            titre: "Voltage curve",
+            texte: "For sensors that output a voltage: 0-5 V, 0.5-4.5 V, 0-10 V, or two free bounds.",
+            exemple: " a 0.5-4.5 V gas level sensor reads directly as a percentage.",
+            ou: ["board", "app"]
+          },
+          {
+            ico: "contact",
+            titre: "Contact threshold",
+            texte: "The voltage below which a contact counts as closed is adjustable, to cope with a long cable run or a tired switch.",
+            exemple: " a door contact eight metres away is still read correctly.",
+            ou: ["board", "app"]
+          },
+          {
+            ico: "liaison",
+            titre: "An input drives outputs",
+            texte: "Eight actions: follow a contact, follow it inverted, toggle on each pulse, switch on above or below a voltage threshold, or lock in either direction. No phone, no Home Assistant.",
+            exemple: " the garage door contact lights the bay for as long as the door is open.",
+            ou: ["board", "app"]
+          },
+          {
+            ico: "listeNum",
+            titre: "Several outputs targeted",
+            texte: "An input does not drive one output only: the list of targeted channels is written plainly, “1,3,5”.",
+            exemple: " the step contact lights both the entrance light and the doorway light.",
+            ou: ["board", "app"]
+          },
+          {
+            ico: "maintien",
+            titre: "A push button that dims",
+            texte: "In “toggle” action, a held contact sweeps the brightness of the targeted outputs, exactly like a front panel button.",
+            exemple: " the wall push button by the bed acts as a switch AND as a dimmer.",
+            ou: ["board"]
+          },
+          {
+            ico: "cloche",
+            titre: "Alert thresholds per input",
+            texte: "Two thresholds per input — warning and critical — and a direction: alert when it runs short, or when it overflows. An alert is reported, never acted on: no output is cut.",
+            exemple: " fresh water drops below 20 %: the app warns, without switching anything off.",
+            ou: ["board", "app", "Home Assistant"]
+          },
+          {
+            ico: "nom",
+            titre: "A name per input",
+            texte: "Like outputs, each input carries its label, stored in the board.",
+            exemple: " “Fresh water tank (AN3)” reads without the wiring diagram in mind.",
+            ou: ["board", "app", "Home Assistant"]
+          }
+        ]
+      },
+
+      {
+        titre: "The app",
+        chapeau: "Android and iOS. Direct Bluetooth: no Wi-Fi, no account, no subscription to drive your van.",
+        fiches: [
+          {
+            ico: "bluetooth",
+            titre: "Direct control, nothing else needed",
+            texte: "The app talks to the board over Bluetooth, with no network, no server and no account. It is the product's official path, and it answers in half a second.",
+            exemple: " a van deep in the mountains with no coverage at all: everything works.",
+            ou: ["app"]
+          },
+          {
+            ico: "couches",
+            titre: "Several boards at once",
+            texte: "A van often carries more than one. The app holds one open link per paired board in range: a board out of range does not stop the others working.",
+            exemple: " the garage board is out of range, the cabin still answers.",
+            ou: ["app"]
+          },
+          {
+            ico: "pages",
+            titre: "Pages composed by hand",
+            texte: "Nobody thinks in “board 2, output 5”. The user composes their own pages, with titled sections and tiles taken from any board.",
+            exemple: " a “Leaving” page gathering the five things to cut before shutting the door.",
+            ou: ["app"]
+          },
+          {
+            ico: "redimensionner",
+            titre: "A grid that follows the screen",
+            texte: "Each tile has a size — small, medium, large — and the number of tiles per row follows the screen width. The same dashboard reads on a phone held in one hand and on a tablet fixed to the wall.",
+            exemple: " the cabin wall tablet shows the same page as the phone, only wider.",
+            ou: ["app"]
+          },
+          {
+            ico: "van",
+            titre: "Measurements about the whole van",
+            texte: "Some tiles aggregate the whole installation: total current, lowest voltage, hottest board, faults attributed to their board.",
+            exemple: " a single tile at the top of the page says what the van draws, all boards together.",
+            ou: ["app"]
+          },
+          {
+            ico: "groupe",
+            titre: "Action buttons that cross boards",
+            texte: "A group action tile switches off whatever it was given, wherever it sits in the installation.",
+            exemple: " “all off when leaving” does not stop at the cabin board.",
+            ou: ["app"]
+          },
+          {
+            ico: "etoile",
+            titre: "A ready-made page on first connection",
+            texte: "On the first paired board, a page is offered straight away. Starting on an empty page explains to nobody what pages are for.",
+            exemple: " the board has been paired for thirty seconds and the app already shows its eight outputs.",
+            ou: ["app"]
+          },
+          {
+            ico: "oeil",
+            titre: "An absent board does not erase its tiles",
+            texte: "Out of range, tiles stay in place, greyed, with the reason shown. A tile that evaporates makes the page look broken.",
+            exemple: " parked fifty metres away, you still see your complete pages, simply inert.",
+            ou: ["app"]
+          },
+          {
+            ico: "ecrire",
+            titre: "The shortcut to configuration",
+            texte: "A long press on a tile leads straight to that output's or input's settings.",
+            exemple: " a misspelled label is fixed from the page, without crossing four screens.",
+            ou: ["app"]
+          },
+          {
+            ico: "maison",
+            titre: "Several installations",
+            texte: "Van, truck, boat, tiny house, house: the app holds several installations, each with its boards and pages, and you switch between them.",
+            exemple: " a converter keeps their workshop installation and a customer's van on the same phone.",
+            ou: ["app"]
+          },
+          {
+            ico: "palette",
+            titre: "Theme and language",
+            texte: "Light, dark or the system's; French or English, following the phone by default.",
+            exemple: " in dark mode, at night, the screen does not dazzle the cabin.",
+            ou: ["app"]
+          },
+          {
+            ico: "vibration",
+            titre: "Haptic feedback",
+            texte: "A short vibration confirms a command, which matters in a moving vehicle or in the dark.",
+            exemple: " you know you hit the switch without looking at the screen.",
+            ou: ["app"]
+          },
+          {
+            ico: "journal",
+            titre: "The alert log",
+            texte: "What happened, newest first: overcurrents, cutoffs, shedding, lost links, input thresholds crossed, updates available. Every line leads to the place concerned.",
+            exemple: " last night's “Overcurrent on Winch” opens straight onto the board and output at fault.",
+            ou: ["app"]
+          },
+          {
+            ico: "cloche",
+            titre: "Notifications even with the app closed",
+            texte: "Faults — overcurrent, battery cutoff, thermal threshold — arrive as system notifications. Deliberately nothing else: a lost Bluetooth link wakes nobody.",
+            exemple: " the 4 a.m. battery cutoff is read on waking, not discovered three days later.",
+            ou: ["app"]
+          },
+          {
+            ico: "arrierePlan",
+            titre: "Link held in the background",
+            texte: "On Android, a service keeps the link alive when the app is no longer in the foreground. It is only armed if you asked to be warned about faults.",
+            exemple: " the phone is in a pocket during the hike, the board stays watched.",
+            ou: ["app"]
+          },
+          {
+            ico: "exporter",
+            titre: "Export the log as text",
+            texte: "The whole log copies out as readable text, in the sender's language, ready to paste into a message.",
+            exemple: " you send support what happened on the night of the 12th, without screenshots.",
+            ou: ["app"]
+          },
+          {
+            ico: "insecte",
+            titre: "Report a problem",
+            texte: "A form inside the app, in the user's language, with an optional screenshot. Crashes are reported on their own too, with no personal data.",
+            exemple: " a tester describes what went wrong in two lines, without leaving the app.",
+            ou: ["app"]
+          },
+          {
+            ico: "megaphone",
+            titre: "The app announces its own updates",
+            texte: "Stores notify nobody of a new version. The app does it itself and points at the store; it never installs anything on its own.",
+            exemple: " a tester learns that a release fixes their problem, the day it ships.",
+            ou: ["app"]
+          },
+          {
+            ico: "lecture",
+            titre: "Demonstration mode",
+            texte: "The full app, wired to two simulated boards, with a believable van: dimmable lights, pump, fridge already cycling, tanks whose fresh water drops as the pump runs. Scenarios trigger overcurrent, battery cutoff, shedding, a door opening, a lost link.",
+            exemple: " showing the product at a trade show, with no board and no cable.",
+            ou: ["app"]
+          },
+          {
+            ico: "etabli",
+            titre: "Virtual boards",
+            texte: "Simulated boards that show up in the normal search, pair and configure exactly like real hardware — Bluetooth off or in flight mode — and whose settings survive restarting the app.",
+            exemple: " preparing a job's pages on the train, without the board with you.",
+            ou: ["app"]
+          },
+          {
+            ico: "serpent",
+            titre: "What is pending is visible",
+            texte: "A lit line runs around an element while the board has not confirmed, or while an entered setting has not been written yet.",
+            exemple: " you know the press was registered, even if the board takes two seconds to answer.",
+            ou: ["app"]
+          }
+        ]
+      },
+
+      {
+        titre: "Configure, back up, replace",
+        chapeau: "Everything that can be set can be read back, saved, carried to another board and replayed across ten vans.",
+        fiches: [
+          {
+            ico: "reglages",
+            titre: "The whole configuration from the phone",
+            texte: "Outputs, inputs and board are configured entirely over Bluetooth: labels, types, thresholds, timers, pairings, sender curves, actions, battery protection, thermal thresholds.",
+            exemple: " a brand new board is fully set up before it is even fitted in the van.",
+            ou: ["app"]
+          },
+          {
+            ico: "ecrire",
+            titre: "You type, then you write",
+            texte: "Nothing leaves on each keystroke: you fill in, you touch “Write”, and the board says whether it accepts. Fields refuse up front the values the firmware would reject.",
+            exemple: " a 25 A threshold is refused in the field, not three seconds later by an obscure message.",
+            ou: ["app"]
+          },
+          {
+            ico: "sablier",
+            titre: "Nothing is touchable before the board answers",
+            texte: "While settings are still being read, the controls are locked. Writing into a still-empty field would erase the real setting.",
+            exemple: " you cannot write an empty label by tapping too fast when the screen opens.",
+            ou: ["app"]
+          },
+          {
+            ico: "listeEchec",
+            titre: "What was not written is told",
+            texte: "When a write does not go through entirely, the list of what is missing is shown plainly — which setting, and why — and the rest is retried in one gesture.",
+            exemple: " “Water pump · overcurrent threshold, value out of allowed bounds”: you know what to redo.",
+            ou: ["app"]
+          },
+          {
+            ico: "fichier",
+            titre: "Export and import a board's configuration",
+            texte: "All of a board's settings come out as a file, and can be written back onto another board. The file never contains a pairing key.",
+            exemple: " a converter fits the same configuration on ten vans without retyping forty settings nine times.",
+            ou: ["app"]
+          },
+          {
+            ico: "plan",
+            titre: "Installation templates",
+            texte: "A whole installation — several boards, their settings and the pages that go with them — saves as a template. A template names roles, “Cabin”, “Garage”, never specific boards; on install, you say who plays which role.",
+            exemple: " the “L2H2 camper conversion” template is laid onto a new van in ten minutes.",
+            ou: ["app"]
+          },
+          {
+            ico: "echange",
+            titre: "Replacing a failed board",
+            texte: "A board dies, you fit a new one, and the app brings the new one to the exact state of the old: labels, thresholds, inputs, pages, tiles. One step at a time, with the progress counted, and at the end what does not follow is said plainly.",
+            exemple: " broken down on a Sunday, far from anywhere: the spare board takes over the van in a quarter of an hour.",
+            ou: ["app", { mot: "to be trialled", neuf: true }]
+          },
+          {
+            ico: "photo",
+            titre: "A dated snapshot of the settings",
+            texte: "A failed board no longer answers: its configuration has to have been copied while it was still well. The app keeps a dated snapshot, and can refresh it on demand.",
+            exemple: " last month's snapshot is what rebuilds a board that has gone silent.",
+            ou: ["app"]
+          },
+          {
+            ico: "sauvegarde",
+            titre: "The backup reminder",
+            texte: "The snapshot lives in the phone and dies with it. The app offers to write it out as a file, on opening and never in the middle of a settings session.",
+            exemple: " a lost phone does not mean a lost van configuration.",
+            ou: ["app"]
+          },
+          {
+            ico: "partager",
+            titre: "Export and share your pages",
+            texte: "The page layout exports as a file: to keep it safe, or to hand it to someone else. On import, the app offers to match the boards named in the file to the local ones.",
+            exemple: " you send your pages to a friend with the same conversion, and they work there.",
+            ou: ["app"]
+          },
+          {
+            ico: "annuler",
+            titre: "Undo an import",
+            texte: "A copy of the pages is set aside at each import: if it was not the right file, you restore. The button only appears when there is something to undo.",
+            exemple: " the import overwrote the pages: two gestures put them back.",
+            ou: ["app"]
+          },
+          {
+            ico: "cle",
+            titre: "Export and import the pairing key",
+            texte: "A board's key can be read out in hexadecimal and installed on another phone, without going back to press the board's button.",
+            exemple: " the couple's second phone drives the same board, without removing the trim.",
+            ou: ["app"]
+          }
+        ]
+      },
+
+      {
+        titre: "Connecting",
+        chapeau: "Bluetooth first, always. Wi-Fi and the Internet are extra paths, and they only open if you ask.",
+        fiches: [
+          {
+            ico: "empreinte",
+            titre: "Pairing by a physical press",
+            texte: "To pair a board you must hold its button for three seconds: it then opens a thirty-second window during which it hands out its key. Being in range is not enough, you have to be there.",
+            exemple: " a neighbour cannot adopt your board from the camper next door.",
+            ou: ["board", "app"]
+          },
+          {
+            ico: "verrou",
+            titre: "Every command is signed",
+            texte: "All commands are authenticated with a signature computed from the pairing key. The board accepts several clients at once, each with its own session.",
+            exemple: " two phones and a tablet drive the same board, each authenticated.",
+            ou: ["board", "app"]
+          },
+          {
+            ico: "reconnexion",
+            titre: "Automatic reconnection",
+            texte: "The key is kept in the phone, indexed on the board's name. Come back in range and the link re-establishes itself.",
+            exemple: " you get back in the van after shopping: the pages are live before the bags are down.",
+            ou: ["app"]
+          },
+          {
+            ico: "wifi",
+            titre: "Setting Wi-Fi from the app",
+            texte: "The board's Wi-Fi network is entered over Bluetooth, from the app. Nothing is stored until the connection has succeeded: a board never restarts onto an unreachable network.",
+            exemple: " on a campsite car park, the board joins the site Wi-Fi in two minutes.",
+            ou: ["app"]
+          },
+          {
+            ico: "nuageCadenas",
+            titre: "End-to-end encrypted remote access",
+            texte: "With Wi-Fi, the board publishes its state to a server, and the app sends it commands from anywhere. Everything is encrypted with the pairing key: the server can neither read the installation nor drive it.",
+            exemple: " you check from the office that the van heater is running before the weekend departure.",
+            ou: ["board", "app", "remote"]
+          },
+          {
+            ico: "badgeCompte",
+            titre: "No account to create",
+            texte: "Access to the server is derived from the board's name. Nothing to type, nothing to remember, nothing to re-synchronise — and nothing to lose.",
+            exemple: " remote access arms with a switch, with no sign-up form.",
+            ou: ["board", "app"]
+          },
+          {
+            ico: "deuxInter",
+            titre: "Two permissions, kept apart",
+            texte: "The board distinguishes “I may be read remotely” from “I may be commanded remotely”. Both are refused by default, and set independently.",
+            exemple: " you allow reading to watch the tanks, without opening up control.",
+            ou: ["board", "app"]
+          },
+          {
+            ico: "itineraire",
+            titre: "Bluetooth first, remote as a fallback",
+            texte: "The app always takes the direct path when it exists. The remote link only serves when out of range, and the app says clearly when it is working from afar.",
+            exemple: " one metre from the board, the command goes over Bluetooth even with remote access armed.",
+            ou: ["app"]
+          },
+          {
+            ico: "pastille",
+            titre: "What does not travel is marked",
+            texte: "Remotely, not everything is equal: switching an output works, setting a threshold does not. Each element concerned carries its own mark, rather than one global indicator that would not say whether THIS button works.",
+            exemple: " the settings tile is marked “unavailable remotely” before you press it.",
+            ou: ["app", "remote"]
+          },
+          {
+            ico: "interdit",
+            titre: "What is never done from afar",
+            texte: "The settings that would cut the link — network, board name, reset, update, reading the key — are closed remotely, by construction.",
+            exemple: " nobody can cut a board's Wi-Fi from the other side of the country.",
+            ou: ["board"]
+          },
+          {
+            ico: "navigateur",
+            titre: "A console in the browser",
+            texte: "A Web Bluetooth console drives and configures a board from a computer, with nothing to install.",
+            exemple: " a repair is done from the workshop laptop, with no phone.",
+            ou: ["web console"]
+          }
+        ]
+      },
+
+      {
+        titre: "Fitting into the rest of the van",
+        chapeau: "TinyRail is not one more app: the board shows up where the owner already looks.",
+        fiches: [
+          {
+            ico: "maison",
+            titre: "Home Assistant, with no bridge",
+            texte: "The board is discovered by itself on the local network and appears in Home Assistant with all its entities — controls, measurements, settings, diagnostics. No third-party integration, no cloud, no subscription.",
+            exemple: " an automation cuts the water when nobody is on board.",
+            ou: ["board", "Home Assistant"]
+          },
+          {
+            ico: "boites",
+            titre: "One device per output and per input",
+            texte: "Each output and each input forms its own device in Home Assistant, named after the label given on the board. The board's own settings are grouped by subject: battery, thermal, pairs, maintenance, network.",
+            exemple: " “Fridge” and its entities are found at a glance, instead of a forty-line list.",
+            ou: ["Home Assistant"]
+          },
+          {
+            ico: "domaine",
+            titre: "The right entity type for the load",
+            texte: "The output type decides what Home Assistant shows: a light with its dimmer, a fan with its speed, or a plain switch. The change takes effect immediately.",
+            exemple: " “Roof fan” appears as a fan, with its speed in percent.",
+            ou: ["Home Assistant"]
+          },
+          {
+            ico: "oeil",
+            titre: "Only meaningful measurements are published",
+            texte: "An input only announces the quantities of its mode: a voltage in voltage mode, a resistance and a level in sender mode, a state on a dry contact. The others are not announced at all.",
+            exemple: " the list no longer fills with “unknown” entities that end up ignored.",
+            ou: ["Home Assistant"]
+          },
+          {
+            ico: "ecran",
+            titre: "On a Cerbo GX screen",
+            texte: "A Victron-equipped van already has its screen on the wall. The board can publish to the Cerbo's local broker, in a flat format the whole Victron ecosystem knows how to read.",
+            exemple: " the TinyRail outputs appear next to the batteries and the inverter, on the existing screen.",
+            ou: ["board", { mot: "to be trialled", neuf: true }]
+          },
+          {
+            ico: "domaine",
+            titre: "Valves, locks, blinds, sirens",
+            texte: "These loads are described by their type on the board and are promoted, on the Home Assistant side, to the matching entity.",
+            exemple: " the gas solenoid appears as a valve, with the icon that goes with it.",
+            ou: ["Home Assistant"]
+          },
+          {
+            ico: "bus",
+            titre: "One internal bus, five peripherals",
+            texte: "All of the board's intelligence runs over two wires: driving the outputs, measuring currents, reading inputs, front panel buttons and temperature.",
+            exemple: " one bus to diagnose, and two processor pins used.",
+            ou: ["hardware"]
+          }
+        ]
+      },
+
+      {
+        titre: "Updating",
+        chapeau: "Three ways into a board: the phone, Wi-Fi, the cable. None of them needs the trim removed.",
+        fiches: [
+          {
+            ico: "bluetooth",
+            titre: "Update over Bluetooth",
+            texte: "The phone downloads the new version and passes it to the board over Bluetooth: the phone has the network, the board does not need one. About two minutes, with progress reported by the board itself.",
+            exemple: " a board with no Wi-Fi, deep in a locker, gets its update from the phone.",
+            ou: ["app"]
+          },
+          {
+            ico: "nuageMaj",
+            titre: "Update over Wi-Fi",
+            texte: "When on a network, the board checks by itself every six hours whether a newer version exists, and announces it in Home Assistant.",
+            exemple: " the Home Assistant “Updates” panel offers the new version, you click.",
+            ou: ["board", "Home Assistant"]
+          },
+          {
+            ico: "usb",
+            titre: "Install from the browser",
+            texte: "A new or silent board is installed from a web page, over USB-C, with nothing to install on the computer.",
+            exemple: " a board received unprogrammed is running in three minutes.",
+            ou: ["web console"]
+          },
+          {
+            ico: "insigne",
+            titre: "A badge wherever you look at a board",
+            texte: "When a newer version exists, the app says so where you look at the board — in the brand colour, never in a fault colour. An available firmware is not a failure.",
+            exemple: " you see that a board is behind without opening the update screen.",
+            ou: ["app"]
+          },
+          {
+            ico: "doubleCheck",
+            titre: "A successful update is proven twice",
+            texte: "The image's fingerprint is checked before the first byte leaves, and “succeeded” requires both the board's acceptance and its return announcing a different version.",
+            exemple: " a truncated download is stopped before two minutes of pointless transfer.",
+            ou: ["app"]
+          },
+          {
+            ico: "etabli",
+            titre: "A beta track",
+            texte: "The app can follow firmware versions still in preparation, for those who want to try what is coming.",
+            exemple: " a tester puts their test board on beta, and leaves the cabin one on stable.",
+            ou: ["app"]
+          }
+        ]
+      },
+
+      {
+        titre: "The board",
+        chapeau: "What is in the box, and what it imposes on the rest.",
+        fiches: [
+          {
+            ico: "puce",
+            titre: "Eight high-side switched channels",
+            texte: "Each output has its own smart power device, rated 10 A continuous, with built-in current diagnosis.",
+            exemple: " eight relays, eight fuse holders and their wiring replaced by one board.",
+            ou: ["hardware"]
+          },
+          {
+            ico: "alim",
+            titre: "From 9 to 30 volts",
+            texte: "The same board works on a 12 V and on a 24 V system, with no variant and no jumper.",
+            exemple: " a 24 V truck and a 12 V van order the same part.",
+            ou: ["hardware"]
+          },
+          {
+            ico: "bornier",
+            titre: "5 mm pitch terminals",
+            texte: "The eight outputs come out on two pluggable terminal blocks, and a busbar gathers the power inputs.",
+            exemple: " the board comes out without undoing a single wire, by unplugging the terminals.",
+            ou: ["hardware"]
+          },
+          {
+            ico: "usb",
+            titre: "Built-in USB-C",
+            texte: "The connector is on the board: first installation, debugging log and recovery all go through an ordinary cable.",
+            exemple: " no adapter, no programmer: the same cable as the phone.",
+            ou: ["hardware"]
+          },
+          {
+            ico: "bouton",
+            titre: "The pairing button",
+            texte: "A button on the board opens pairing with a three-second press, and erases the key with a ten-second one. It is the only gesture that cannot be done remotely, and that is on purpose.",
+            exemple: " you revoke every phone's access by holding the button for ten seconds.",
+            ou: ["hardware"]
+          },
+          {
+            ico: "couches",
+            titre: "Several boards chained",
+            texte: "An installation can hold several, spread through the vehicle, and the app holds them all together.",
+            exemple: " one board in the cabin and one in the garage, seen as a single dashboard.",
+            ou: ["hardware", "app"]
+          }
+        ]
+      }
+    ],
+
+    note: {
+      titre: "This catalogue is kept in step with the product.",
+      texte: "A feature that reaches a user is added here the day it ships, in French and in English, with its usage example. A feature missing from here exists for nobody: that is the only discipline that keeps this page true, and it is also what makes it usable to prepare a demonstration, write a product sheet or answer a converter."
+    },
+
+    pied: "TinyRail · Xptrucks. This catalogue describes the product as it is, not what is planned. The manual trial protocols live on this site's home page."
+  }
+};
+
+Essais.fonctions(FONCTIONS);
+</script>
+</body>
+</html>

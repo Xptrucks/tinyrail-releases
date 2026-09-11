@@ -681,3 +681,220 @@
   }
 
   .note b { color: var(--ink); font-weight: 600; }
+
+  /* ── Le catalogue des fonctions ───────────────────────────────────────────
+     Une fiche par fonction : une silhouette, un titre, ce que c'est, et un
+     exemple d'usage. L'exemple n'est pas un ornement : une fonction décrite
+     sans cas d'usage se relit dix fois sans qu'on sache à quoi elle sert. */
+
+  .fonctions .wrap { max-width: 64rem; }
+
+  .fonctions h1 {
+    font-family: Archivo, system-ui, sans-serif;
+    font-size: 1.7rem;
+    font-weight: 700;
+    letter-spacing: -.02em;
+    margin: 0 0 .5rem;
+  }
+
+  .fonctions .entete {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+
+  .fonctions .lede { color: var(--ink-soft); margin: 0 0 1.4rem; max-width: 40rem; }
+
+  .fonctions .retour {
+    display: inline-block;
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: .72rem;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    text-decoration: none;
+    margin: 1.2rem 0 .4rem;
+  }
+
+  .fonctions .retour:hover { color: var(--accent); }
+
+  /* ── Le filtre et les raccourcis de thème ───────────────────────────────
+     Le filtre est là parce que le catalogue est long PAR CONSTRUCTION : on
+     vient y chercher « est-ce que ça sait faire X », pas le lire d'un bout à
+     l'autre. Les raccourcis servent l'autre usage, la promenade. */
+
+  .barre {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: color-mix(in srgb, var(--ground) 94%, transparent);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--rule);
+    margin: 0 -1.1rem 1.4rem;
+    padding: .7rem 1.1rem .6rem;
+  }
+
+  .barre input[type="search"] {
+    width: 100%;
+    font-family: inherit;
+    font-size: .95rem;
+    color: var(--ink);
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+    padding: .5rem .7rem;
+  }
+
+  .barre input[type="search"]:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+    border-color: var(--accent);
+  }
+
+  .sauts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .3rem;
+    margin-top: .55rem;
+  }
+
+  .sauts a {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: .7rem;
+    letter-spacing: .02em;
+    text-decoration: none;
+    color: var(--ink-soft);
+    background: var(--surface-sunk);
+    border: 1px solid var(--rule);
+    border-radius: 999px;
+    padding: .18rem .6rem;
+  }
+
+  .sauts a:hover { color: var(--accent); border-color: var(--accent); }
+
+  .compte {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: .72rem;
+    color: var(--ink-faint);
+    margin: .5rem 0 0;
+  }
+
+  /* ── Un thème ──────────────────────────────────────────────────────────── */
+
+  .theme { margin: 2.2rem 0 0; scroll-margin-top: 6.5rem; }
+
+  .theme > h2 {
+    font-family: Archivo, system-ui, sans-serif;
+    font-size: .78rem;
+    font-weight: 600;
+    letter-spacing: .07em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin: 0 0 .3rem;
+  }
+
+  .theme > .chapeau {
+    margin: 0 0 1rem;
+    color: var(--ink-soft);
+    max-width: 42rem;
+  }
+
+  .grille {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(19rem, 1fr));
+    gap: .75rem;
+  }
+
+  /* ── Une fiche ─────────────────────────────────────────────────────────── */
+
+  .fiche {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 10px;
+    padding: .95rem 1rem 1rem;
+    box-shadow: var(--shadow);
+    display: flex;
+    flex-direction: column;
+  }
+
+  .fiche .tete {
+    display: flex;
+    align-items: flex-start;
+    gap: .65rem;
+    margin-bottom: .45rem;
+  }
+
+  .fiche .ico {
+    flex: 0 0 auto;
+    width: 2.1rem;
+    height: 2.1rem;
+    border-radius: 8px;
+    background: var(--accent-soft);
+    color: var(--accent);
+    display: grid;
+    place-items: center;
+  }
+
+  .fiche .ico svg { width: 1.25rem; height: 1.25rem; display: block; }
+
+  .fiche h3 {
+    font-family: Archivo, system-ui, sans-serif;
+    font-size: 1rem;
+    font-weight: 600;
+    line-height: 1.3;
+    margin: .2rem 0 0;
+  }
+
+  .fiche > p { margin: 0 0 .6rem; color: var(--ink-soft); font-size: .93rem; }
+
+  .fiche .exemple {
+    border-left: 2px solid var(--accent-soft);
+    padding-left: .7rem;
+    margin: auto 0 0;
+    font-size: .9rem;
+    color: var(--ink-soft);
+  }
+
+  .fiche .exemple b {
+    display: block;
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: .66rem;
+    font-weight: 500;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin-bottom: .1rem;
+  }
+
+  .fiche .ou {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .25rem;
+    margin: .7rem 0 0;
+  }
+
+  .fiche .ou span {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: .64rem;
+    letter-spacing: .03em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    background: var(--surface-sunk);
+    border-radius: 4px;
+    padding: .1rem .38rem;
+  }
+
+  .fiche .ou span.neuf { background: var(--wait-soft); color: var(--wait); }
+
+  .vide {
+    border: 1px dashed var(--rule);
+    border-radius: 10px;
+    padding: 1.4rem;
+    text-align: center;
+    color: var(--ink-faint);
+  }
+
+  @media (max-width: 34rem) {
+    .grille { grid-template-columns: 1fr; }
+  }
