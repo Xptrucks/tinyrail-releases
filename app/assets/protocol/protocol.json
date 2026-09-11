@@ -903,7 +903,7 @@
   "constants": {
     "channels": 8,
     "inputs": 4,
-    "max_sessions": 3,
+    "max_sessions": 8,
     "label_max_bytes": 32,
     "key_bytes": 32,
     "nonce_bytes": 16,
