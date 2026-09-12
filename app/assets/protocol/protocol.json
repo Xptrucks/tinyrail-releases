@@ -384,6 +384,7 @@
       "GET_CH_CONFIG",
       "GET_CH_META",
       "GET_DIAG",
+      "GET_DIM",
       "GET_INFO",
       "GET_INPUT",
       "GET_INPUT_ALARM",
@@ -406,6 +407,7 @@
       "SET_BATTERY",
       "SET_CHANNEL",
       "SET_CH_KIND",
+      "SET_DIM",
       "SET_INPUT_ALARM",
       "SET_INPUT_KIND",
       "SET_INPUT_LABEL",
@@ -433,6 +435,8 @@
     "SET_AUTO_ON": 18,
     "SET_PAIR": 19,
     "SET_START_MODE": 20,
+    "GET_DIM": 21,
+    "SET_DIM": 22,
     "GET_OVERCURRENT": 32,
     "SET_OC_THRESHOLD": 33,
     "SET_OC_DELAY": 34,
@@ -690,9 +694,24 @@
     "`restores` distingue le seul mode qui écrit dans la flash."
   ],
   "start_modes": [
-    {"id": 0, "en": "Off", "fr": "Éteinte", "restores": false},
-    {"id": 1, "en": "On", "fr": "Allumée", "restores": false},
-    {"id": 2, "en": "Restore", "fr": "Comme avant la coupure", "restores": true}
+    {
+      "id": 0,
+      "en": "Off",
+      "fr": "Éteinte",
+      "restores": false
+    },
+    {
+      "id": 1,
+      "en": "On",
+      "fr": "Allumée",
+      "restores": false
+    },
+    {
+      "id": 2,
+      "en": "Restore",
+      "fr": "Comme avant la coupure",
+      "restores": true
+    }
   ],
   "_link_actions_comment": [
     "L'index est stocké en NVS et transporté tel quel : les actions ne",
