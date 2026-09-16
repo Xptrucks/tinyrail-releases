@@ -1,0 +1,31 @@
+<!--
+     Variante pour les très petites tailles : favicon, icône mdpi.
+
+     ⚠️ Bornes plus épaisses (100 px) et points plus gros (r=26) pour une meilleure
+     lisibilité à très petite échelle. Barre centrale en couleur PLEINE (#6BB5FF).
+
+     ⚠️ Le rect du fond porte rx="110" : poser-icones.sh le retire pour
+     les launchers Android via sed.
+-->
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="fond" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="512" y2="512">
+      <stop offset="0%" stop-color="#121A2E"/>
+      <stop offset="90%" stop-color="#050810"/>
+    </linearGradient>
+    <mask id="trou">
+      <rect x="0" y="0" width="512" height="512" fill="#FFFFFF"/>
+      <circle cx="150" cy="126" r="26" fill="#000000"/>
+      <circle cx="150" cy="256" r="26" fill="#000000"/>
+      <circle cx="150" cy="386" r="26" fill="#000000"/>
+    </mask>
+  </defs>
+  <rect width="512" height="512" rx="110" fill="url(#fond)"/>
+  <g fill="#FFFFFF" opacity="0.9" mask="url(#trou)">
+    <rect x="100" y="76"  width="234" height="100" rx="20"/>
+    <rect x="100" y="336" width="176" height="100" rx="20"/>
+  </g>
+  <g fill="#6BB5FF" mask="url(#trou)">
+    <rect x="100" y="206" width="312" height="100" rx="20"/>
+  </g>
+</svg>
