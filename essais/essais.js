@@ -654,10 +654,6 @@
 
       const wrap = el("div", "wrap");
 
-      const retour = el("a", "retour", "← " + m.retour);
-      retour.href = "../";
-      wrap.append(retour);
-
       const entete = el("div", "entete");
       const gauche = el("div");
       gauche.append(el("h1", null, t.titre));

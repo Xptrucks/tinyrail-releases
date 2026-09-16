@@ -685,15 +685,36 @@
   /* ── Le catalogue des fonctions ───────────────────────────────────────────
      Une fiche par fonction : une silhouette, un titre, ce que c'est, et un
      exemple d'usage. L'exemple n'est pas un ornement : une fonction décrite
-     sans cas d'usage se relit dix fois sans qu'on sache à quoi elle sert. */
+     sans cas d'usage se relit dix fois sans qu'on sache à quoi elle sert.
+
+     Page publique (fonctions.tinyrail.xptrucks.fr) : charte du site vitrine
+     (fond marine, néon bleu, Orbitron/Inter), indépendante du reste des
+     essais qui garde sa charte utilitaire claire. */
+
+  body.fonctions {
+    --ground: #05080F;
+    --surface: #0D1220;
+    --surface-sunk: #101A2E;
+    --ink: #E9EEF7;
+    --ink-soft: #B9C4D9;
+    --ink-faint: #8A97AE;
+    --rule: #1E293B;
+    --accent: #38A0FF;
+    --accent-soft: #122540;
+    --wait: #D9AC4E;
+    --wait-soft: #2E2412;
+    --shadow: 0 0 0 1px rgba(56, 160, 255, .08), 0 18px 40px -20px rgba(0, 0, 0, .8);
+    font-family: Inter, system-ui, -apple-system, sans-serif;
+  }
 
   .fonctions .wrap { max-width: 64rem; }
 
   .fonctions h1 {
-    font-family: Archivo, system-ui, sans-serif;
-    font-size: 1.7rem;
+    font-family: Orbitron, system-ui, sans-serif;
+    font-size: 1.6rem;
     font-weight: 700;
-    letter-spacing: -.02em;
+    letter-spacing: -.01em;
+    text-shadow: 0 0 24px rgba(56, 160, 255, .5);
     margin: 0 0 .5rem;
   }
 
@@ -705,19 +726,6 @@
   }
 
   .fonctions .lede { color: var(--ink-soft); margin: 0 0 1.4rem; max-width: 40rem; }
-
-  .fonctions .retour {
-    display: inline-block;
-    font-family: "IBM Plex Mono", ui-monospace, monospace;
-    font-size: .72rem;
-    letter-spacing: .04em;
-    text-transform: uppercase;
-    color: var(--ink-faint);
-    text-decoration: none;
-    margin: 1.2rem 0 .4rem;
-  }
-
-  .fonctions .retour:hover { color: var(--accent); }
 
   /* ── Le filtre et les raccourcis de thème ───────────────────────────────
      Le filtre est là parce que le catalogue est long PAR CONSTRUCTION : on
@@ -785,7 +793,7 @@
   .theme { margin: 2.2rem 0 0; scroll-margin-top: 6.5rem; }
 
   .theme > h2 {
-    font-family: Archivo, system-ui, sans-serif;
+    font-family: Orbitron, system-ui, sans-serif;
     font-size: .78rem;
     font-weight: 600;
     letter-spacing: .07em;
@@ -816,6 +824,12 @@
     box-shadow: var(--shadow);
     display: flex;
     flex-direction: column;
+    transition: border-color .2s, box-shadow .2s;
+  }
+
+  .fonctions .fiche:hover {
+    border-color: var(--accent);
+    box-shadow: 0 0 24px rgba(56, 160, 255, .18), var(--shadow);
   }
 
   .fiche .tete {
@@ -839,7 +853,7 @@
   .fiche .ico svg { width: 1.25rem; height: 1.25rem; display: block; }
 
   .fiche h3 {
-    font-family: Archivo, system-ui, sans-serif;
+    font-family: Orbitron, system-ui, sans-serif;
     font-size: 1rem;
     font-weight: 600;
     line-height: 1.3;
