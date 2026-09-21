@@ -601,6 +601,13 @@ const FONCTIONS = {
             ou: ["app"]
           },
           {
+            ico: "fichier",
+            titre: "L'app reconnaît le fichier qu'on lui ouvre",
+            texte: "Sauvegarde, modèle, pages, réglages d'un appareil : un seul bouton Importer les reçoit tous. L'app lit ce que le fichier contient et lance ce qui va avec, au lieu de demander de le deviner à l'avance.",
+            exemple: " une sauvegarde reçue par messagerie s'ouvre du premier coup, même si l'on ne sait plus laquelle on avait envoyée.",
+            ou: ["app"]
+          },
+          {
             ico: "plan",
             titre: "Modèles d'installation",
             texte: "Une installation entière, plusieurs cartes avec leurs réglages et les pages qui vont avec, s'enregistre en modèle. Un modèle nomme des rôles, « Cellule », « Soute », jamais des cartes précises ; à l'installation, on dit qui tient quel rôle.",
@@ -610,8 +617,8 @@ const FONCTIONS = {
           {
             ico: "cle",
             titre: "Reprendre un van sur un téléphone neuf",
-            texte: "Un modèle peut emporter les clés d'appairage, le fichier entier étant alors protégé par un mot de passe. Le téléphone qui l'ouvre reprend le van sans aller appuyer sur le bouton d'une seule carte, y compris à distance. Une clé déjà connue du téléphone n'est jamais remplacée.",
-            exemple: " téléphone perdu en vacances : le nouveau reprend les six cartes du van depuis une pièce jointe, sans ouvrir un coffre de rangement.",
+            texte: "Une sauvegarde emporte les clés d'appairage, le fichier entier étant protégé par un mot de passe. Le téléphone qui l'ouvre reprend le van sans aller appuyer sur le bouton d'une seule carte, y compris à distance. Elle couvre plusieurs installations à la fois, et la restaurer ne touche jamais aux réglages des appareils : elle remet le téléphone d'aplomb, pas le matériel. Une clé déjà connue n'est jamais remplacée.",
+            exemple: " téléphone perdu en vacances : le nouveau reprend les six cartes du van, et celles du bateau, depuis une pièce jointe, sans ouvrir un coffre de rangement.",
             ou: ["app", "à distance", { mot: "à éprouver", neuf: true }]
           },
           {
@@ -631,7 +638,7 @@ const FONCTIONS = {
           {
             ico: "sauvegarde",
             titre: "Le rappel de sauvegarde",
-            texte: "Le cliché vit dans le téléphone et meurt avec lui. L'app propose d'en sortir un fichier, à l'ouverture et jamais au milieu d'un réglage.",
+            texte: "Le cliché vit dans le téléphone et meurt avec lui. L'app propose d'en sortir un fichier, à l'ouverture et jamais au milieu d'un réglage. Un seul geste couvre tous les appareils de l'installation, ceux hors de portée compris.",
             exemple: " un téléphone perdu ne fait pas perdre la configuration du van.",
             ou: ["app"]
           },
@@ -1486,6 +1493,13 @@ const FONCTIONS = {
             ou: ["app"]
           },
           {
+            ico: "fichier",
+            titre: "The app recognises the file you open",
+            texte: "Backup, template, pages, a single device's settings: one Import button takes them all. The app reads what the file holds and starts what goes with it, instead of asking you to guess beforehand.",
+            exemple: " a backup received by message opens first time, even when you no longer remember which one you sent.",
+            ou: ["app"]
+          },
+          {
             ico: "plan",
             titre: "Installation templates",
             texte: "A whole installation, several boards with their settings and the pages that go with them, saves as a template. A template names roles, “Cabin”, “Garage”, never specific boards; on install, you say who plays which role.",
@@ -1495,8 +1509,8 @@ const FONCTIONS = {
           {
             ico: "cle",
             titre: "Taking a van over on a new phone",
-            texte: "A template can carry the pairing keys, the whole file then being protected by a password. The phone that opens it takes the van over without pressing the button on a single board, remotely included. A key the phone already knows is never replaced.",
-            exemple: " phone lost on holiday: the new one takes over the van's six boards from an email attachment, without opening a single locker.",
+            texte: "A backup carries the pairing keys, the whole file being protected by a password. The phone that opens it takes the van over without pressing the button on a single board, remotely included. It covers several installations at once, and restoring it never touches your devices' settings: it puts the phone back in order, not the hardware. A key the phone already knows is never replaced.",
+            exemple: " phone lost on holiday: the new one takes over the van's six boards, and the boat's, from an email attachment, without opening a single locker.",
             ou: ["app", "remote", { mot: "to be trialled", neuf: true }]
           },
           {
@@ -1516,7 +1530,7 @@ const FONCTIONS = {
           {
             ico: "sauvegarde",
             titre: "The backup reminder",
-            texte: "The snapshot lives in the phone and dies with it. The app offers to write it out as a file, on opening and never in the middle of a settings session.",
+            texte: "The snapshot lives in the phone and dies with it. The app offers to write it out as a file, on opening and never in the middle of a settings session. One gesture covers every device in the installation, those out of range included.",
             exemple: " a lost phone does not mean a lost van configuration.",
             ou: ["app"]
           },
