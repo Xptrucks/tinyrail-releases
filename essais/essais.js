@@ -551,7 +551,6 @@
     archive: '<rect x="3" y="4" width="18" height="5" rx="1.5"/><path d="M5 9v9a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V9"/><path d="M10 13h4"/>',
     barres: '<path d="M3 20h18"/><path d="M6 20v-6M11 20V8M16 20v-9"/>',
     jalon: '<path d="M5 21V4"/><path d="M5 5h11l-2 3 2 3H5"/>',
-    filigrane: '<path d="M3 18h18"/><path d="M5 18v-3M8 18v-6M11 18v-2M14 18v-5M17 18v-3M20 18v-7"/>',
     hachure: '<rect x="4" y="4" width="16" height="16" rx="2"/><path d="M4 12 12 4M4 18 18 4M10 20l10-10M16 20l4-4"/>',
     effacer: '<path d="M4 7h16"/><path d="M9 7V5h6v2"/><path d="M6 7l1 13h10l1-13"/><path d="M10 11v6M14 11v6"/>',
     horlogeSync: '<circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/><path d="M20 5v4h-4"/>',
