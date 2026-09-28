@@ -1,0 +1,963 @@
+{
+  "_comment": [
+    "Protocole BLE TinyRail — SOURCE DE VÉRITÉ UNIQUE.",
+    "",
+    "Cinq implémentations en dérivent : packages/ble_protocol.h (firmware),",
+    "tools/ble/tinyrail_ble.py, tools/webble/index.html, et — dans le dépôt de",
+    "l'app mobile — lib/ble/ble_constants.dart et lib/demo/fake_board.dart.",
+    "",
+    "Ce fichier ne génère rien : chaque implémentation reste écrite dans son",
+    "idiome. C'est tools/check-protocol.py qui les compare toutes à ce fichier",
+    "et échoue au moindre écart. Un opcode absent d'un client ne provoque",
+    "aucune erreur visible — la console le convertissait silencieusement en 0,",
+    "et la carte répondait « opcode inconnu » sur op=0 pendant qu'on attendait",
+    "une réponse qui ne viendrait jamais.",
+    "",
+    "JSON et non YAML : lisible sans dépendance par Python, Dart, JS et C++.",
+    "",
+    "L'app mobile en garde une copie vendorisée, vérifiée par empreinte.",
+    "Toute modification ici doit être reportée dans cette copie."
+  ],
+  "version": 2,
+  "service_uuid": "12340000-1234-1234-1234-123412340000",
+  "uuid_base": "12340000-1234-1234-1234-1234123400",
+  "characteristics": {
+    "CHALLENGE": {
+      "suffix": "01",
+      "props": "R",
+      "size": 16
+    },
+    "AUTH_RESPONSE": {
+      "suffix": "02",
+      "props": "W",
+      "size": 32
+    },
+    "SHARED_KEY": {
+      "suffix": "03",
+      "props": "R",
+      "size": 32
+    },
+    "STATE": {
+      "suffix": "10",
+      "props": "RN",
+      "size": 9
+    },
+    "TELEMETRY": {
+      "suffix": "11",
+      "props": "RN",
+      "size": 20
+    },
+    "INPUTS": {
+      "suffix": "12",
+      "props": "RN",
+      "size": 20,
+      "min_size": 16
+    },
+    "FAULTS": {
+      "suffix": "13",
+      "props": "RN",
+      "size": 5,
+      "min_size": 2
+    },
+    "CMD": {
+      "suffix": "20",
+      "props": "W",
+      "max_size": 34
+    },
+    "RESP": {
+      "suffix": "21",
+      "props": "RN"
+    },
+    "OTA_STATUS": {
+      "suffix": "31",
+      "props": "RN",
+      "size": 12
+    },
+    "OTA_DATA": {
+      "suffix": "30",
+      "props": "WNR"
+    },
+    "HIST_DATA": {
+      "suffix": "40",
+      "props": "N"
+    }
+  },
+  "_ota_comment": [
+    "Mise à jour du firmware par BLE. Le contrôle passe par CMD (OTA_BEGIN,",
+    "OTA_END, OTA_ABORT, OTA_STATUS) ; les octets de l'image passent par la",
+    "caractéristique OTA_DATA, en écriture SANS réponse.",
+    "",
+    "Mesuré sur carte le 2026-08-09 — ces chiffres commandent toute la forme",
+    "du mécanisme, ne pas les redécouvrir :",
+    "  • une écriture AVEC réponse coûte 84 ms, quelle que soit sa taille ;",
+    "    l'image y passerait en plus de cinq minutes, flash non comprise ;",
+    "  • le lien sature vers 17 kio/s. À 60 paquets de 244 o par seconde la",
+    "    carte ne perd rien ; à 100 paquets, un tiers disparaît sans que",
+    "    l'écrivain en sache quoi que ce soit ;",
+    "  • des paquets de 512 o arrivent entiers depuis un Mac (MTU 515). La",
+    "    taille utile vaut MTU − 5 : 3 d'en-tête ATT, 2 de numéro de séquence.",
+    "    Un iPhone négocie plus petit — ne rien plafonner en dur.",
+    "",
+    "Format d'un paquet OTA_DATA : [seq u16, données…]. Le numéro repart de 0",
+    "à chaque OTA_BEGIN ; un trou signale des paquets perdus et interrompt le",
+    "transfert. La taille des données est libre — le client découpe selon SON",
+    "MTU, la carte ne compte que des octets.",
+    "",
+    "Contrôle de flux : la carte n'écrit en flash que des fenêtres complètes",
+    "de 4096 octets (un secteur), et n'accuse qu'aux frontières de fenêtre.",
+    "L'accusé porte le crédit — le nombre d'octets encore acceptés. Un client",
+    "qui dépasse son crédit fait échouer le transfert.",
+    "",
+    "OTA_STATUS (12 o) : [état u8, erreur u8, owner u16, écrits u32,",
+    "prochain_seq u16, crédit u16].",
+    "",
+    "Un firmware sans ces opcodes répond BAD_OPCODE : c'est ainsi qu'un client",
+    "reconnaît une carte qui ne sait pas se mettre à jour par BLE. C'est",
+    "pourquoi la version du protocole ne change pas — rien n'est rompu."
+  ],
+  "ota_states": [
+    {
+      "id": 0,
+      "en": "Idle",
+      "fr": "Au repos"
+    },
+    {
+      "id": 1,
+      "en": "Preparing",
+      "fr": "Préparation de la partition"
+    },
+    {
+      "id": 2,
+      "en": "Ready",
+      "fr": "Prête à recevoir"
+    },
+    {
+      "id": 3,
+      "en": "Receiving",
+      "fr": "Réception"
+    },
+    {
+      "id": 4,
+      "en": "Done",
+      "fr": "Terminée"
+    },
+    {
+      "id": 5,
+      "en": "Failed",
+      "fr": "Échec"
+    }
+  ],
+  "ota_errors": [
+    {
+      "id": 0,
+      "en": "None",
+      "fr": "Aucune"
+    },
+    {
+      "id": 1,
+      "en": "Busy",
+      "fr": "Une mise à jour est déjà en cours"
+    },
+    {
+      "id": 2,
+      "en": "Not ready",
+      "fr": "Aucun transfert ouvert pour ce client"
+    },
+    {
+      "id": 3,
+      "en": "Bad size",
+      "fr": "Taille refusée par la partition"
+    },
+    {
+      "id": 4,
+      "en": "Lost packets",
+      "fr": "Des paquets ont été perdus"
+    },
+    {
+      "id": 5,
+      "en": "Credit exceeded",
+      "fr": "Crédit dépassé"
+    },
+    {
+      "id": 6,
+      "en": "Foreign image",
+      "fr": "Ce n'est pas un firmware de cette carte"
+    },
+    {
+      "id": 7,
+      "en": "Flash error",
+      "fr": "La flash a refusé l'écriture"
+    },
+    {
+      "id": 8,
+      "en": "Checksum",
+      "fr": "Empreinte fausse — image incomplète"
+    },
+    {
+      "id": 9,
+      "en": "Aborted",
+      "fr": "Annulée"
+    }
+  ],
+  "_mqtt_comment": [
+    "TRANSPORT MQTT — le même protocole, un autre chemin.",
+    "",
+    "La carte publie sur un broker les trames QU'ELLE PRODUIT DÉJÀ pour le",
+    "GATT, octet pour octet : une caractéristique, un topic. Rien n'est",
+    "réencodé, donc un client qui sait lire le BLE sait lire le MQTT.",
+    "",
+    "⚠️ Mais la copie ne peut pas être nue. Le GATT n'a pas d'horodatage parce",
+    "que le BLE est synchrone : on lit, c'est frais. En MQTT la donnée est",
+    "RETENUE et peut venir de deux sources, la carte en WiFi et le pont",
+    "téléphonique. D'où une enveloppe, puis un chiffrement.",
+    "",
+    "⚠️ TOUT est chiffré, dans les deux sens. TLS protège le trajet et l'ACL",
+    "protège l'accès, mais qui tient le broker lirait l'installation et",
+    "pourrait la piloter. La clé est celle de l'appairage (OP_GET_KEY) : le",
+    "broker ne l'a jamais."
+  ],
+  "mqtt": {
+    "topics": {
+      "state": {
+        "from": "STATE",
+        "retain": true,
+        "direction": "board_to_client",
+        "periodic": true
+      },
+      "telemetry": {
+        "from": "TELEMETRY",
+        "retain": true,
+        "direction": "board_to_client",
+        "periodic": true
+      },
+      "inputs": {
+        "from": "INPUTS",
+        "retain": true,
+        "direction": "board_to_client",
+        "periodic": true
+      },
+      "faults": {
+        "from": "FAULTS",
+        "retain": true,
+        "direction": "board_to_client",
+        "periodic": true
+      },
+      "status": {
+        "from": null,
+        "retain": true,
+        "direction": "board_to_client",
+        "values": [
+          "online",
+          "offline"
+        ],
+        "note": "birth et testament, en clair : il ne dit rien de l'installation"
+      },
+      "cmd": {
+        "from": "CMD",
+        "retain": false,
+        "direction": "client_to_board"
+      },
+      "resp": {
+        "from": "RESP",
+        "retain": false,
+        "direction": "board_to_client",
+        "note": "réponse à une commande, chiffrée comme le reste ; non retenue, elle ne vaut que pour la commande qui l'a provoquée"
+      },
+      "req": {
+        "from": null,
+        "retain": false,
+        "direction": "client_to_board",
+        "note": "demande de republication ; une LECTURE, donc permise même sans droit de commande"
+      },
+      "meta": {
+        "sens": "carte → clients",
+        "retain": true,
+        "format": "[n_sorties u8]{kind u8, len u8, libellé…}×n [n_entrees u8]{kind u8, len u8, libellé…}×n",
+        "publie": "à la connexion, sur `req`, et à chaque changement de libellé ou de type",
+        "_comment": [
+          "⚠️ SEUL SUJET SANS ÉQUIVALENT GATT, et c'est une exception assumée au",
+          "décalque « une caractéristique par sujet ». Il agrège ce que le BLE lit en",
+          "douze allers-retours (GET_CH_META ×8, GET_INPUT_META ×4) : gratuit en",
+          "Bluetooth, mais mesuré à 1 050 ms par aller-retour par le broker, soit",
+          "treize secondes avant que les noms apparaissent.",
+          "⚠️ RETENU : un client a les noms dès son abonnement, avant toute réponse de",
+          "la carte, et même si elle est éteinte."
+        ]
+      }
+    },
+    "topic_prefix": "nom de la carte, suffixe MAC compris, qui est AUSSI son compte sur le broker",
+    "envelope": {
+      "order": [
+        "t_u32_le",
+        "flags_u8",
+        "gatt_frame"
+      ],
+      "header_size": 5,
+      "flags": {
+        "time_is_sure": 1,
+        "via_phone_bridge": 2
+      }
+    },
+    "encryption": {
+      "algorithm": "AES-256-GCM",
+      "key": "clé d'appairage, 32 o, celle d'OP_GET_KEY",
+      "layout": [
+        "version_u8",
+        "nonce_12",
+        "ciphertext",
+        "tag_16"
+      ],
+      "version": 1,
+      "aad": "le nom du topic, sans le préfixe",
+      "overhead": 29
+    },
+    "publish_when": [
+      "connexion",
+      "changement",
+      "demande sur req"
+    ],
+    "rate_limit": {
+      "state": {
+        "burst": 5,
+        "refill_ms": 5000
+      },
+      "faults": {
+        "burst": 5,
+        "refill_ms": 5000
+      },
+      "telemetry": {
+        "burst": 1,
+        "refill_ms": 10000
+      },
+      "inputs": {
+        "burst": 1,
+        "refill_ms": 10000
+      }
+    },
+    "_allowed_opcodes_comment": [
+      "⚠️ LA RÈGLE S'EST INVERSÉE LE 2026-09-07. Elle était une liste blanche de",
+      "douze opcodes ; elle est désormais une liste NOIRE : tout ce que le",
+      "dispatcheur sait faire passe par le broker, SAUF ce qui est nommé ici.",
+      "Ce qui le rend défendable : une commande venue du broker est chiffrée avec",
+      "la clé d'appairage, que seul un téléphone appairé possède. Le broker ne",
+      "peut ni la lire ni en forger une.",
+      "Restent fermés : les options d'accès à distance (Wi-Fi, compte du broker,",
+      "SET_REMOTE) — s'en servir depuis le lien qu'elles portent le couperait ;",
+      "GET_KEY, parce que la clé d'appairage ne sort jamais par le réseau ;",
+      "FACTORY_RESET, qui efface cette clé et rend la carte injoignable pour de",
+      "bon ; SET_BOARD_NAME, parce que le nom EST le compte du broker (D-137) ;",
+      "SAFE_MODE et les opcodes d'OTA, qui n'ont pas de sens par ce chemin.",
+      "⚠️ GET_REMOTE reste OUVERT : c'est une lecture, et sans elle l'écran",
+      "affiche « inconnu » pour un état qu'on a le droit de connaître."
+    ],
+    "denied_opcodes": [
+      "NOP",
+      "GET_KEY",
+      "SAFE_MODE",
+      "FACTORY_RESET",
+      "OTA_BEGIN",
+      "OTA_END",
+      "OTA_ABORT",
+      "OTA_STATUS",
+      "SET_BOARD_NAME",
+      "GET_MQTT",
+      "SET_MQTT",
+      "CLEAR_MQTT",
+      "GET_WIFI",
+      "SET_WIFI",
+      "CLEAR_WIFI",
+      "SET_REMOTE"
+    ],
+    "_open_opcodes_comment": [
+      "⚠️ CETTE LISTE N'EST PAS LA RÈGLE, C'EST SA PREUVE. La règle reste la liste",
+      "NOIRE : tout passe sauf `denied_opcodes`. Mais une liste noire ouvre par",
+      "défaut, et un opcode ajouté demain passerait sans que personne ne l'ait",
+      "décidé — vérifié le 2026-09-08 en ajoutant GET_DIAG, que le test natif n'a",
+      "pas vu, sa propre liste étant recopiée à la main.",
+      "check-protocol.py exige donc que `open_opcodes ∪ denied_opcodes` couvre TOUS",
+      "les opcodes de ble_protocol.h. Ajouter un opcode oblige à dire, une fois, de",
+      "quel côté il tombe. C'est la seule façon qu'un oubli se voie."
+    ],
+    "open_opcodes": [
+      "GET_BATTERY",
+      "GET_BOARD_NAME",
+      "GET_CH_CONFIG",
+      "GET_CH_META",
+      "GET_DIAG",
+      "GET_DIM",
+      "GET_INFO",
+      "GET_INPUT",
+      "GET_INPUT_ALARM",
+      "GET_INPUT_META",
+      "GET_INPUT_SCALE",
+      "GET_LABEL",
+      "GET_LINK",
+      "GET_OVERCURRENT",
+      "GET_REMOTE",
+      "GET_SENDER",
+      "GET_SHED",
+      "GET_THERMAL",
+      "HIST_CLEAR",
+      "HIST_INFO",
+      "HIST_READ",
+      "RESTART",
+      "SET_ALL",
+      "SET_AUTO_OFF",
+      "SET_AUTO_ON",
+      "SET_BATTERY",
+      "SET_CHANNEL",
+      "SET_CH_KIND",
+      "SET_DIM",
+      "SET_INPUT_ALARM",
+      "SET_INPUT_KIND",
+      "SET_INPUT_LABEL",
+      "SET_INPUT_MODE",
+      "SET_INPUT_SCALE",
+      "SET_LABEL",
+      "SET_LINK",
+      "SET_OC_DELAY",
+      "SET_OC_THRESHOLD",
+      "SET_PAIR",
+      "SET_SENDER",
+      "SET_SHED",
+      "SET_START_MODE",
+      "SET_THERMAL",
+      "SET_TIME"
+    ]
+  },
+  "opcodes": {
+    "NOP": 0,
+    "SET_CHANNEL": 1,
+    "SET_ALL": 2,
+    "GET_KEY": 3,
+    "GET_CH_CONFIG": 16,
+    "SET_AUTO_OFF": 17,
+    "SET_AUTO_ON": 18,
+    "SET_PAIR": 19,
+    "SET_START_MODE": 20,
+    "GET_DIM": 21,
+    "SET_DIM": 22,
+    "GET_OVERCURRENT": 32,
+    "SET_OC_THRESHOLD": 33,
+    "SET_OC_DELAY": 34,
+    "GET_THERMAL": 48,
+    "SET_THERMAL": 49,
+    "GET_LABEL": 64,
+    "SET_LABEL": 65,
+    "GET_CH_META": 66,
+    "SET_CH_KIND": 67,
+    "GET_INPUT": 80,
+    "SET_INPUT_MODE": 81,
+    "GET_LINK": 82,
+    "SET_LINK": 83,
+    "GET_SHED": 84,
+    "SET_SHED": 85,
+    "GET_BATTERY": 86,
+    "SET_BATTERY": 87,
+    "GET_INPUT_META": 88,
+    "SET_INPUT_KIND": 89,
+    "SET_INPUT_LABEL": 90,
+    "GET_SENDER": 91,
+    "SET_SENDER": 92,
+    "GET_INFO": 96,
+    "RESTART": 97,
+    "SAFE_MODE": 98,
+    "FACTORY_RESET": 99,
+    "OTA_BEGIN": 100,
+    "OTA_END": 101,
+    "OTA_ABORT": 102,
+    "OTA_STATUS": 103,
+    "GET_BOARD_NAME": 104,
+    "SET_BOARD_NAME": 105,
+    "GET_INPUT_SCALE": 93,
+    "SET_INPUT_SCALE": 94,
+    "GET_INPUT_ALARM": 106,
+    "SET_INPUT_ALARM": 107,
+    "SET_TIME": 108,
+    "HIST_INFO": 109,
+    "HIST_READ": 110,
+    "HIST_CLEAR": 111,
+    "GET_MQTT": 112,
+    "SET_MQTT": 113,
+    "CLEAR_MQTT": 114,
+    "GET_WIFI": 115,
+    "SET_WIFI": 116,
+    "CLEAR_WIFI": 117,
+    "GET_REMOTE": 118,
+    "SET_REMOTE": 119,
+    "GET_DIAG": 120
+  },
+  "_opcodes_not_dispatched": [
+    "NOP"
+  ],
+  "status": {
+    "OK": 0,
+    "UNAUTHORIZED": 1,
+    "BAD_OPCODE": 2,
+    "BAD_INDEX": 3,
+    "BAD_PAYLOAD": 4,
+    "TRUNCATED": 5,
+    "BUSY": 6,
+    "DRIVEN": 7,
+    "LOCKED": 8
+  },
+  "_output_kinds_comment": [
+    "L'index EST la valeur du protocole ET celle rangée en NVS : un décalage",
+    "ne renomme pas une icône, il désigne une autre charge. `dimmable` reflète",
+    "kind_is_dimmable() (packages/channel_kinds.h) — le firmware ramène au tout",
+    "ou rien les types qui ne s'y trouvent pas, donc un client qui afficherait",
+    "un curseur verrait sa consigne relevée à 100 % à la trame STATE suivante."
+  ],
+  "output_kinds": [
+    {
+      "id": 0,
+      "en": "Generic",
+      "fr": "Générique",
+      "dimmable": false
+    },
+    {
+      "id": 1,
+      "en": "Interior light",
+      "fr": "Éclairage intérieur",
+      "dimmable": true
+    },
+    {
+      "id": 2,
+      "en": "Exterior light",
+      "fr": "Éclairage extérieur",
+      "dimmable": true
+    },
+    {
+      "id": 3,
+      "en": "Water pump",
+      "fr": "Pompe à eau",
+      "dimmable": false
+    },
+    {
+      "id": 4,
+      "en": "Fan",
+      "fr": "Ventilation",
+      "dimmable": true
+    },
+    {
+      "id": 5,
+      "en": "Fridge",
+      "fr": "Réfrigérateur",
+      "dimmable": false
+    },
+    {
+      "id": 6,
+      "en": "Heater",
+      "fr": "Chauffage",
+      "dimmable": false
+    },
+    {
+      "id": 7,
+      "en": "Water heater",
+      "fr": "Chauffe-eau",
+      "dimmable": false
+    },
+    {
+      "id": 8,
+      "en": "Socket",
+      "fr": "Prise 12 V",
+      "dimmable": false
+    },
+    {
+      "id": 9,
+      "en": "Motor",
+      "fr": "Motorisation",
+      "dimmable": false
+    },
+    {
+      "id": 10,
+      "en": "Compressor",
+      "fr": "Compresseur",
+      "dimmable": false
+    },
+    {
+      "id": 11,
+      "en": "Antenna / TV",
+      "fr": "Antenne / TV",
+      "dimmable": false
+    },
+    {
+      "id": 12,
+      "en": "Siren",
+      "fr": "Sirène",
+      "dimmable": false
+    },
+    {
+      "id": 13,
+      "en": "Valve",
+      "fr": "Électrovanne",
+      "dimmable": false
+    },
+    {
+      "id": 14,
+      "en": "Light (on/off)",
+      "fr": "Éclairage tout ou rien",
+      "dimmable": false
+    }
+  ],
+  "input_kinds": [
+    {
+      "id": 0,
+      "en": "Generic",
+      "fr": "Générique",
+      "view": "value"
+    },
+    {
+      "id": 1,
+      "en": "Fresh water tank",
+      "fr": "Réservoir eau propre",
+      "view": "gauge"
+    },
+    {
+      "id": 2,
+      "en": "Grey water tank",
+      "fr": "Réservoir eaux grises",
+      "view": "gauge"
+    },
+    {
+      "id": 3,
+      "en": "Black water tank",
+      "fr": "Réservoir eaux noires",
+      "view": "gauge"
+    },
+    {
+      "id": 4,
+      "en": "Gas level",
+      "fr": "Niveau de gaz",
+      "view": "gauge"
+    },
+    {
+      "id": 5,
+      "en": "Voltage",
+      "fr": "Tension",
+      "view": "value"
+    },
+    {
+      "id": 6,
+      "en": "Contact",
+      "fr": "Contact",
+      "view": "contact"
+    },
+    {
+      "id": 7,
+      "en": "Temperature",
+      "fr": "Température",
+      "view": "value"
+    },
+    {
+      "id": 8,
+      "en": "Battery",
+      "fr": "Batterie",
+      "view": "value"
+    }
+  ],
+  "_input_modes_comment": [
+    "Trois modes seulement. Une seule plage de sonde : la courbe se règle par",
+    "les bornes (GET_SENDER / SET_SENDER), pas par le mode.",
+    "Le mode dit COMMENT la carte mesure (excitation, PGA) ; le type de",
+    "l'entrée (input_kinds) dit ce que la mesure REPRÉSENTE. En mode tension,",
+    "c'est le type qui décide : un réservoir montre un niveau (converti par",
+    "GET/SET_INPUT_SCALE), un contact montre un état, une batterie ses volts.",
+    "⚠️ Corrigé le 2026-08-13 : le commentaire de OP_SET_INPUT_MODE annonçait",
+    "« 0-4 » et la garde du firmware acceptait 3 et 4 en répondant OK, sans",
+    "rien changer. Les deux disent maintenant 0-2, comme les trois clients."
+  ],
+  "input_modes": [
+    {
+      "id": 0,
+      "en": "Voltage 0-30 V",
+      "fr": "Tension 0-30 V",
+      "unit": "centivolts"
+    },
+    {
+      "id": 1,
+      "en": "Sender 0-500 Ω",
+      "fr": "Sonde 0-500 Ω",
+      "unit": "ohms"
+    },
+    {
+      "id": 2,
+      "en": "Dry contact",
+      "fr": "Contact sec",
+      "unit": "boolean"
+    }
+  ],
+  "_start_modes_comment": [
+    "Ce que devient une sortie au démarrage de la carte. ⚠️ L'INDEX EST UNE VALEUR",
+    "DE PROTOCOLE ET DE NVS : toute addition se fait EN FIN DE LISTE, sinon les",
+    "sorties déjà réglées changeraient de comportement au démarrage, en silence.",
+    "`restores` distingue le seul mode qui écrit dans la flash."
+  ],
+  "start_modes": [
+    {
+      "id": 0,
+      "en": "Off",
+      "fr": "Éteinte",
+      "restores": false
+    },
+    {
+      "id": 1,
+      "en": "On",
+      "fr": "Allumée",
+      "restores": false
+    },
+    {
+      "id": 2,
+      "en": "Restore",
+      "fr": "Comme avant la coupure",
+      "restores": true
+    }
+  ],
+  "_link_actions_comment": [
+    "L'index est stocké en NVS et transporté tel quel : les actions ne",
+    "s'ajoutent qu'en fin de liste. Les actions 1 et 2 réimposent l'état de la",
+    "sortie toutes les 200 ms — une commande manuelle y est reprise dans la",
+    "seconde, ce qu'un client doit signaler.",
+    "",
+    "TOUTE action vise autant de sorties qu'on veut : le 5e octet de GET/SET_LINK",
+    "porte leur masque (bit 0 = CH1), et `target`, uni, gardé pour les cartes en",
+    "service et les automatisations Home Assistant, s'y AJOUTE. Les sorties",
+    "d'une liaison sont l'union des deux ; GET rend cette union déjà faite.",
+    "",
+    "L'action 3 (bascule) porte sur le GROUPE : si une seule de ses sorties est",
+    "éteinte, l'impulsion les éteint toutes, la suivante les rallume. Et sur un",
+    "groupe dont au moins une sortie se grade, elle fait défiler la luminosité",
+    "(25 %, 50 %, 100 %, puis éteint) au lieu du tout ou rien. La carte en décide",
+    "d'après le type des sorties : le protocole, lui, ne change pas.",
+    "",
+    "Les actions 6 et 7 ne commandent RIEN : elles VERROUILLENT leurs sorties,",
+    "qui ne peuvent alors plus être allumées : ni par le protocole, qui répond",
+    "LOCKED, ni par Home Assistant, repris en 200 ms, ni par les boutons de",
+    "façade. Éteindre reste permis, une sortie déjà allumée quand le verrou se",
+    "ferme le reste, et les sécurités passent toujours. Le masque des sorties",
+    "effectivement verrouillées est le 5e octet de FAULTS."
+  ],
+  "link_actions": [
+    {
+      "id": 0,
+      "en": "Disabled",
+      "fr": "Aucune action",
+      "overrides": false,
+      "needs_threshold": false
+    },
+    {
+      "id": 1,
+      "en": "Contact: follow",
+      "fr": "Contact : suit l'état",
+      "overrides": true,
+      "needs_threshold": false
+    },
+    {
+      "id": 2,
+      "en": "Contact: follow inverted",
+      "fr": "Contact : suit l'état inversé",
+      "overrides": true,
+      "needs_threshold": false
+    },
+    {
+      "id": 3,
+      "en": "Contact: toggle",
+      "fr": "Contact : bascule",
+      "overrides": false,
+      "needs_threshold": false
+    },
+    {
+      "id": 4,
+      "en": "Voltage: above threshold",
+      "fr": "Tension : au-dessus du seuil",
+      "overrides": false,
+      "needs_threshold": true
+    },
+    {
+      "id": 5,
+      "en": "Voltage: below threshold",
+      "fr": "Tension : en dessous du seuil",
+      "overrides": false,
+      "needs_threshold": true
+    },
+    {
+      "id": 6,
+      "en": "Lock: above threshold",
+      "fr": "Verrouillage : au-dessus du seuil",
+      "overrides": false,
+      "needs_threshold": true,
+      "locks": true
+    },
+    {
+      "id": 7,
+      "en": "Lock: below threshold",
+      "fr": "Verrouillage : en dessous du seuil",
+      "overrides": false,
+      "needs_threshold": true,
+      "locks": true
+    }
+  ],
+  "sender_profiles": [
+    {
+      "id": 0,
+      "en": "Custom",
+      "fr": "personnalisé"
+    },
+    {
+      "id": 1,
+      "en": "VDO 10-180 Ω (180 = full)",
+      "fr": "VDO 10-180 Ω"
+    },
+    {
+      "id": 2,
+      "en": "Euro 0-190 Ω (190 = full)",
+      "fr": "Euro 0-190 Ω"
+    },
+    {
+      "id": 3,
+      "en": "US 240-33 Ω (33 = full)",
+      "fr": "US 240-33 Ω"
+    },
+    {
+      "id": 4,
+      "en": "GM 0-90 Ω (90 = full)",
+      "fr": "GM 0-90 Ω"
+    },
+    {
+      "id": 5,
+      "en": "0-5 V (5 = full)",
+      "fr": "0-5 V"
+    },
+    {
+      "id": 6,
+      "en": "0.5-4.5 V (4.5 = full)",
+      "fr": "0,5-4,5 V"
+    },
+    {
+      "id": 7,
+      "en": "0-10 V (10 = full)",
+      "fr": "0-10 V"
+    }
+  ],
+  "_sender_profiles_comment": [
+    "Les profils 1 à 4 écrivent les bornes RÉSISTIVES (GET/SET_SENDER), les",
+    "profils 5 à 7 les bornes en TENSION (GET/SET_INPUT_SCALE). Une seule",
+    "liste, l'unité est dans le libellé : ce sont deux façons de décrire la",
+    "même chose, la course d'une sonde entre vide et plein.",
+    "⚠️ La carte ne fournit pas le 5 V d'une sonde ratiométrique (VEXC vaut",
+    "2,495 V et n'existe qu'en mode excité) : le profil 0,5-4,5 V suppose une",
+    "alimentation extérieure."
+  ],
+  "_alarms_comment": [
+    "Seuils d'alerte par entrée. Le sens et les deux seuils se règlent",
+    "(SET_INPUT_ALARM) ; la grandeur et le niveau courant se lisent",
+    "(GET_INPUT_ALARM). Le niveau de chaque entrée voyage aussi en continu",
+    "dans l'octet 3 de la trame FAULTS, 2 bits par entrée.",
+    "⚠️ Seuils en DIXIÈMES d'unité : 500 Ω en centièmes déborderaient un u16.",
+    "⚠️ La grandeur dépend du mode ET de la courbe réglée : un client ne peut",
+    "pas la déduire seul, c'est pourquoi elle est transmise.",
+    "⚠️ Une alerte est signalée, jamais agie : aucune sortie n'est coupée.",
+    "Piloter une sortie depuis une entrée reste le rôle de SET_LINK."
+  ],
+  "alarm_directions": [
+    {
+      "id": 0,
+      "en": "Disabled",
+      "fr": "Désactivée"
+    },
+    {
+      "id": 1,
+      "en": "Below threshold",
+      "fr": "En dessous du seuil"
+    },
+    {
+      "id": 2,
+      "en": "Above threshold",
+      "fr": "Au-dessus du seuil"
+    }
+  ],
+  "alarm_metrics": [
+    {
+      "id": 0,
+      "en": "None",
+      "fr": "Aucune",
+      "unit": null
+    },
+    {
+      "id": 1,
+      "en": "Percent",
+      "fr": "Pourcentage",
+      "unit": "%"
+    },
+    {
+      "id": 2,
+      "en": "Volt",
+      "fr": "Tension",
+      "unit": "V"
+    },
+    {
+      "id": 3,
+      "en": "Ohm",
+      "fr": "Résistance",
+      "unit": "Ω"
+    }
+  ],
+  "alarm_levels": [
+    {
+      "id": 0,
+      "en": "OK",
+      "fr": "Normal"
+    },
+    {
+      "id": 1,
+      "en": "Warning",
+      "fr": "Avertissement"
+    },
+    {
+      "id": 2,
+      "en": "Critical",
+      "fr": "Critique"
+    }
+  ],
+  "constants": {
+    "channels": 8,
+    "inputs": 4,
+    "max_sessions": 8,
+    "label_max_bytes": 32,
+    "key_bytes": 32,
+    "nonce_bytes": 16,
+    "nan_i16": -32768,
+    "notify_interval_ms": 500,
+    "pairing_window_s": 30,
+    "ota_window_bytes": 4096,
+    "alarm_threshold_max_tenths": 5000,
+    "input_scale_max_cv": 3000,
+    "hist_levels": 5,
+    "hist_record_bytes": 156,
+    "hist_level_seconds": [
+      900,
+      3600,
+      86400,
+      604800,
+      2419200
+    ],
+    "hist_level_depth": [
+      8,
+      48,
+      14,
+      9,
+      14
+    ]
+  },
+  "_network_comment": [
+    "⚠️ SET_REMOTE accepte 2 ou 3 octets depuis le 2026-09-06 : [accès, commandes]",
+    "ou [accès, commandes, réseau]. GET_REMOTE rend 4 octets :",
+    "[accès, commandes, connecté, réseau].",
+    "réseau : 0 = aucun, 1 = broker Xptrucks, 2 = Victron (Cerbo GX local).",
+    "⚠️ Les deux profils MQTT S'EXCLUENT : deux clients armés ensemble mettent la",
+    "carte en boucle de redémarrage (mesuré : heap libre 3 580 o, creux 212).",
+    "⚠️ Le champ est ajouté À LA FIN : une application ancienne lit ce qu'elle",
+    "connaît et ignore le reste. Une application à jour face à un firmware ancien",
+    "reçoit BAD_PAYLOAD sur trois octets, et peut se rabattre sur deux."
+  ]
+}
