@@ -420,9 +420,9 @@ const FONCTIONS = {
           },
           {
             ico: "redimensionner",
-            titre: "Une grille qui suit l'écran",
-            texte: "Chaque tuile a une taille (petite, moyenne, grande) et le nombre de tuiles par ligne suit la largeur de l'écran. Le même tableau de bord se lit sur un téléphone tenu à une main comme sur une tablette fixée à la cloison.",
-            exemple: " la tablette murale de la cellule affiche la même page que le téléphone, en plus large.",
+            titre: "Des tuiles posées où l'on veut",
+            texte: "Chaque page est une grille de quatre colonnes, la même sur un téléphone et sur une tablette. En édition, les cases libres se dessinent : on en touche une pour ajouter une tuile, on glisse une tuile sur n'importe quelle case où elle tient, trous compris.",
+            exemple: " on laisse une case vide entre l'éclairage et la pompe pour que la page respire.",
             ou: ["app"]
           },
           {
@@ -479,6 +479,27 @@ const FONCTIONS = {
             titre: "Thème et langue",
             texte: "Clair, sombre ou celui du système ; français ou anglais, avec la langue du téléphone par défaut.",
             exemple: " en mode sombre, la nuit, l'écran n'éblouit pas dans la cellule.",
+            ou: ["app"]
+          },
+          {
+            ico: "palette",
+            titre: "Le thème de votre marque",
+            texte: "Un fichier de thème remplace toutes les couleurs de l'app et des TinyView, en clair comme en sombre. On le compare au thème actuel avant de l'appliquer à l'installation, on l'importe, on l'exporte.",
+            exemple: " un loueur habille l'app et les écrans de ses vans à ses couleurs.",
+            ou: ["app"]
+          },
+          {
+            ico: "oeil",
+            titre: "Une représentation par tuile",
+            texte: "Interrupteur, gradateur, icône seule ; chiffre, jauge, réservoir, voyant, batterie : chaque tuile choisit sa façon de se montrer, parmi celles que son type permet, la même dans l'app et sur le TinyView.",
+            exemple: " le réservoir d'eau propre se dessine en cuve verticale, la batterie en quatre crans.",
+            ou: ["app"]
+          },
+          {
+            ico: "filet",
+            titre: "Le courant sur demande",
+            texte: "Une sortie dit ALLUMÉ ou ÉTEINT. Son courant et son filet s'affichent si on le demande, tuile par tuile.",
+            exemple: " on garde le courant sur le chauffe-eau, qu'on surveille, et pas sur l'éclairage.",
             ou: ["app"]
           },
           {
@@ -848,6 +869,47 @@ const FONCTIONS = {
         ]
       },
 
+      {
+        titre: "Le TinyView",
+        chapeau: "Un écran au mur, pour piloter le van sans sortir son téléphone.",
+        fiches: [
+          {
+            ico: "ecran",
+            titre: "Un écran au mur",
+            texte: "Le TinyView, un écran tactile de 4 pouces, montre et commande les sorties, les réservoirs et la batterie des cartes de l'installation, sans téléphone ni réseau.",
+            exemple: " en entrant dans le van, on allume le plafonnier et on lit le niveau d'eau à côté de la porte.",
+            ou: ["TinyView"]
+          },
+          {
+            ico: "liaison",
+            titre: "Appairé en six chiffres",
+            texte: "Le TinyView affiche un code, on le tape dans l'app : il reçoit les cartes de l'installation et de quoi leur parler, sans que leurs clés passent en clair.",
+            exemple: " un aménageur appaire l'écran du client en une minute, à la livraison.",
+            ou: ["TinyView", "app"]
+          },
+          {
+            ico: "pages",
+            titre: "Ses pages, composées dans l'app",
+            texte: "L'app compose les pages du TinyView sur sa grille, ou lui donne celles de l'installation. Une page modifiée lui parvient dès qu'il est à portée.",
+            exemple: " on garde sur l'écran de la cellule une page « En partant » avec tout éteindre.",
+            ou: ["TinyView", "app"]
+          },
+          {
+            ico: "palette",
+            titre: "En français ou en anglais, clair ou sombre",
+            texte: "La langue, le thème clair ou sombre et le petit bruit des appuis se règlent d'un geste en haut de l'écran ; le logo et les couleurs du client viennent de l'app.",
+            exemple: " la nuit, l'écran passe en sombre d'un geste, sans chercher le téléphone.",
+            ou: ["TinyView"]
+          },
+          {
+            ico: "bouee",
+            titre: "Mis à jour depuis l'app",
+            texte: "Le TinyView se met à jour par Bluetooth depuis l'app, comme la carte. S'il démarre mal sur la nouvelle version, il revient seul à l'ancienne.",
+            exemple: " une nouvelle version s'installe depuis le téléphone, sans câble ni ordinateur.",
+            ou: ["TinyView", "app"]
+          }
+        ]
+      },
       {
         titre: "La carte",
         chapeau: "Ce qu'il y a dans la boîte, et ce que cela impose au reste.",
@@ -1305,9 +1367,9 @@ const FONCTIONS = {
           },
           {
             ico: "redimensionner",
-            titre: "A grid that follows the screen",
-            texte: "Each tile has a size (small, medium, large) and the number of tiles per row follows the screen width. The same dashboard reads on a phone held in one hand and on a tablet fixed to the wall.",
-            exemple: " the cabin wall tablet shows the same page as the phone, only wider.",
+            titre: "Tiles placed where you want",
+            texte: "Each page is a four-column grid, the same on a phone and on a tablet. In edit mode the free squares are drawn: tap one to add a tile, drag a tile onto any square where it fits, gaps included.",
+            exemple: " you leave an empty square between the lights and the pump so the page can breathe.",
             ou: ["app"]
           },
           {
@@ -1364,6 +1426,27 @@ const FONCTIONS = {
             titre: "Theme and language",
             texte: "Light, dark or the system's; French or English, following the phone by default.",
             exemple: " in dark mode, at night, the screen does not dazzle the cabin.",
+            ou: ["app"]
+          },
+          {
+            ico: "palette",
+            titre: "Your brand's theme",
+            texte: "A theme file replaces every colour of the app and the TinyViews, light and dark. You compare it with the current theme before applying it to the installation, and you can import and export it.",
+            exemple: " a van rental company dresses the app and its vans' screens in its own colours.",
+            ou: ["app"]
+          },
+          {
+            ico: "oeil",
+            titre: "One representation per tile",
+            texte: "Switch, dimmer, icon only; number, gauge, tank, indicator, battery: each tile picks how it shows itself, among those its type allows, the same in the app and on the TinyView.",
+            exemple: " the fresh water tank is drawn as a vertical tank, the battery as four bars.",
+            ou: ["app"]
+          },
+          {
+            ico: "filet",
+            titre: "Current on demand",
+            texte: "An output says ON or OFF. Its current and its current trace show when you ask for them, tile by tile.",
+            exemple: " you keep the current on the water heater, which you watch, and not on the lights.",
             ou: ["app"]
           },
           {
@@ -1733,6 +1816,47 @@ const FONCTIONS = {
         ]
       },
 
+      {
+        titre: "The TinyView",
+        chapeau: "A screen on the wall, to run the van without taking out your phone.",
+        fiches: [
+          {
+            ico: "ecran",
+            titre: "A screen on the wall",
+            texte: "The TinyView, a 4-inch touch screen, shows and controls the outputs, tanks and battery of the installation's boards, with no phone and no network.",
+            exemple: " walking into the van, you switch the ceiling light on and read the water level by the door.",
+            ou: ["TinyView"]
+          },
+          {
+            ico: "liaison",
+            titre: "Paired with six digits",
+            texte: "The TinyView shows a code, you type it in the app: it receives the installation's boards and what it needs to talk to them, without their keys ever travelling in clear.",
+            exemple: " a converter pairs the customer's screen in a minute, at delivery.",
+            ou: ["TinyView", "app"]
+          },
+          {
+            ico: "pages",
+            titre: "Its pages, composed in the app",
+            texte: "The app composes the TinyView's pages on its grid, or gives it the installation's. A changed page reaches it as soon as it is in range.",
+            exemple: " the cabin screen keeps a “Leaving” page with switch everything off.",
+            ou: ["TinyView", "app"]
+          },
+          {
+            ico: "palette",
+            titre: "French or English, light or dark",
+            texte: "Language, light or dark theme and the small click of each tap are set with one gesture at the top of the screen; the customer's logo and colours come from the app.",
+            exemple: " at night, the screen goes dark with one gesture, without looking for the phone.",
+            ou: ["TinyView"]
+          },
+          {
+            ico: "bouee",
+            titre: "Updated from the app",
+            texte: "The TinyView updates over Bluetooth from the app, like the board. If it starts badly on the new version, it goes back to the previous one on its own.",
+            exemple: " a new version installs from the phone, with no cable and no computer.",
+            ou: ["TinyView", "app"]
+          }
+        ]
+      },
       {
         titre: "The board",
         chapeau: "What is in the box, and what it imposes on the rest.",
