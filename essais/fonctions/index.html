@@ -470,7 +470,7 @@ const FONCTIONS = {
           {
             ico: "maison",
             titre: "Plusieurs installations",
-            texte: "Van, camion, bateau, tiny house, maison : l'app tient plusieurs installations, chacune avec ses cartes et ses pages, et on passe de l'une à l'autre.",
+            texte: "Van, camion, bateau, tiny house, maison : l'app tient plusieurs installations, chacune avec ses cartes et ses pages, et on passe de l'une à l'autre. Chacune a ses réglages en un seul écran : nom et icône, thème et logo, Wi-Fi, accès distant, sauvegarde.",
             exemple: " un aménageur garde l'installation de son atelier et celle du van du client sur le même téléphone.",
             ou: ["app"]
           },
@@ -484,7 +484,7 @@ const FONCTIONS = {
           {
             ico: "palette",
             titre: "Le thème de votre marque",
-            texte: "Un fichier de thème remplace toutes les couleurs de l'app et des TinyView, en clair comme en sombre. On le compare au thème actuel avant de l'appliquer à l'installation, on l'importe, on l'exporte.",
+            texte: "Un fichier de thème remplace toutes les couleurs de l'app et des TinyView, en clair comme en sombre. On le compare au thème actuel avant de l'appliquer à l'installation, on l'importe, on l'exporte. Le logo affiché au démarrage des TinyView se choisit au même endroit, une fois pour toute l'installation.",
             exemple: " un loueur habille l'app et les écrans de ses vans à ses couleurs.",
             ou: ["app"]
           },
@@ -714,15 +714,15 @@ const FONCTIONS = {
           },
           {
             ico: "wifi",
-            titre: "Poser le Wi-Fi depuis l'app",
-            texte: "Le réseau Wi-Fi de la carte se saisit en Bluetooth, depuis l'app. Rien n'est enregistré tant que la connexion n'a pas réussi : une carte ne redémarre jamais sur un réseau injoignable.",
-            exemple: " au parking d'un camping, la carte rejoint le Wi-Fi du site en deux minutes.",
+            titre: "Un Wi-Fi pour toute l'installation",
+            texte: "Le réseau se saisit une fois, en Bluetooth, et l'app le pose sur toutes les cartes de l'installation à portée. Chaque carte n'enregistre qu'après s'être connectée : une carte ne redémarre jamais sur un réseau injoignable. Une carte ajoutée plus tard rejoint le réseau d'une touche, sans ressaisir le mot de passe.",
+            exemple: " le van reçoit un routeur 4G : les trois cartes passent dessus en une seule saisie.",
             ou: ["app"]
           },
           {
             ico: "nuageCadenas",
             titre: "Accès distant chiffré de bout en bout",
-            texte: "Quand elle a du Wi-Fi, la carte publie son état sur un serveur, et l'app lui envoie des commandes depuis n'importe où. Tout est chiffré avec la clé d'appairage : le serveur ne peut ni lire l'installation, ni la piloter.",
+            texte: "Quand elle a du Wi-Fi, la carte publie son état sur un serveur, et l'app lui envoie des commandes depuis n'importe où. Tout est chiffré avec la clé d'appairage : le serveur ne peut ni lire l'installation, ni la piloter. L'accès distant et l'autorisation des commandes se choisissent une fois pour toute l'installation.",
             exemple: " on vérifie depuis le bureau que le chauffage du van tourne avant le départ du week-end.",
             ou: ["carte", "app", "à distance"]
           },
@@ -911,7 +911,7 @@ const FONCTIONS = {
           {
             ico: "pages",
             titre: "Ses pages, composées dans l'app",
-            texte: "L'app compose les pages du TinyView sur sa grille, ou lui donne celles de l'installation. Une page modifiée lui parvient dès qu'il est à portée.",
+            texte: "Un TinyView appairé démarre sans pages et attend qu'on les compose dans l'app, sur sa grille ; on peut aussi partir d'une copie des pages de l'installation. Une page modifiée lui parvient dès qu'il est à portée, ou d'un appui sur « Envoyer », et l'app réessaie avant de dire un échec.",
             exemple: " on garde sur l'écran de la cellule une page « En partant » avec tout éteindre.",
             ou: ["TinyView", "app"]
           },
@@ -1438,7 +1438,7 @@ const FONCTIONS = {
           {
             ico: "maison",
             titre: "Several installations",
-            texte: "Van, truck, boat, tiny house, house: the app holds several installations, each with its boards and pages, and you switch between them.",
+            texte: "Van, truck, boat, tiny house, house: the app holds several installations, each with its boards and pages, and you switch between them. Each one has its settings on a single screen: name and icon, theme and logo, Wi-Fi, remote access, backup.",
             exemple: " a converter keeps their workshop installation and a customer's van on the same phone.",
             ou: ["app"]
           },
@@ -1452,7 +1452,7 @@ const FONCTIONS = {
           {
             ico: "palette",
             titre: "Your brand's theme",
-            texte: "A theme file replaces every colour of the app and the TinyViews, light and dark. You compare it with the current theme before applying it to the installation, and you can import and export it.",
+            texte: "A theme file replaces every colour of the app and the TinyViews, light and dark. You compare it with the current theme before applying it to the installation, and you can import and export it. The logo shown when the TinyViews start is chosen in the same place, once for the whole installation.",
             exemple: " a van rental company dresses the app and its vans' screens in its own colours.",
             ou: ["app"]
           },
@@ -1682,15 +1682,15 @@ const FONCTIONS = {
           },
           {
             ico: "wifi",
-            titre: "Setting Wi-Fi from the app",
-            texte: "The board's Wi-Fi network is entered over Bluetooth, from the app. Nothing is stored until the connection has succeeded: a board never restarts onto an unreachable network.",
-            exemple: " on a campsite car park, the board joins the site Wi-Fi in two minutes.",
+            titre: "One Wi-Fi for the whole installation",
+            texte: "The network is entered once, over Bluetooth, and the app sets it on every board of the installation within range. Each board only stores it once connected: a board never restarts onto an unreachable network. A board added later joins with one tap, without typing the password again.",
+            exemple: " the van gets a 4G router: all three boards move onto it with a single entry.
             ou: ["app"]
           },
           {
             ico: "nuageCadenas",
             titre: "End-to-end encrypted remote access",
-            texte: "With Wi-Fi, the board publishes its state to a server, and the app sends it commands from anywhere. Everything is encrypted with the pairing key: the server can neither read the installation nor drive it.",
+            texte: "With Wi-Fi, the board publishes its state to a server, and the app sends it commands from anywhere. Everything is encrypted with the pairing key: the server can neither read the installation nor drive it. Remote access and permission for commands are chosen once for the whole installation.",
             exemple: " you check from the office that the van heater is running before the weekend departure.",
             ou: ["board", "app", "remote"]
           },
@@ -1879,7 +1879,7 @@ const FONCTIONS = {
           {
             ico: "pages",
             titre: "Its pages, composed in the app",
-            texte: "The app composes the TinyView's pages on its grid, or gives it the installation's. A changed page reaches it as soon as it is in range.",
+            texte: "A paired TinyView starts with no pages and waits for them to be composed in the app, on its grid; you can also start from a copy of the installation's pages. A changed page reaches it as soon as it is in range, or with a tap on “Send”, and the app retries before reporting a failure.",
             exemple: " the cabin screen keeps a “Leaving” page with switch everything off.",
             ou: ["TinyView", "app"]
           },
