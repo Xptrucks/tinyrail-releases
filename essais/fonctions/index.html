@@ -643,6 +643,13 @@ const FONCTIONS = {
             ou: ["app", "à distance", { mot: "à éprouver", neuf: true }]
           },
           {
+            ico: "partager",
+            titre: "Passer l'installation à un autre téléphone, sans réseau",
+            texte: "Un téléphone affiche la sauvegarde en QR codes qui défilent, l'autre la lit avec sa caméra : ni Wi-Fi commun, ni Internet, ni appairage entre les deux, et Android comme iPhone. Le mot de passe se tape sur les deux téléphones, il n'est jamais dans les codes. Un code raté ne fait pas attendre, le suivant le remplace ; si la caméra peine, on passe à moins de codes, plus grands.",
+            exemple: " au fond d'une vallée sans réseau, le second conducteur reprend le van sur son téléphone en une demi-minute, logo compris.",
+            ou: ["app"]
+          },
+          {
             ico: "echange",
             titre: "Remplacer une carte en panne",
             texte: "Une carte lâche, on en pose une neuve, et l'app remet la neuve dans l'état exact de l'ancienne : libellés, seuils, entrées, pages, tuiles. Une étape à la fois, avec la progression comptée, et à la fin ce qui ne suit pas est dit en clair.",
@@ -690,6 +697,13 @@ const FONCTIONS = {
             texte: "Pour appairer une carte, il faut appuyer trois secondes sur son bouton : elle ouvre alors une fenêtre de trente secondes pendant laquelle elle délivre sa clé. Être à portée ne suffit pas, il faut être devant.",
             exemple: " un voisin ne peut pas adopter votre carte depuis le camping-car d'à côté.",
             ou: ["carte", "app"]
+          },
+          {
+            ico: "liaison",
+            titre: "Appairée par son étiquette",
+            texte: "Une carte préparée en atelier porte une étiquette avec un QR code. L'app le scanne et obtient la clé sans qu'on touche au bouton de la carte. L'étiquette d'une autre carte est reconnue et refusée, et cinq essais faux de suite bloquent la carte cinq minutes.",
+            exemple: " la carte est déjà vissée derrière un meuble : on scanne l'étiquette restée visible, et c'est appairé.",
+            ou: ["carte", "app", { mot: "à éprouver", neuf: true }]
           },
           {
             ico: "verrou",
@@ -907,6 +921,13 @@ const FONCTIONS = {
             texte: "En option, le TinyView en veille garde l'heure à l'écran, faiblement éclairée, au lieu de s'éteindre : mêmes formats que la tuile Horloge, luminosité réglable de 2 à 50 %. Un premier contact ne fait que le réveiller, sans rien actionner.",
             exemple: " la nuit, on lit l'heure d'un coup d'oeil depuis la couchette, sans être ébloui.",
             ou: ["TinyView", "app"]
+          },
+          {
+            ico: "insigne",
+            titre: "Une tuile Logo",
+            texte: "Une tuile qui ne mesure rien et montre le logo importé pour l'installation, ou celui de TinyRail s'il n'y en a pas. Elle se pose sur une page de l'app comme sur l'écran du TinyView, à la taille voulue.",
+            exemple: " un aménageur met son logo en grand sur la première page du TinyView qu'il livre.",
+            ou: ["TinyView", "app", { mot: "à éprouver", neuf: true }]
           },
           {
             ico: "pages",
@@ -1611,6 +1632,13 @@ const FONCTIONS = {
             ou: ["app", "remote", { mot: "to be trialled", neuf: true }]
           },
           {
+            ico: "partager",
+            titre: "Hand the installation to another phone, no network needed",
+            texte: "One phone shows the backup as cycling QR codes, the other reads it with its camera: no shared Wi-Fi, no Internet, no pairing between the two, Android and iPhone alike. The password is typed on both phones and is never in the codes. A missed code costs no wait, the next one replaces it; if the camera struggles, switch to fewer, larger codes.",
+            exemple: " deep in a valley with no signal, the second driver takes the van over on their phone in half a minute, logo included.",
+            ou: ["app"]
+          },
+          {
             ico: "echange",
             titre: "Replacing a failed board",
             texte: "A board dies, you fit a new one, and the app brings the new one to the exact state of the old: labels, thresholds, inputs, pages, tiles. One step at a time, with the progress counted, and at the end what does not follow is said plainly.",
@@ -1658,6 +1686,13 @@ const FONCTIONS = {
             texte: "To pair a board you must hold its button for three seconds: it then opens a thirty-second window during which it hands out its key. Being in range is not enough, you have to be there.",
             exemple: " a neighbour cannot adopt your board from the camper next door.",
             ou: ["board", "app"]
+          },
+          {
+            ico: "liaison",
+            titre: "Paired by its label",
+            texte: "A board prepared in the workshop carries a label with a QR code. The app scans it and gets the key without touching the board's button. Another board's label is recognised and refused, and five wrong attempts in a row lock the board for five minutes.",
+            exemple: " the board is already screwed in behind a cabinet: you scan the label that is still visible, and it is paired.",
+            ou: ["board", "app", { mot: "to be trialled", neuf: true }]
           },
           {
             ico: "verrou",
@@ -1875,6 +1910,13 @@ const FONCTIONS = {
             texte: "As an option, the sleeping TinyView keeps the time on screen, dimly lit, instead of turning off: same formats as the Clock tile, brightness adjustable from 2 to 50 %. A first touch only wakes it, without triggering anything.",
             exemple: " at night, you read the time at a glance from the bunk, without being dazzled.",
             ou: ["TinyView", "app"]
+          },
+          {
+            ico: "insigne",
+            titre: "A Logo tile",
+            texte: "A tile that measures nothing and shows the logo imported for the installation, or TinyRail's when there is none. It goes on an app page as well as on the TinyView screen, at any size.",
+            exemple: " a van converter puts their logo in large on the first page of the TinyView they deliver.",
+            ou: ["TinyView", "app", { mot: "to be trialled", neuf: true }]
           },
           {
             ico: "pages",
