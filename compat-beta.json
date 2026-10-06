@@ -22,7 +22,7 @@
     "Publié à chaque release sur https://ota.tinyrail.xptrucks.fr/compat.json",
     "(canal bêta : compat-beta.json)."
   ],
-  "firmware": "0.15.0-beta.1",
+  "firmware": "0.15.0-beta.2",
   "protocole": 2,
   "cartes": [
     "0.2"
