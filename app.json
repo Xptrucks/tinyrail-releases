@@ -1,8 +1,8 @@
 {
-  "version": "2.1.0",
-  "build": 80,
+  "version": "2.11.0",
+  "build": 90,
   "stores": {
     "android": "https://play.google.com/store/apps/details?id=fr.xptrucks.tinyrail_app"
   },
-  "release_url": "https://github.com/Xptrucks/TinyRail_app/releases/tag/v2.1.0+80"
+  "release_url": "https://github.com/Xptrucks/TinyRail_app/releases/tag/v2.11.0+90"
 }
