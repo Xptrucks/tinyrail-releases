@@ -66,7 +66,7 @@ const FONCTIONS = {
             titre: "Type de charge par sortie",
             texte: "Quinze types : éclairage intérieur ou extérieur, pompe, ventilation, frigo, chauffage, chauffe-eau, prise, motorisation, compresseur, antenne, sirène, électrovanne, éclairage tout ou rien, générique. Le type décide de l'icône, du curseur, et de ce que Home Assistant affiche.",
             exemple: " une sortie réglée sur « Réfrigérateur » se présente en interrupteur, jamais en gradateur.",
-            ou: ["carte", "app", "Home Assistant"]
+            ou: ["carte", "app"]
           },
           {
             ico: "plafond",
@@ -108,35 +108,35 @@ const FONCTIONS = {
             titre: "Paires exclusives",
             texte: "Deux sorties voisines qui ne peuvent jamais être allumées ensemble : allumer l'une coupe l'autre, avec une coupure avant établissement.",
             exemple: " les deux sens d'un vérin de lit escamotable, qu'il ne faut jamais commander en même temps.",
-            ou: ["carte", "app", "Home Assistant"]
+            ou: ["carte", "app"]
           },
           {
             ico: "inclusif",
             titre: "Paires synchronisées",
             texte: "Deux sorties qui se suivent : commander l'une commande l'autre, dans le même sens.",
             exemple: " deux bandeaux LED sur deux circuits, commandés comme un seul éclairage.",
-            ou: ["carte", "app", "Home Assistant"]
+            ou: ["carte", "app"]
           },
           {
             ico: "chrono",
             titre: "Extinction automatique",
             texte: "Une sortie peut s'éteindre seule après un délai réglable, d'une seconde à une heure.",
             exemple: " l'éclairage de soute s'éteint tout seul cinq minutes après qu'on l'a allumé.",
-            ou: ["carte", "app", "Home Assistant"]
+            ou: ["carte", "app"]
           },
           {
             ico: "demarrage",
             titre: "État au démarrage",
             texte: "Ce que devient chaque sortie quand la carte est mise sous tension : éteinte, allumée, ou comme avant la coupure, niveau de gradation compris.",
             exemple: " après une coupure du coupe-batterie, le frigo redémarre seul et l'éclairage reste éteint.",
-            ou: ["carte", "app", "Home Assistant"]
+            ou: ["carte", "app"]
           },
           {
             ico: "nom",
             titre: "Un nom par sortie",
             texte: "Chaque sortie porte son libellé, rangé dans la carte et non dans le téléphone. Un second téléphone retrouve les mêmes noms sans rien recopier.",
             exemple: " « Pompe à eau » plutôt que « Canal 3 », partout : app, Home Assistant, journal d'alertes.",
-            ou: ["carte", "app", "Home Assistant"]
+            ou: ["carte", "app"]
           }
         ]
       },
@@ -234,7 +234,7 @@ const FONCTIONS = {
             titre: "Surintensité par sortie",
             texte: "Chaque sortie a son seuil de courant et son délai de tolérance. Au-delà, elle est coupée et le reste : c'est le rallumage qui vaut acquittement.",
             exemple: " une prise 12 V en court-circuit coupe seule, sans faire fondre le fusible ni tomber la carte entière.",
-            ou: ["carte", "app", "Home Assistant"]
+            ou: ["carte", "app"]
           },
           {
             ico: "fusible",
@@ -255,14 +255,14 @@ const FONCTIONS = {
             titre: "Coupure générale de batterie",
             texte: "Sous une tension réglable, maintenue pendant une temporisation, tout s'éteint et rien ne peut être rallumé tant que la tension n'est pas remontée. Des préréglages existent par chimie de batterie, plomb ou lithium.",
             exemple: " la batterie de service ne descend jamais assez bas pour être abîmée, même si on oublie une lampe allumée trois jours.",
-            ou: ["carte", "app", "Home Assistant"]
+            ou: ["carte", "app"]
           },
           {
             ico: "cascade",
             titre: "Délestage en cascade",
             texte: "Chaque sortie peut recevoir son propre seuil de tension. En échelonnant les seuils, le confort tombe d'abord et le vital en dernier. Un seuil à zéro veut dire « ne jamais délester ce canal ».",
             exemple: " à 12,0 V l'éclairage extérieur s'éteint, à 11,8 V le chauffe-eau, et le frigo tient jusqu'à la coupure générale.",
-            ou: ["carte", "app", "Home Assistant"]
+            ou: ["carte", "app"]
           },
           {
             ico: "rearmer",
@@ -297,21 +297,21 @@ const FONCTIONS = {
             titre: "Mode sans échec",
             texte: "Un redémarrage en mode réduit, où seule la mise à jour répond. C'est le chemin de retour si un firmware se comporte mal.",
             exemple: " on remet la carte dans un état où elle accepte une nouvelle version, sans la démonter.",
-            ou: ["carte", "app", "Home Assistant"]
+            ou: ["carte", "app"]
           },
           {
             ico: "redemarrer",
             titre: "Redémarrage à distance",
-            texte: "La carte se redémarre depuis l'app ou Home Assistant, sans y accéder physiquement.",
+            texte: "La carte se redémarre depuis l'app, sans y accéder physiquement.",
             exemple: " la carte est derrière un habillage vissé : on la redémarre depuis le téléphone.",
-            ou: ["app", "Home Assistant", "à distance"]
+            ou: ["app", "à distance"]
           },
           {
             ico: "usine",
             titre: "Retour aux réglages d'usine",
             texte: "Tout ce que la carte a en mémoire, libellés, types, seuils et clé d'appairage, s'efface d'un geste confirmé.",
             exemple: " on remet une carte d'occasion à neuf avant de la poser dans un autre véhicule.",
-            ou: ["carte", "app", "Home Assistant"]
+            ou: ["carte", "app"]
           }
         ]
       },
@@ -325,14 +325,14 @@ const FONCTIONS = {
             titre: "Trois modes de mesure",
             texte: "Chaque entrée se règle par logiciel en tension de 0 à 30 V, en sonde résistive de 0 à 500 Ω, ou en contact sec. Aucun cavalier, aucune soudure.",
             exemple: " la même borne lit la tension de la batterie du porteur ce mois-ci, et une sonde de réservoir le mois prochain.",
-            ou: ["carte", "app", "Home Assistant"]
+            ou: ["carte", "app"]
           },
           {
             ico: "goutte",
             titre: "Neuf types d'entrée",
             texte: "Eau propre, eaux grises, eaux noires, gaz, tension, contact, température, batterie, générique. Le type décide de la façon dont la mesure s'affiche : jauge, valeur ou état.",
             exemple: " une entrée réglée sur « Réservoir eau propre » se présente en jauge, pas en nombre d'ohms.",
-            ou: ["carte", "app", "Home Assistant"]
+            ou: ["carte", "app"]
           },
           {
             ico: "courbe",
@@ -381,14 +381,14 @@ const FONCTIONS = {
             titre: "Seuils d'alerte par entrée",
             texte: "Deux seuils par entrée, avertissement et critique, et un sens : alerter quand ça manque, ou quand ça déborde. L'alerte est signalée, jamais agie : aucune sortie n'est coupée.",
             exemple: " l'eau propre passe sous 20 % : l'app prévient, sans rien éteindre.",
-            ou: ["carte", "app", "Home Assistant"]
+            ou: ["carte", "app"]
           },
           {
             ico: "nom",
             titre: "Un nom par entrée",
             texte: "Comme les sorties, chaque entrée porte son libellé, rangé dans la carte.",
             exemple: " « Réservoir eau propre (AN3) » se lit sans avoir le schéma en tête.",
-            ou: ["carte", "app", "Home Assistant"]
+            ou: ["carte", "app"]
           }
         ]
       },
@@ -584,7 +584,7 @@ const FONCTIONS = {
             titre: "Un nom pour la carte",
             texte: "Le nom que le propriétaire donne à la carte (« Cellule », « Soute », « Bateau ») est rangé dans la carte elle-même.",
             exemple: " deux cartes dans un van, nommées « Cellule » et « Soute », reconnues telles quelles sur n'importe quel téléphone.",
-            ou: ["carte", "app", "Home Assistant"]
+            ou: ["carte", "app"]
           },
           {
             ico: "ecrire",
@@ -792,14 +792,14 @@ const FONCTIONS = {
           {
             ico: "maison",
             titre: "Home Assistant, sans passerelle",
-            texte: "La carte est découverte toute seule sur le réseau local et apparaît dans Home Assistant avec toutes ses entités : commandes, mesures, réglages, diagnostics. Ni intégration tierce, ni cloud, ni abonnement.",
+            texte: "La carte est découverte toute seule sur le réseau local et apparaît dans Home Assistant avec ses commandes, ses mesures et ses diagnostics. Home Assistant lit et commande les sorties ; les réglages se font dans l'app. Ni intégration tierce, ni cloud, ni abonnement.",
             exemple: " une automatisation coupe l'eau quand personne n'est à bord.",
             ou: ["carte", "Home Assistant"]
           },
           {
             ico: "boites",
             titre: "Un appareil par sortie et par entrée",
-            texte: "Chaque sortie et chaque entrée forme son propre appareil dans Home Assistant, dont le nom suit le libellé donné à la carte. Les réglages de la carte sont eux-mêmes rangés par sujet : batterie, thermique, paires, maintenance, réseau.",
+            texte: "Chaque sortie et chaque entrée forme son propre appareil dans Home Assistant, dont le nom suit le libellé donné dans l'app.",
             exemple: " « Frigo » et ses entités se retrouvent d'un coup d'œil, au lieu d'une liste de quarante lignes.",
             ou: ["Home Assistant"]
           },
@@ -953,6 +953,82 @@ const FONCTIONS = {
         ]
       },
       {
+        titre: "La TinyPower",
+        chapeau: "La distribution de la batterie sur quatre fusibles MIDI de 50 A, et chacun d'eux surveillé. La TinyPower ne commande rien : elle renseigne.",
+        fiches: [
+          {
+            ico: "fusible",
+            titre: "Quatre fusibles surveillés",
+            texte: "Chaque voie dit si son fusible est en place, s'il est grillé, ou si la TinyPower n'a pas d'alimentation en amont. « Grillé » veut dire : pas de tension en aval alors que l'amont est présent, que le fusible ait fondu ou qu'il ait été retiré. C'est une indication, pas une protection : la protection reste le fusible, et un défaut se diagnostique sur l'installation.",
+            exemple: " le frigo ne démarre plus : la voie 2 est marquée « Grillé », on sait quel fusible regarder avant d'ouvrir le coffre.",
+            ou: ["TinyPower", "app"]
+          },
+          {
+            ico: "tension",
+            titre: "La tension d'alimentation et la température",
+            texte: "La TinyPower mesure la tension qui l'alimente, en amont des fusibles, et sa propre température.",
+            exemple: " un coup d'œil à l'app dit que la batterie tient sa tension et que le coffre ne chauffe pas.",
+            ou: ["TinyPower", "app"]
+          },
+          {
+            ico: "empreinte",
+            titre: "Appairée par son bouton ou son étiquette",
+            texte: "Comme une carte TinyRail : trois secondes sur son bouton d'appairage ouvrent une fenêtre de trente secondes, ou l'app scanne le QR code de son étiquette sans qu'on touche à la TinyPower.",
+            exemple: " la TinyPower est déjà vissée au fond du coffre batterie : on scanne l'étiquette, et elle rejoint l'installation.",
+            ou: ["TinyPower", "app"]
+          },
+          {
+            ico: "nom",
+            titre: "Un nom par voie, un nom pour la TinyPower",
+            texte: "Les quatre voies et la TinyPower elle-même portent un nom, rangé dans la carte : un second téléphone les retrouve sans rien recopier.",
+            exemple: " « Convertisseur », « Frigo », « Cellule » et « Treuil » plutôt que « Voie 1 » à « Voie 4 ».",
+            ou: ["TinyPower", "app"]
+          },
+          {
+            ico: "pages",
+            titre: "La tuile Fusible",
+            texte: "Une tuile du tableau de bord montre en grand l'état d'une voie, avec son nom. Elle se pose sur une page de l'app comme sur l'écran d'un TinyView (version 0.6.0 ou plus).",
+            exemple: " la voie du frigo en tuile, à côté de son interrupteur : un fusible grillé se voit sans chercher.",
+            ou: ["app", "TinyView"]
+          },
+          {
+            ico: "archive",
+            titre: "L'historique de la TinyPower",
+            texte: "Comme une carte TinyRail, la TinyPower tient elle-même son historique : tension d'alimentation et température, temps passé sous tension par chaque voie, fusibles grillés sur la période. Sur 24 heures, 7 jours, 4 semaines ou un an.",
+            exemple: " après trois semaines d'hivernage, on vérifie que la tension de la batterie n'est jamais descendue trop bas.",
+            ou: ["TinyPower", "app"]
+          },
+          {
+            ico: "wifi",
+            titre: "Sur le réseau de l'installation",
+            texte: "Le Wi-Fi et l'accès distant de l'installation se règlent pour la TinyPower en même temps que pour les cartes TinyRail. L'appairage d'une nouvelle TinyPower propose de la poser sur le réseau de l'installation, sans ressaisir le mot de passe.",
+            exemple: " une TinyPower ajoutée dans la soute rejoint le routeur 4G du van d'une touche.",
+            ou: ["TinyPower", "app"]
+          },
+          {
+            ico: "nuageCadenas",
+            titre: "La TinyPower à distance",
+            texte: "Hors de portée du Bluetooth, l'app lit la TinyPower par Internet, chiffrée de bout en bout avec la clé d'appairage, comme une carte TinyRail : état des fusibles, tension d'alimentation et température.",
+            exemple: " depuis le bureau, on vérifie avant le départ que les quatre fusibles du van sont en place.",
+            ou: ["TinyPower", "app", "à distance", { mot: "à éprouver", neuf: true }]
+          },
+          {
+            ico: "maison",
+            titre: "Dans Home Assistant, en lecture",
+            texte: "Sur le réseau local, la TinyPower apparaît dans Home Assistant avec l'état de ses quatre fusibles, sa tension d'alimentation et sa température. Elle s'y lit, elle ne s'y règle pas : les noms et les réglages passent par l'app.",
+            exemple: " une automatisation envoie une notification quand un fusible grille.",
+            ou: ["TinyPower", "Home Assistant"]
+          },
+          {
+            ico: "ecran",
+            titre: "Vers un Victron GX",
+            texte: "La TinyPower publie vers le Victron GX du réseau local l'état de ses voies, sa tension d'alimentation et sa température, comme le fait une carte TinyRail.",
+            exemple: " l'état des quatre fusibles rejoint les batteries et le convertisseur dans l'installation Victron.",
+            ou: ["TinyPower", { mot: "à éprouver", neuf: true }]
+          }
+        ]
+      },
+      {
         titre: "La carte",
         chapeau: "Ce qu'il y a dans la boîte, et ce que cela impose au reste.",
         fiches: [
@@ -1055,7 +1131,7 @@ const FONCTIONS = {
             titre: "A load type per output",
             texte: "Fifteen types: interior or exterior light, pump, fan, fridge, heater, water heater, socket, motor, compressor, antenna, siren, valve, on/off light, generic. The type decides the icon, the slider, and what Home Assistant shows.",
             exemple: " an output set to “Fridge” shows up as a switch, never as a dimmer.",
-            ou: ["board", "app", "Home Assistant"]
+            ou: ["board", "app"]
           },
           {
             ico: "plafond",
@@ -1097,35 +1173,35 @@ const FONCTIONS = {
             titre: "Exclusive pairs",
             texte: "Two neighbouring outputs that can never be on together: switching one on cuts the other, break before make.",
             exemple: " the two directions of a drop-down bed actuator, which must never be driven at once.",
-            ou: ["board", "app", "Home Assistant"]
+            ou: ["board", "app"]
           },
           {
             ico: "inclusif",
             titre: "Synchronised pairs",
             texte: "Two outputs that follow each other: driving one drives the other, the same way.",
             exemple: " two LED strips on two circuits, driven as a single light.",
-            ou: ["board", "app", "Home Assistant"]
+            ou: ["board", "app"]
           },
           {
             ico: "chrono",
             titre: "Automatic switch-off",
             texte: "An output can switch itself off after an adjustable delay, from one second to one hour.",
             exemple: " the garage light goes out on its own five minutes after being switched on.",
-            ou: ["board", "app", "Home Assistant"]
+            ou: ["board", "app"]
           },
           {
             ico: "demarrage",
             titre: "State at power-up",
             texte: "What each output becomes when the board is powered: off, on, or the way it was before the cut, dimming level included.",
             exemple: " after the battery isolator is switched back on, the fridge restarts by itself and the lights stay off.",
-            ou: ["board", "app", "Home Assistant"]
+            ou: ["board", "app"]
           },
           {
             ico: "nom",
             titre: "A name per output",
             texte: "Each output carries its label, stored in the board and not in the phone. A second phone finds the same names without copying anything.",
             exemple: " “Water pump” rather than “Channel 3”, everywhere: app, Home Assistant, alert log.",
-            ou: ["board", "app", "Home Assistant"]
+            ou: ["board", "app"]
           }
         ]
       },
@@ -1223,7 +1299,7 @@ const FONCTIONS = {
             titre: "Overcurrent per output",
             texte: "Each output has its own current threshold and tolerance delay. Beyond it, the output is cut and stays cut: switching it back on is the acknowledgement.",
             exemple: " a shorted 12 V socket cuts on its own, without blowing a fuse or taking the whole board down.",
-            ou: ["board", "app", "Home Assistant"]
+            ou: ["board", "app"]
           },
           {
             ico: "fusible",
@@ -1244,14 +1320,14 @@ const FONCTIONS = {
             titre: "General battery cutoff",
             texte: "Below an adjustable voltage, held for a delay, everything switches off and nothing can be switched back on until the voltage recovers. Presets exist per battery chemistry, lead or lithium.",
             exemple: " the service battery never drops low enough to be damaged, even if a light is left on for three days.",
-            ou: ["board", "app", "Home Assistant"]
+            ou: ["board", "app"]
           },
           {
             ico: "cascade",
             titre: "Load shedding in cascade",
             texte: "Each output can get its own voltage threshold. By staggering them, comfort goes first and essentials last. A threshold of zero means “never shed this channel”.",
             exemple: " at 12.0 V the exterior light goes, at 11.8 V the water heater, and the fridge holds until the general cutoff.",
-            ou: ["board", "app", "Home Assistant"]
+            ou: ["board", "app"]
           },
           {
             ico: "rearmer",
@@ -1286,21 +1362,21 @@ const FONCTIONS = {
             titre: "Safe mode",
             texte: "A restart into a reduced mode where only updating answers. It is the way back in if a firmware misbehaves.",
             exemple: " you put the board back into a state where it accepts a new version, without removing it.",
-            ou: ["board", "app", "Home Assistant"]
+            ou: ["board", "app"]
           },
           {
             ico: "redemarrer",
             titre: "Remote restart",
-            texte: "The board restarts from the app or from Home Assistant, without physical access.",
+            texte: "The board restarts from the app, without physical access.",
             exemple: " the board is behind a screwed-on panel: you restart it from the phone.",
-            ou: ["app", "Home Assistant", "remote"]
+            ou: ["app", "remote"]
           },
           {
             ico: "usine",
             titre: "Factory reset",
             texte: "Everything the board holds, labels, types, thresholds and pairing key, is erased in one confirmed gesture.",
             exemple: " you bring a second-hand board back to new before fitting it in another vehicle.",
-            ou: ["board", "app", "Home Assistant"]
+            ou: ["board", "app"]
           }
         ]
       },
@@ -1314,14 +1390,14 @@ const FONCTIONS = {
             titre: "Three measurement modes",
             texte: "Each input is set in software to voltage from 0 to 30 V, resistive sender from 0 to 500 Ω, or dry contact. No jumper, no soldering.",
             exemple: " the same terminal reads the starter battery voltage this month, and a tank sender next month.",
-            ou: ["board", "app", "Home Assistant"]
+            ou: ["board", "app"]
           },
           {
             ico: "goutte",
             titre: "Nine input types",
             texte: "Fresh water, grey water, black water, gas, voltage, contact, temperature, battery, generic. The type decides how the measurement is shown: gauge, value or state.",
             exemple: " an input set to “Fresh water tank” shows as a gauge, not as a number of ohms.",
-            ou: ["board", "app", "Home Assistant"]
+            ou: ["board", "app"]
           },
           {
             ico: "courbe",
@@ -1370,14 +1446,14 @@ const FONCTIONS = {
             titre: "Alert thresholds per input",
             texte: "Two thresholds per input, warning and critical, and a direction: alert when it runs short, or when it overflows. An alert is reported, never acted on: no output is cut.",
             exemple: " fresh water drops below 20 %: the app warns, without switching anything off.",
-            ou: ["board", "app", "Home Assistant"]
+            ou: ["board", "app"]
           },
           {
             ico: "nom",
             titre: "A name per input",
             texte: "Like outputs, each input carries its label, stored in the board.",
             exemple: " “Fresh water tank (AN3)” reads without the wiring diagram in mind.",
-            ou: ["board", "app", "Home Assistant"]
+            ou: ["board", "app"]
           }
         ]
       },
@@ -1573,7 +1649,7 @@ const FONCTIONS = {
             titre: "A name for the board",
             texte: "The name the owner gives the board (“Cabin”, “Garage”, “Boat”) is stored in the board itself.",
             exemple: " two boards in a van, named “Cabin” and “Garage”, recognised as such on any phone.",
-            ou: ["board", "app", "Home Assistant"]
+            ou: ["board", "app"]
           },
           {
             ico: "ecrire",
@@ -1719,7 +1795,7 @@ const FONCTIONS = {
             ico: "wifi",
             titre: "One Wi-Fi for the whole installation",
             texte: "The network is entered once, over Bluetooth, and the app sets it on every board of the installation within range. Each board only stores it once connected: a board never restarts onto an unreachable network. A board added later joins with one tap, without typing the password again.",
-            exemple: " the van gets a 4G router: all three boards move onto it with a single entry.
+            exemple: " the van gets a 4G router: all three boards move onto it with a single entry.",
             ou: ["app"]
           },
           {
@@ -1781,14 +1857,14 @@ const FONCTIONS = {
           {
             ico: "maison",
             titre: "Home Assistant, with no bridge",
-            texte: "The board is discovered by itself on the local network and appears in Home Assistant with all its entities: controls, measurements, settings, diagnostics. No third-party integration, no cloud, no subscription.",
+            texte: "The board is discovered by itself on the local network and appears in Home Assistant with its controls, measurements and diagnostics. Home Assistant reads and drives the outputs; settings are made in the app. No third-party integration, no cloud, no subscription.",
             exemple: " an automation cuts the water when nobody is on board.",
             ou: ["board", "Home Assistant"]
           },
           {
             ico: "boites",
             titre: "One device per output and per input",
-            texte: "Each output and each input forms its own device in Home Assistant, named after the label given on the board. The board's own settings are grouped by subject: battery, thermal, pairs, maintenance, network.",
+            texte: "Each output and each input forms its own device in Home Assistant, named after the label given in the app.",
             exemple: " “Fridge” and its entities are found at a glance, instead of a forty-line list.",
             ou: ["Home Assistant"]
           },
@@ -1938,6 +2014,82 @@ const FONCTIONS = {
             texte: "The TinyView updates over Bluetooth from the app, like the board. If it starts badly on the new version, it goes back to the previous one on its own.",
             exemple: " a new version installs from the phone, with no cable and no computer.",
             ou: ["TinyView", "app"]
+          }
+        ]
+      },
+      {
+        titre: "The TinyPower",
+        chapeau: "The battery distributed over four 50 A MIDI fuses, each one monitored. The TinyPower switches nothing: it reports.",
+        fiches: [
+          {
+            ico: "fusible",
+            titre: "Four monitored fuses",
+            texte: "Each way tells whether its fuse is in place, whether it has blown, or whether the TinyPower has no upstream supply. “Blown” means: no voltage downstream while the upstream supply is present, whether the fuse melted or was removed. It is an indication, not a protection: the fuse remains the protection, and a fault is diagnosed on the installation.",
+            exemple: " the fridge no longer starts: way 2 shows “Blown”, you know which fuse to check before opening the locker.",
+            ou: ["TinyPower", "app"]
+          },
+          {
+            ico: "tension",
+            titre: "Supply voltage and temperature",
+            texte: "The TinyPower measures the voltage that supplies it, upstream of the fuses, and its own temperature.",
+            exemple: " a glance at the app shows the battery holding its voltage and the locker staying cool.",
+            ou: ["TinyPower", "app"]
+          },
+          {
+            ico: "empreinte",
+            titre: "Paired by its button or its label",
+            texte: "As with a TinyRail board: three seconds on its pairing button open a thirty-second window, or the app scans the QR code on its label without touching the TinyPower.",
+            exemple: " the TinyPower is already bolted at the back of the battery locker: you scan the label, and it joins the installation.",
+            ou: ["TinyPower", "app"]
+          },
+          {
+            ico: "nom",
+            titre: "A name per way, a name for the TinyPower",
+            texte: "The four ways and the TinyPower itself carry a name, stored in the board: a second phone finds them without copying anything.",
+            exemple: " “Inverter”, “Fridge”, “Habitation” and “Winch” rather than “Way 1” to “Way 4”.",
+            ou: ["TinyPower", "app"]
+          },
+          {
+            ico: "pages",
+            titre: "The Fuse tile",
+            texte: "A dashboard tile shows the state of one way in large, with its name. It goes on an app page as well as on a TinyView screen (version 0.6.0 or later).",
+            exemple: " the fridge way as a tile, next to its switch: a blown fuse is seen without searching.",
+            ou: ["app", "TinyView"]
+          },
+          {
+            ico: "archive",
+            titre: "The TinyPower history",
+            texte: "Like a TinyRail board, the TinyPower keeps its own history: supply voltage and temperature, time each way spent powered, fuses blown over the period. Over 24 hours, 7 days, 4 weeks or a year.",
+            exemple: " after three weeks of winter storage, you check that the battery voltage never dropped too low.",
+            ou: ["TinyPower", "app"]
+          },
+          {
+            ico: "wifi",
+            titre: "On the installation network",
+            texte: "The installation's Wi-Fi and remote access are set for the TinyPower together with the TinyRail boards. Pairing a new TinyPower offers to put it on the installation network, without typing the password again.",
+            exemple: " a TinyPower added in the rear locker joins the van's 4G router with one tap.",
+            ou: ["TinyPower", "app"]
+          },
+          {
+            ico: "nuageCadenas",
+            titre: "The TinyPower, remotely",
+            texte: "Out of Bluetooth range, the app reads the TinyPower over the Internet, end-to-end encrypted with the pairing key, as with a TinyRail board: fuse states, supply voltage and temperature.",
+            exemple: " from the office, you check before leaving that the van's four fuses are in place.",
+            ou: ["TinyPower", "app", "remote", { mot: "to be trialled", neuf: true }]
+          },
+          {
+            ico: "maison",
+            titre: "In Home Assistant, read-only",
+            texte: "On the local network, the TinyPower appears in Home Assistant with the state of its four fuses, its supply voltage and its temperature. It is read there, not set up there: names and settings go through the app.",
+            exemple: " an automation sends a notification when a fuse blows.",
+            ou: ["TinyPower", "Home Assistant"]
+          },
+          {
+            ico: "ecran",
+            titre: "To a Victron GX",
+            texte: "The TinyPower publishes the state of its ways, its supply voltage and its temperature to the Victron GX on the local network, as a TinyRail board does.",
+            exemple: " the state of the four fuses joins the batteries and the inverter in the Victron installation.",
+            ou: ["TinyPower", { mot: "to be trialled", neuf: true }]
           }
         ]
       },
