@@ -1,14 +1,14 @@
 {
   "name": "TinyRail ESP32 v2",
-  "version": "0.16.0-beta.1",
+  "version": "0.16.0-beta.2",
   "builds": [
     {
       "chipFamily": "ESP32-C3",
       "ota": {
         "path": "https://ota.tinyrail.xptrucks.fr/firmware-beta.bin",
-        "md5": "9529283289c78c4341534232f9a57ff4",
+        "md5": "07ccfc6bdb4f66b4ddc8dc967213b8cb",
         "summary": "Voir les notes de release sur GitHub",
-        "release_url": "https://github.com/Xptrucks/tinyrail-releases/releases/tag/v0.16.0-beta.1"
+        "release_url": "https://github.com/Xptrucks/tinyrail-releases/releases/tag/v0.16.0-beta.2"
       }
     }
   ]
