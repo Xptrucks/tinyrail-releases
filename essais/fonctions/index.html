@@ -650,6 +650,27 @@ const FONCTIONS = {
             ou: ["app"]
           },
           {
+            ico: "fichier",
+            titre: "Une sauvegarde qui n'oublie rien",
+            texte: "La sauvegarde emporte tous les réglages de l'installation : ceux de chaque carte, pas de gradation et réseau compris, la TinyPower et ses libellés, et les tuiles de fusible des pages. Avant le mot de passe, l'app dit quels appareils n'ont pas été relus à l'instant.",
+            exemple: " une TinyPower hors de portée part avec son dernier relevé, et l'app le signale plutôt que de laisser croire à une copie exacte.",
+            ou: ["app", { mot: "à éprouver", neuf: true }]
+          },
+          {
+            ico: "carteNom",
+            titre: "La référence de l'installateur, gardée dans l'appareil",
+            texte: "L'installateur enregistre la configuration de référence dans la carte ou la TinyPower elle-même, en Bluetooth. Elle survit à une remise aux réglages d'usine. On compare l'appareil à sa référence, et l'on y revient, sur place comme à distance ; ce que l'appareil ne sait pas remettre est dit.",
+            exemple: " un client a tout déréglé à distance : le SAV revient à la référence posée à la livraison, sans se déplacer.",
+            ou: ["carte", "TinyPower", "app", "à distance", { mot: "à éprouver", neuf: true }]
+          },
+          {
+            ico: "partager",
+            titre: "Session SAV par le téléphone du client",
+            texte: "Le client ouvre une session SAV dans les Réglages et dicte deux codes au SAV XP Trucks, qui voit et règle l'installation exactement comme lui, depuis le menu des installations. Aucune clé n'est transmise ; la session dure deux heures au plus, le client l'arrête quand il veut, et son téléphone reste allumé pendant ce temps.",
+            exemple: " un réglage qui inquiète le client au bout du monde : le SAV le voit et le corrige en direct, pendant que le client garde l'app ouverte près du van.",
+            ou: ["app", "à distance", { mot: "à éprouver", neuf: true }]
+          },
+          {
             ico: "echange",
             titre: "Remplacer une carte en panne",
             texte: "Une carte lâche, on en pose une neuve, et l'app remet la neuve dans l'état exact de l'ancienne : libellés, seuils, entrées, pages, tuiles. Une étape à la fois, avec la progression comptée, et à la fin ce qui ne suit pas est dit en clair.",
@@ -1713,6 +1734,27 @@ const FONCTIONS = {
             texte: "One phone shows the backup as cycling QR codes, the other reads it with its camera: no shared Wi-Fi, no Internet, no pairing between the two, Android and iPhone alike. The password is typed on both phones and is never in the codes. A missed code costs no wait, the next one replaces it; if the camera struggles, switch to fewer, larger codes.",
             exemple: " deep in a valley with no signal, the second driver takes the van over on their phone in half a minute, logo included.",
             ou: ["app"]
+          },
+          {
+            ico: "fichier",
+            titre: "A backup that forgets nothing",
+            texte: "The backup carries every setting of the installation: each board's, dimming step and network included, the TinyPower and its labels, and the fuse tiles of the pages. Before the password, the app says which devices were not read just now.",
+            exemple: " a TinyPower out of range goes with its last reading, and the app says so instead of implying an exact copy.",
+            ou: ["app", { mot: "to be trialled", neuf: true }]
+          },
+          {
+            ico: "carteNom",
+            titre: "The installer's reference, kept in the device",
+            texte: "The installer saves the reference configuration inside the board or the TinyPower itself, over Bluetooth. It survives a factory reset. The device can be compared with its reference and brought back to it, on site or remotely; what the device cannot set back is spelled out.",
+            exemple: " a customer has changed everything from afar: support goes back to the reference set at delivery, without travelling.",
+            ou: ["board", "TinyPower", "app", "remote", { mot: "to be trialled", neuf: true }]
+          },
+          {
+            ico: "partager",
+            titre: "Support session through the customer's phone",
+            texte: "The customer opens a support session in Settings and reads two codes to XP Trucks support, who then see and adjust the installation exactly as the customer does, from the installations menu. No key is shared; the session lasts two hours at most, the customer stops it at will, and the phone stays awake meanwhile.",
+            exemple: " a setting worries a customer on the other side of the world: support sees it and fixes it live, while the customer keeps the app open near the van.",
+            ou: ["app", "remote", { mot: "to be trialled", neuf: true }]
           },
           {
             ico: "echange",
