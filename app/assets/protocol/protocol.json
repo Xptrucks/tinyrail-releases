@@ -368,7 +368,10 @@
       "GET_WIFI",
       "SET_WIFI",
       "CLEAR_WIFI",
-      "SET_REMOTE"
+      "SET_REMOTE",
+      "INST_BEGIN",
+      "INST_CHUNK",
+      "INST_COMMIT"
     ],
     "_open_opcodes_comment": [
       "⚠️ CETTE LISTE N'EST PAS LA RÈGLE, C'EST SA PREUVE. La règle reste la liste",
@@ -390,6 +393,8 @@
       "GET_INFO",
       "GET_INPUT",
       "GET_INPUT_ALARM",
+      "INST_INFO",
+      "INST_READ",
       "GET_INPUT_META",
       "GET_INPUT_SCALE",
       "GET_LABEL",
@@ -488,7 +493,12 @@
     "CLEAR_WIFI": 117,
     "GET_REMOTE": 118,
     "SET_REMOTE": 119,
-    "GET_DIAG": 120
+    "GET_DIAG": 120,
+    "INST_INFO": 121,
+    "INST_BEGIN": 122,
+    "INST_CHUNK": 123,
+    "INST_COMMIT": 124,
+    "INST_READ": 125
   },
   "_opcodes_not_dispatched": [
     "NOP"
