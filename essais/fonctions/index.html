@@ -253,9 +253,9 @@ const FONCTIONS = {
           {
             ico: "batterie",
             titre: "Coupure générale de batterie",
-            texte: "Sous une tension réglable, maintenue pendant une temporisation, tout s'éteint et rien ne peut être rallumé tant que la tension n'est pas remontée. Des préréglages existent par chimie de batterie, plomb ou lithium.",
+            texte: "Sous une tension réglable, maintenue pendant une temporisation, tout s'éteint et rien ne peut être rallumé tant que la tension n'est pas remontée : ni par les boutons, ni par l'app, ni par Home Assistant, et l'app dit pourquoi. Éteindre reste toujours possible. Des préréglages existent par chimie de batterie, plomb ou lithium.",
             exemple: " la batterie de service ne descend jamais assez bas pour être abîmée, même si on oublie une lampe allumée trois jours.",
-            ou: ["carte", "app"]
+            ou: ["carte", "app", "Home Assistant", { mot: "à éprouver", neuf: true }]
           },
           {
             ico: "cascade",
@@ -669,6 +669,13 @@ const FONCTIONS = {
             texte: "Le client ouvre une session SAV dans les Réglages et dicte un code au SAV XP Trucks, ou le lui envoie d'un bouton. Le SAV le colle depuis le message reçu et demande l'accès sous son nom ; le client voit « Demande de connexion de Paul » et un code à quatre chiffres, le même chez le SAV, qu'ils comparent au téléphone avant d'autoriser. Le SAV voit et règle alors l'installation exactement comme lui, depuis le menu des installations : cartes, TinyPower, TinyView et leurs pages, pages de l'installation. Ce que le SAV modifie est enregistré chez le client. Aucune clé n'est transmise ; appairer, retirer un appareil ou le mettre à jour reste au client. Les deux écrans affichent la version de l'app, qui doit être la même des deux côtés. La session dure deux heures au plus, le client l'arrête quand il veut, et son téléphone reste allumé pendant ce temps.",
             exemple: " un réglage qui inquiète le client au bout du monde : le SAV le voit et le corrige en direct, jusqu'aux pages de son TinyView, pendant que le client garde l'app ouverte près du van.",
             ou: ["carte", "TinyPower", "TinyView", "app", "à distance", { mot: "à éprouver", neuf: true }]
+          },
+          {
+            ico: "echange",
+            titre: "Une carte qui change de nom reste appairée",
+            texte: "Une carte qui prend son numéro de série pour nom, à une mise à jour, est reconnue par l'app : clé, pages, installation et historique la suivent sous son nouveau nom, sans réappairage.",
+            exemple: " après la mise à jour, la carte réapparaît sous TR26105VT avec ses tuiles, sans retourner au van appuyer sur un bouton.",
+            ou: ["carte", "app", { mot: "à éprouver", neuf: true }]
           },
           {
             ico: "echange",
@@ -1346,9 +1353,9 @@ const FONCTIONS = {
           {
             ico: "batterie",
             titre: "General battery cutoff",
-            texte: "Below an adjustable voltage, held for a delay, everything switches off and nothing can be switched back on until the voltage recovers. Presets exist per battery chemistry, lead or lithium.",
+            texte: "Below an adjustable voltage, held for a delay, everything switches off and nothing can be switched back on until the voltage recovers: not from the buttons, the app or Home Assistant, and the app says why. Switching off always remains possible. Presets exist per battery chemistry, lead or lithium.",
             exemple: " the service battery never drops low enough to be damaged, even if a light is left on for three days.",
-            ou: ["board", "app"]
+            ou: ["board", "app", "Home Assistant", { mot: "to be trialled", neuf: true }]
           },
           {
             ico: "cascade",
@@ -1762,6 +1769,13 @@ const FONCTIONS = {
             texte: "The customer opens a support session in Settings and reads a code to XP Trucks support, or sends it with one tap. Support pastes it from the message received and asks for access under their name; the customer sees “Connection request from Paul” and a four-digit code, the same one support sees, which they compare on the phone before allowing. Support then sees and adjusts the installation exactly as the customer does, from the installations menu: boards, TinyPower, TinyView and its pages, installation pages. What support changes is saved on the customer's phone. No key is shared; pairing, removing or updating a device stays with the customer. Both screens show the app version, which must be the same on both sides. The session lasts two hours at most, the customer stops it at will, and the phone stays awake meanwhile.",
             exemple: " a setting worries a customer on the other side of the world: support sees it and fixes it live, down to the pages of their TinyView, while the customer keeps the app open near the van.",
             ou: ["board", "TinyPower", "TinyView", "app", "remote", { mot: "to be trialled", neuf: true }]
+          },
+          {
+            ico: "echange",
+            titre: "A board that changes its name stays paired",
+            texte: "A board that takes its serial number as its name during an update is recognised by the app: key, pages, installation and history follow it under its new name, without pairing again.",
+            exemple: " after the update, the board reappears as TR26105VT with its tiles, without going back to the van to press a button.",
+            ou: ["board", "app", { mot: "to be trialled", neuf: true }]
           },
           {
             ico: "echange",
