@@ -355,6 +355,7 @@
       "NOP",
       "GET_KEY",
       "PAIR_LABEL",
+      "GET_MAC_SUFFIX",
       "SAFE_MODE",
       "FACTORY_RESET",
       "OTA_BEGIN",
@@ -438,6 +439,7 @@
     "SET_ALL": 2,
     "GET_KEY": 3,
     "PAIR_LABEL": 4,
+    "GET_MAC_SUFFIX": 5,
     "GET_CH_CONFIG": 16,
     "SET_AUTO_OFF": 17,
     "SET_AUTO_ON": 18,
@@ -512,7 +514,8 @@
     "TRUNCATED": 5,
     "BUSY": 6,
     "DRIVEN": 7,
-    "LOCKED": 8
+    "LOCKED": 8,
+    "CUTOFF": 9
   },
   "_output_kinds_comment": [
     "L'index EST la valeur du protocole ET celle rangée en NVS : un décalage",
