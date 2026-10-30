@@ -347,7 +347,9 @@
       "réseau, même masquée ;",
       "FACTORY_RESET, qui efface cette clé et rend la carte injoignable pour de",
       "bon ; SET_BOARD_NAME, parce que le nom EST le compte du broker (D-137) ;",
-      "SAFE_MODE et les opcodes d'OTA, qui n'ont pas de sens par ce chemin.",
+      "SAFE_MODE et les opcodes d'OTA, qui n'ont pas de sens par ce chemin ;",
+      "l'écriture et l'effacement de la référence de l'installateur (INST_BEGIN,",
+      "INST_CHUNK, INST_COMMIT, INST_CLEAR), qui se font sur place (D-198, D-211).",
       "⚠️ GET_REMOTE reste OUVERT : c'est une lecture, et sans elle l'écran",
       "affiche « inconnu » pour un état qu'on a le droit de connaître."
     ],
@@ -372,7 +374,8 @@
       "SET_REMOTE",
       "INST_BEGIN",
       "INST_CHUNK",
-      "INST_COMMIT"
+      "INST_COMMIT",
+      "INST_CLEAR"
     ],
     "_open_opcodes_comment": [
       "⚠️ CETTE LISTE N'EST PAS LA RÈGLE, C'EST SA PREUVE. La règle reste la liste",
@@ -500,7 +503,8 @@
     "INST_BEGIN": 122,
     "INST_CHUNK": 123,
     "INST_COMMIT": 124,
-    "INST_READ": 125
+    "INST_READ": 125,
+    "INST_CLEAR": 126
   },
   "_opcodes_not_dispatched": [
     "NOP"
