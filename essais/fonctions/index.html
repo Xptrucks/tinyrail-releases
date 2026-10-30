@@ -664,6 +664,13 @@ const FONCTIONS = {
             ou: ["carte", "TinyPower", "app", "à distance", { mot: "à éprouver", neuf: true }]
           },
           {
+            ico: "carteNom",
+            titre: "Effacer la référence, sur place",
+            texte: "Avant de vendre, le propriétaire efface la référence de la carte ou de la TinyPower. L'app propose d'abord d'en enregistrer une copie, puis demande un geste sur l'appareil : un appui bref sur son bouton BOOT, dans les 30 s. Sans ce geste, rien n'est effacé. Avant de revenir à une référence, l'app montre sa date et qui l'a posée.",
+            exemple: " le van change de main : le vendeur garde une copie de sa référence et l'efface, l'acheteur n'hérite que de ce qu'il voit.",
+            ou: ["carte", "TinyPower", "app", { mot: "à éprouver", neuf: true }]
+          },
+          {
             ico: "partager",
             titre: "Session SAV par le téléphone du client",
             texte: "Le client ouvre une session SAV dans les Réglages et dicte un code au SAV XP Trucks, ou le lui envoie d'un bouton. Le SAV le colle depuis le message reçu et demande l'accès sous son nom ; le client voit « Demande de connexion de Paul » et un code à quatre chiffres, le même chez le SAV, qu'ils comparent au téléphone avant d'autoriser. Le SAV voit et règle alors l'installation exactement comme lui, depuis le menu des installations : cartes, TinyPower, TinyView et leurs pages, pages de l'installation. Ce que le SAV modifie est enregistré chez le client. Aucune clé n'est transmise ; appairer, retirer un appareil ou le mettre à jour reste au client. Les deux écrans affichent la version de l'app, qui doit être la même des deux côtés. La session dure deux heures au plus, le client l'arrête quand il veut, et son téléphone reste allumé pendant ce temps.",
@@ -1762,6 +1769,13 @@ const FONCTIONS = {
             texte: "The installer saves the reference configuration inside the board or the TinyPower itself, over Bluetooth. It survives a factory reset. The device can be compared with its reference and brought back to it, on site or remotely; what the device cannot set back is spelled out.",
             exemple: " a customer has changed everything from afar: support goes back to the reference set at delivery, without travelling.",
             ou: ["board", "TinyPower", "app", "remote", { mot: "to be trialled", neuf: true }]
+          },
+          {
+            ico: "carteNom",
+            titre: "Erasing the reference, on site",
+            texte: "Before selling, the owner erases the reference from the board or the TinyPower. The app first offers to save a copy, then asks for a gesture on the device: a short press on its BOOT button, within 30 s. Without that gesture, nothing is erased. Before going back to a reference, the app shows its date and who set it.",
+            exemple: " the van changes hands: the seller keeps a copy of their reference and erases it, the buyer only inherits what they can see.",
+            ou: ["board", "TinyPower", "app", { mot: "to be trialled", neuf: true }]
           },
           {
             ico: "partager",
