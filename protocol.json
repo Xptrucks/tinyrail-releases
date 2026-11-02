@@ -343,16 +343,21 @@
       "peut ni la lire ni en forger une.",
       "Restent fermés : les options d'accès à distance (Wi-Fi, compte du broker,",
       "SET_REMOTE) — s'en servir depuis le lien qu'elles portent le couperait ;",
-      "GET_KEY, parce que la clé d'appairage ne sort jamais par le réseau ;",
+      "GET_KEY et PAIR_LABEL, parce que la clé d'appairage ne sort jamais par le",
+      "réseau, même masquée ;",
       "FACTORY_RESET, qui efface cette clé et rend la carte injoignable pour de",
       "bon ; SET_BOARD_NAME, parce que le nom EST le compte du broker (D-137) ;",
-      "SAFE_MODE et les opcodes d'OTA, qui n'ont pas de sens par ce chemin.",
+      "SAFE_MODE et les opcodes d'OTA, qui n'ont pas de sens par ce chemin ;",
+      "l'écriture et l'effacement de la référence de l'installateur (INST_BEGIN,",
+      "INST_CHUNK, INST_COMMIT, INST_CLEAR), qui se font sur place (D-198, D-211).",
       "⚠️ GET_REMOTE reste OUVERT : c'est une lecture, et sans elle l'écran",
       "affiche « inconnu » pour un état qu'on a le droit de connaître."
     ],
     "denied_opcodes": [
       "NOP",
       "GET_KEY",
+      "PAIR_LABEL",
+      "GET_MAC_SUFFIX",
       "SAFE_MODE",
       "FACTORY_RESET",
       "OTA_BEGIN",
@@ -366,7 +371,11 @@
       "GET_WIFI",
       "SET_WIFI",
       "CLEAR_WIFI",
-      "SET_REMOTE"
+      "SET_REMOTE",
+      "INST_BEGIN",
+      "INST_CHUNK",
+      "INST_COMMIT",
+      "INST_CLEAR"
     ],
     "_open_opcodes_comment": [
       "⚠️ CETTE LISTE N'EST PAS LA RÈGLE, C'EST SA PREUVE. La règle reste la liste",
@@ -388,6 +397,8 @@
       "GET_INFO",
       "GET_INPUT",
       "GET_INPUT_ALARM",
+      "INST_INFO",
+      "INST_READ",
       "GET_INPUT_META",
       "GET_INPUT_SCALE",
       "GET_LABEL",
@@ -430,6 +441,8 @@
     "SET_CHANNEL": 1,
     "SET_ALL": 2,
     "GET_KEY": 3,
+    "PAIR_LABEL": 4,
+    "GET_MAC_SUFFIX": 5,
     "GET_CH_CONFIG": 16,
     "SET_AUTO_OFF": 17,
     "SET_AUTO_ON": 18,
@@ -485,7 +498,13 @@
     "CLEAR_WIFI": 117,
     "GET_REMOTE": 118,
     "SET_REMOTE": 119,
-    "GET_DIAG": 120
+    "GET_DIAG": 120,
+    "INST_INFO": 121,
+    "INST_BEGIN": 122,
+    "INST_CHUNK": 123,
+    "INST_COMMIT": 124,
+    "INST_READ": 125,
+    "INST_CLEAR": 126
   },
   "_opcodes_not_dispatched": [
     "NOP"
@@ -499,7 +518,8 @@
     "TRUNCATED": 5,
     "BUSY": 6,
     "DRIVEN": 7,
-    "LOCKED": 8
+    "LOCKED": 8,
+    "CUTOFF": 9
   },
   "_output_kinds_comment": [
     "L'index EST la valeur du protocole ET celle rangée en NVS : un décalage",

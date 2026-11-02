@@ -517,8 +517,8 @@
     <b id="pairTitle">Première connexion à cette carte.</b><br>
     <span id="pairWhy">Pour commander la carte, il faut récupérer sa clé : </span>
     appuyez <b>3&nbsp;secondes</b> sur le bouton BOOT (SW13) du TinyRail pour ouvrir la
-    fenêtre d'appairage de 30&nbsp;s, puis touchez « Appairer ». La consultation fonctionne
-    sans cela ; seules les commandes exigent la clé.
+    fenêtre d'appairage de 30&nbsp;s, puis touchez « Appairer ». Sans la clé, la carte ne
+    montre rien : ni état, ni mesures.
     <div class="row" style="margin-top:10px">
       <button id="btnPair">Appairer</button>
       <button class="ghost" id="btnImport">Coller une clé</button>
@@ -761,7 +761,7 @@
 // Remplacé à la publication par tools/webble/publish.sh ou par le workflow de
 // release. Reste tel quel lorsqu'on sert le fichier directement : c'est ainsi
 // qu'on distingue une page de travail d'une page publiée.
-const CONSOLE_VERSION = 'v0.14.1';
+const CONSOLE_VERSION = 'v0.16.0';
 
 const BASE = '12340000-1234-1234-1234-1234123400';   // + 2 hex
 const U = {
@@ -778,7 +778,8 @@ const U = {
 };
 
 const OP = {
-  SET_CHANNEL: 0x01, SET_ALL: 0x02, GET_KEY: 0x03,
+  SET_CHANNEL: 0x01, SET_ALL: 0x02, GET_KEY: 0x03, PAIR_LABEL: 0x04,
+  GET_MAC_SUFFIX: 0x05,
   GET_CH_CONFIG: 0x10, SET_AUTO_OFF: 0x11, SET_AUTO_ON: 0x12, SET_PAIR: 0x13,
   SET_START_MODE: 0x14,
   // Pas du cycle de gradation, global : le POURCENTAGE voyage (5, 10, 20, 25).
@@ -815,6 +816,9 @@ const OP = {
   // Diagnostic : uptime, heap, et la cause du dernier démarrage — celle qui
   // distingue une carte qui redémarre d'un réseau qui tombe.
   GET_DIAG: 0x78,
+  // Sauvegarde installateur (D-198) : un bloc opaque, écrit en BLE seulement.
+  INST_INFO: 0x79, INST_BEGIN: 0x7A, INST_CHUNK: 0x7B, INST_COMMIT: 0x7C,
+  INST_READ: 0x7D, INST_CLEAR: 0x7E,
 };
 const OP_NAME = Object.fromEntries(Object.entries(OP).map(([k, v]) => [v, k]));
 
@@ -824,6 +828,8 @@ const STATUS = {
   0x06: 'occupé', 0x07: 'sortie asservie à une entrée',
   // ⚠️ Verrouillée n'est pas asservie : seul l'allumage est refusé.
   0x08: 'sortie verrouillée : allumage refusé',
+  // Coupure batterie : allumer est refusé partout, éteindre passe.
+  0x09: 'coupure batterie : allumage refusé',
 };
 
 // Une seule plage de sonde : la courbe se règle par les bornes, pas par le mode.
