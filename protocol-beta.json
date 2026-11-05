@@ -375,7 +375,8 @@
       "INST_BEGIN",
       "INST_CHUNK",
       "INST_COMMIT",
-      "INST_CLEAR"
+      "INST_CLEAR",
+      "LOCK_LABEL"
     ],
     "_open_opcodes_comment": [
       "⚠️ CETTE LISTE N'EST PAS LA RÈGLE, C'EST SA PREUVE. La règle reste la liste",
@@ -433,7 +434,10 @@
       "SET_SHED",
       "SET_START_MODE",
       "SET_THERMAL",
-      "SET_TIME"
+      "SET_TIME",
+      "LOCK_INFO",
+      "LOCK_SET",
+      "LOCK_OPEN"
     ]
   },
   "opcodes": {
@@ -504,7 +508,11 @@
     "INST_CHUNK": 123,
     "INST_COMMIT": 124,
     "INST_READ": 125,
-    "INST_CLEAR": 126
+    "INST_CLEAR": 126,
+    "LOCK_INFO": 128,
+    "LOCK_SET": 129,
+    "LOCK_OPEN": 130,
+    "LOCK_LABEL": 131
   },
   "_opcodes_not_dispatched": [
     "NOP"
@@ -519,7 +527,9 @@
     "BUSY": 6,
     "DRIVEN": 7,
     "LOCKED": 8,
-    "CUTOFF": 9
+    "CUTOFF": 9,
+    "INSTALL_LOCKED": 10,
+    "LOCK_WAIT": 11
   },
   "_output_kinds_comment": [
     "L'index EST la valeur du protocole ET celle rangée en NVS : un décalage",
@@ -979,5 +989,47 @@
     "⚠️ Le champ est ajouté À LA FIN : une application ancienne lit ce qu'elle",
     "connaît et ignore le reste. Une application à jour face à un firmware ancien",
     "reçoit BAD_PAYLOAD sur trois octets, et peut se rabattre sur deux."
-  ]
+  ],
+  "_install_lock_comment": "D-214. Une carte verrouillée refuse tout opcode absent de allowed_when_locked (ST_INSTALL_LOCKED), en BLE comme par MQTT : liste BLANCHE, un opcode nouveau est refusé tant qu'il n'y est pas rangé. LOCK_INFO -> [verrouillée u8, échecs u8, attente_s u32]. LOCK_SET et LOCK_OPEN : 6 chiffres ASCII ; 5 essais faux, puis attente doublée d'1 min à 1 jour, LOCK_WAIT (0x0B) pendant l'attente, commun aux trois appareils. LOCK_LABEL : 16 premiers octets de HMAC-SHA256(code de l'étiquette, défi de la connexion 16 o + \"verrou\"), BLE seulement.",
+  "install_lock": {
+    "allowed_when_locked": [
+      "NOP",
+      "GET_CH_CONFIG",
+      "GET_DIM",
+      "GET_OVERCURRENT",
+      "GET_THERMAL",
+      "GET_LABEL",
+      "GET_CH_META",
+      "GET_INPUT",
+      "GET_LINK",
+      "GET_SHED",
+      "GET_BATTERY",
+      "GET_INPUT_META",
+      "GET_SENDER",
+      "GET_INPUT_SCALE",
+      "GET_INFO",
+      "OTA_STATUS",
+      "GET_BOARD_NAME",
+      "GET_INPUT_ALARM",
+      "HIST_INFO",
+      "HIST_READ",
+      "GET_MQTT",
+      "GET_WIFI",
+      "GET_REMOTE",
+      "GET_DIAG",
+      "INST_INFO",
+      "INST_READ",
+      "SET_CHANNEL",
+      "SET_ALL",
+      "SET_DIM",
+      "SET_TIME",
+      "GET_KEY",
+      "PAIR_LABEL",
+      "GET_MAC_SUFFIX",
+      "LOCK_INFO",
+      "LOCK_SET",
+      "LOCK_OPEN",
+      "LOCK_LABEL"
+    ]
+  }
 }

@@ -1,12 +1,12 @@
 {
   "name": "TinyRail ESP32 v2",
-  "version": "0.16.0",
+  "version": "0.17.0-beta.1",
   "home_assistant_domain": "esphome",
   "builds": [
     {
       "chipFamily": "ESP32-C3",
       "parts": [
-        { "path": "https://flash.tinyrail.xptrucks.fr/firmware.factory.bin", "offset": 0 }
+        { "path": "https://flash.tinyrail.xptrucks.fr/firmware-beta.factory.bin", "offset": 0 }
       ]
     }
   ]
