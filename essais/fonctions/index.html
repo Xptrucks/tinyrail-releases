@@ -489,6 +489,13 @@ const FONCTIONS = {
             ou: ["app"]
           },
           {
+            ico: "palette",
+            titre: "Créer son thème dans l'app",
+            texte: "Un accent et une ambiance des fonds suffisent : l'app en déduit toutes les couleurs, en clair comme en sombre, et l'aperçu montre l'effet pendant qu'on choisit. Le niveau détaillé règle chaque couleur une à une. Les couleurs de délestage et de défaut restent verrouillées sauf choix explicite, et un thème illisible au soleil ne s'enregistre pas. Modifier un thème reçu en crée toujours une copie.",
+            exemple: " un aménageur reprend le thème de sa marque, change l'accent pour une série spéciale, et livre le van avec.",
+            ou: ["app", { mot: "à éprouver", neuf: true }]
+          },
+          {
             ico: "oeil",
             titre: "Une représentation par tuile",
             texte: "Interrupteur, gradateur, icône seule ; chiffre, jauge, réservoir, voyant, batterie : chaque tuile choisit sa façon de se montrer, parmi celles que son type permet, la même dans l'app et sur le TinyView.",
@@ -669,6 +676,13 @@ const FONCTIONS = {
             texte: "Avant de vendre, le propriétaire efface la référence de la carte ou de la TinyPower. L'app propose d'abord d'en enregistrer une copie, puis demande un geste sur l'appareil : un appui bref sur son bouton BOOT, dans les 30 s. Sans ce geste, rien n'est effacé. Avant de revenir à une référence, l'app montre sa date et qui l'a posée.",
             exemple: " le van change de main : le vendeur garde une copie de sa référence et l'efface, l'acheteur n'hérite que de ce qu'il voit.",
             ou: ["carte", "TinyPower", "app", { mot: "à éprouver", neuf: true }]
+          },
+          {
+            ico: "verrou",
+            titre: "Verrouiller l'installation",
+            texte: "L'installateur verrouille l'installation avec un code à six chiffres, posé dans chaque carte, TinyPower et TinyView. Un cadenas se ferme par appareil, puis un grand quand tous le sont. L'app passe alors en mode Utilisation : les pages et leurs commandes restent, les réglages, l'ajout d'appareils, les mises à jour et l'onglet Appareils disparaissent, et les appareils refusent eux-mêmes tout réglage, même à distance. Le code rouvre la configuration ; oublié, l'étiquette de chaque appareil le remplace, scannée devant lui.",
+            exemple: " le van est livré verrouillé : le client allume, éteint et règle la lumière, sans pouvoir dérégler par mégarde un seuil de délestage.",
+            ou: ["carte", "TinyPower", "TinyView", "app", "à distance", { mot: "à éprouver", neuf: true }]
           },
           {
             ico: "partager",
@@ -1596,6 +1610,13 @@ const FONCTIONS = {
             ou: ["app"]
           },
           {
+            ico: "palette",
+            titre: "Create your theme in the app",
+            texte: "An accent and a background tint are enough: the app works out every colour, light and dark, and the preview shows the result while you choose. The detailed level sets each colour one by one. Load-shedding and fault colours stay locked unless you choose otherwise, and a theme unreadable in the sun cannot be saved. Editing a received theme always makes a copy.",
+            exemple: " a converter takes its brand theme, changes the accent for a special edition, and delivers the van with it.",
+            ou: ["app", { mot: "to be trialled", neuf: true }]
+          },
+          {
             ico: "oeil",
             titre: "One representation per tile",
             texte: "Switch, dimmer, icon only; number, gauge, tank, indicator, battery: each tile picks how it shows itself, among those its type allows, the same in the app and on the TinyView.",
@@ -1769,6 +1790,13 @@ const FONCTIONS = {
             texte: "The installer saves the reference configuration inside the board or the TinyPower itself, over Bluetooth. It survives a factory reset. The device can be compared with its reference and brought back to it, on site or remotely; what the device cannot set back is spelled out.",
             exemple: " a customer has changed everything from afar: support goes back to the reference set at delivery, without travelling.",
             ou: ["board", "TinyPower", "app", "remote", { mot: "to be trialled", neuf: true }]
+          },
+          {
+            ico: "verrou",
+            titre: "Lock the installation",
+            texte: "The installer locks the installation with a six-digit code, set in every board, TinyPower and TinyView. One padlock closes per device, then a large one once they all are. The app then switches to everyday mode: pages and their controls stay, while settings, adding devices, updates and the Devices tab disappear, and the devices themselves refuse any setting, even remotely. The code opens setup again; if it is forgotten, each device's label replaces it, scanned in front of the device.",
+            exemple: " the van is delivered locked: the customer switches and dims the lights, without being able to upset a load-shedding threshold by mistake.",
+            ou: ["board", "TinyPower", "TinyView", "app", "remote", { mot: "to be trialled", neuf: true }]
           },
           {
             ico: "carteNom",
