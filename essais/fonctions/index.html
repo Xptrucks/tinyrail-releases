@@ -685,6 +685,20 @@ const FONCTIONS = {
             ou: ["carte", "TinyPower", "TinyView", "app", "à distance", { mot: "à éprouver", neuf: true }]
           },
           {
+            ico: "ecran",
+            titre: "L'app sur tablette",
+            texte: "Sur un iPad ou une tablette Android, les sections d'une page se rangent en colonnes, jusqu'à trois selon la largeur, et chaque tuile garde la taille qu'elle a sur le téléphone. En paysage, la navigation passe dans une barre à gauche ; en portrait, elle reste en bas. En paysage aussi, Appareils, Alertes et Réglages gardent leur liste à gauche et ouvrent ce qu'on touche à droite. L'éditeur des pages du TinyView montre l'aperçu à côté des réglages de la tuile.",
+            exemple: " sur la tablette du salon, l'éclairage, le chauffage et l'énergie tiennent côte à côte sans faire défiler.",
+            ou: ["app", { mot: "à éprouver", neuf: true }]
+          },
+          {
+            ico: "ecran",
+            titre: "Écran de bord",
+            texte: "Depuis le menu « … », l'app passe en plein écran : le nom de l'installation et les pages, rien d'autre. On change de page d'un glissement ou par son nom, ou on les laisse défiler seules ; sans contact pendant quelques minutes, l'écran revient à la première. Les tuiles s'agrandissent pour une lecture de loin, et l'orientation peut se figer en paysage ou en portrait (sauf sous Android 16 et en multitâche sur iPad). L'écran reste allumé, un défaut du van s'affiche en tête, et un témoin dit quand les appareils ne répondent plus qu'à distance ou plus du tout. La nuit, aux heures choisies, la luminosité baisse. Chaque tablette choisit d'ouvrir l'app directement sur l'écran de bord ; l'Accès guidé de l'iPad ou l'épinglage d'Android la réservent à cet usage.",
+            exemple: " une tablette fixée près de la porte affiche l'énergie et l'éclairage jour et nuit, sans éblouir la cellule et sans qu'on puisse en sortir par mégarde.",
+            ou: ["app", { mot: "à éprouver", neuf: true }]
+          },
+          {
             ico: "partager",
             titre: "Session SAV par le téléphone du client",
             texte: "Le client ouvre une session SAV dans les Réglages et dicte un code au SAV XP Trucks, ou le lui envoie d'un bouton. Le SAV le colle depuis le message reçu et demande l'accès sous son nom ; le client voit « Demande de connexion de Paul » et un code à quatre chiffres, le même chez le SAV, qu'ils comparent au téléphone avant d'autoriser. Le SAV voit et règle alors l'installation exactement comme lui, depuis le menu des installations : cartes, TinyPower, TinyView et leurs pages, pages de l'installation. Ce que le SAV modifie est enregistré chez le client. Aucune clé n'est transmise ; appairer, retirer un appareil ou le mettre à jour reste au client. Les deux écrans affichent la version de l'app, qui doit être la même des deux côtés. La session dure deux heures au plus, le client l'arrête quand il veut, et son téléphone reste allumé pendant ce temps.",
@@ -967,7 +981,7 @@ const FONCTIONS = {
           {
             ico: "chrono",
             titre: "L'heure sur l'écran, et pour les cartes",
-            texte: "Le TinyView a sa propre horloge, réglée par le téléphone avec son fuseau, heures d'été et d'hiver comprises. Il l'affiche dans une tuile Horloge (24 h ou 12 h, sept formats de date) et la donne à chacune de ses cartes TinyRail, qui datent ainsi leur historique sans attendre l'app.",
+            texte: "Le TinyView a sa propre horloge, réglée par le téléphone avec son fuseau, heures d'été et d'hiver comprises. Il l'affiche dans une tuile Horloge (24 h ou 12 h, sept formats de date) et la donne à chacune de ses cartes TinyRail, qui datent ainsi leur historique sans attendre l'app. La même tuile se pose aussi dans les pages de l'app, à l'heure du téléphone.",
             exemple: " au réveil, on lit l'heure et la date en grand à côté du niveau d'eau, sans sortir son téléphone.",
             ou: ["TinyView", "app", "carte"]
           },
@@ -1799,6 +1813,20 @@ const FONCTIONS = {
             ou: ["board", "TinyPower", "TinyView", "app", "remote", { mot: "to be trialled", neuf: true }]
           },
           {
+            ico: "ecran",
+            titre: "The app on a tablet",
+            texte: "On an iPad or an Android tablet, a page's sections are laid out in columns, up to three depending on the width, and each tile keeps the size it has on the phone. In landscape, navigation moves to a bar on the left; in portrait, it stays at the bottom. In landscape too, Devices, Alerts and Settings keep their list on the left and open what is tapped on the right. The TinyView page editor shows the preview next to the tile settings.",
+            exemple: " on the living-area tablet, lighting, heating and energy sit side by side without scrolling.",
+            ou: ["app", { mot: "to be trialled", neuf: true }]
+          },
+          {
+            ico: "ecran",
+            titre: "Dashboard screen",
+            texte: "From the “…” menu, the app goes full screen: the installation's name and the pages, nothing else. Pages change with a swipe or by name, or rotate on their own; after a few minutes untouched, the screen goes back to the first one. Tiles can be enlarged for reading from a distance, and the orientation can be held in landscape or portrait (except on Android 16 and with multitasking on iPad). The screen stays on, a van fault shows at the top, and a mark tells when the devices only answer remotely or not at all. At night, during the chosen hours, the brightness drops. Each tablet can choose to open the app straight on the dashboard screen; iPad's Guided Access or Android's app pinning dedicate it to that use.",
+            exemple: " a tablet mounted by the door shows energy and lighting day and night, without lighting up the living area and without being left by mistake.",
+            ou: ["app", { mot: "to be trialled", neuf: true }]
+          },
+          {
             ico: "carteNom",
             titre: "Erasing the reference, on site",
             texte: "Before selling, the owner erases the reference from the board or the TinyPower. The app first offers to save a copy, then asks for a gesture on the device: a short press on its BOOT button, within 30 s. Without that gesture, nothing is erased. Before going back to a reference, the app shows its date and who set it.",
@@ -2088,7 +2116,7 @@ const FONCTIONS = {
           {
             ico: "chrono",
             titre: "The time on screen, and for the boards",
-            texte: "The TinyView has its own clock, set by the phone with its time zone, daylight saving included. It shows it in a Clock tile (24 h or 12 h, seven date formats) and passes it on to each of its TinyRail boards, which can then date their history without waiting for the app.",
+            texte: "The TinyView has its own clock, set by the phone with its time zone, daylight saving included. It shows it in a Clock tile (24 h or 12 h, seven date formats) and passes it on to each of its TinyRail boards, which can then date their history without waiting for the app. The same tile can also go on the app's pages, showing the phone's time.",
             exemple: " in the morning, you read the time and date in large print next to the water level, without your phone.",
             ou: ["TinyView", "app", "board"]
           },
