@@ -286,6 +286,13 @@ const FONCTIONS = {
             ou: ["carte", "app"]
           },
           {
+            ico: "goutte",
+            titre: "Actions aux seuils d'un réservoir",
+            texte: "Chaque seuil d'alerte d'une entrée, avertissement et critique, peut agir sur ses propres sorties : couper et verrouiller, ou tenir allumé ou éteint tant que l'alerte dure. Une sortie coupée et verrouillée ne repart pas d'elle-même : on la rallume à la main, une fois l'alerte terminée. Une sonde débranchée est signalée et compte comme un seuil critique.",
+            exemple: " eau propre à 5 %, la pompe se coupe et ne repart qu'après le plein, quand on la rallume ; à 20 %, la douche extérieure est déjà tenue éteinte.",
+            ou: ["carte", "app", "TinyView", { mot: "à éprouver", neuf: true }]
+          },
+          {
             ico: "bouclierOk",
             titre: "Protections du composant de puissance",
             texte: "Chaque sortie s'appuie sur un composant intelligent qui se protège lui-même : limitation de courant, coupure thermique, et une diode de roue libre dimensionnée pour les charges inductives.",
@@ -939,9 +946,16 @@ const FONCTIONS = {
           {
             ico: "insigne",
             titre: "Une carte en retard le dit d'elle-même",
-            texte: "Quand une version plus récente existe, l'app le dit à l'endroit où l'on regarde la carte, aux couleurs de la marque et jamais à celles d'un défaut. Un firmware disponible n'est pas une panne.",
+            texte: "Quand une version plus récente existe <b>et que son image est déjà sur le téléphone</b>, l'app le dit à l'endroit où l'on regarde la carte, aux couleurs de la marque et jamais à celles d'un défaut. Un firmware disponible n'est pas une panne.",
             exemple: " on voit qu'une carte est en retard sans ouvrir l'écran de mise à jour.",
             ou: ["app"]
+          },
+          {
+            ico: "archive",
+            titre: "L'image est sur le téléphone avant l'annonce",
+            texte: "L'app télécharge d'elle-même la dernière image (et la passerelle pour une carte trop ancienne), la vérifie et la garde. Rien n'est annoncé tant qu'elle n'est pas prête : dans un van sans réseau, on ne propose plus une mise à jour impossible à installer.",
+            exemple: " au fond d'un camping sans couverture, on lance la mise à jour : l'image était déjà sur le téléphone.",
+            ou: ["app", { mot: "à éprouver", neuf: true }]
           },
           {
             ico: "doubleCheck",
@@ -1426,6 +1440,13 @@ const FONCTIONS = {
             texte: "An input can forbid switching certain outputs on while a condition holds. A lock commands nothing: what is already on stays on, and switching off is always allowed.",
             exemple: " with the ignition off, the garage fridge socket refuses to switch on.",
             ou: ["board", "app"]
+          },
+          {
+            ico: "goutte",
+            titre: "Tank threshold actions",
+            texte: "Each alert threshold of an input, warning and critical, can act on its own outputs: cut and lock, or hold them on or off while the alert lasts. An output cut and locked does not restart on its own: you switch it back on yourself once the alert is over. A disconnected sender is reported and counts as a critical threshold.",
+            exemple: " fresh water at 5 %, the pump cuts out and only restarts after a refill, when you switch it back on; at 20 %, the outdoor shower is already held off.",
+            ou: ["board", "app", "TinyView", { mot: "to be trialled", neuf: true }]
           },
           {
             ico: "bouclierOk",
@@ -2081,9 +2102,16 @@ const FONCTIONS = {
           {
             ico: "insigne",
             titre: "A board that is behind says so",
-            texte: "When a newer version exists, the app says so where you look at the board, in the brand colour and never in a fault colour. An available firmware is not a failure.",
+            texte: "When a newer version exists <b>and its image is already on the phone</b>, the app says so where you look at the board, in the brand colour and never in a fault colour. An available firmware is not a failure.",
             exemple: " you see that a board is behind without opening the update screen.",
             ou: ["app"]
+          },
+          {
+            ico: "archive",
+            titre: "The image is on the phone before any announcement",
+            texte: "The app downloads the latest image by itself (and the gateway image for a board that is too old), checks it and keeps it. Nothing is announced until it is ready: in a van with no network, you are no longer offered an update you cannot install.",
+            exemple: " at the back of a campsite with no coverage, you start the update: the image was already on the phone.",
+            ou: ["app", { mot: "to be trialled", neuf: true }]
           },
           {
             ico: "doubleCheck",
