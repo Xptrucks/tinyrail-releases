@@ -886,8 +886,15 @@
     "⚠️ Seuils en DIXIÈMES d'unité : 500 Ω en centièmes déborderaient un u16.",
     "⚠️ La grandeur dépend du mode ET de la courbe réglée : un client ne peut",
     "pas la déduire seul, c'est pourquoi elle est transmise.",
-    "⚠️ Une alerte est signalée, jamais agie : aucune sortie n'est coupée.",
-    "Piloter une sortie depuis une entrée reste le rôle de SET_LINK."
+    "Depuis D-222, chaque seuil peut AGIR sur son propre groupe de sorties :",
+    "4 octets en fin de GET/SET_INPUT_ALARM, [act_w, masque_w, act_c, masque_c]",
+    "(alarm_actions, masque bit 0 = CH1), OPTIONNELS en écriture : 5 octets",
+    "laissent les actions inchangées. L'action d'avertissement vaut dès",
+    "l'avertissement, critique compris ; sur une même sortie, le critique",
+    "l'emporte. « Couper et verrouiller » tient APRÈS l'alerte, jusqu'à un",
+    "SET_CHANNEL allumé (ou le bouton de façade), accepté une fois l'alerte",
+    "retombée ; avant, il répond LOCKED. Imposer ON/OFF répond DRIVEN.",
+    "Le niveau 3 (sonde absente) déclenche les actions critiques."
   ],
   "alarm_directions": [
     {
@@ -947,6 +954,36 @@
       "id": 2,
       "en": "Critical",
       "fr": "Critique"
+    },
+    {
+      "id": 3,
+      "en": "Sensor missing",
+      "fr": "Sonde absente"
+    }
+  ],
+  "alarm_actions": [
+    {
+      "id": 0,
+      "en": "None",
+      "fr": "Aucune"
+    },
+    {
+      "id": 1,
+      "en": "Cut and lock",
+      "fr": "Couper et verrouiller",
+      "locks": true
+    },
+    {
+      "id": 2,
+      "en": "Force ON",
+      "fr": "Imposer ON",
+      "overrides": true
+    },
+    {
+      "id": 3,
+      "en": "Force OFF",
+      "fr": "Imposer OFF",
+      "overrides": true
     }
   ],
   "constants": {
