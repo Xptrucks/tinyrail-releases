@@ -104,6 +104,13 @@ const FONCTIONS = {
             ou: ["app", "Home Assistant"]
           },
           {
+            ico: "eteindre",
+            titre: "Boutons de groupe",
+            texte: "Un bouton qui porte le nom et l'icône de votre choix, et qui allume, éteint ou bascule des sorties de plusieurs cartes d'un seul appui. En bascule, il est allumé dès qu'une de ses sorties l'est : un appui éteint tout s'il est allumé, allume tout sinon, chaque sortie retrouvant sa dernière luminosité. Il se pose sur les pages de l'app et sur celles du TinyView.",
+            exemple: " « Soirée » éteint le plafonnier de la cellule et la lampe de la soute, ou les rallume, d'un seul appui.",
+            ou: ["app", "TinyView", { mot: "à éprouver", neuf: true }]
+          },
+          {
             ico: "exclusif",
             titre: "Paires exclusives",
             texte: "Deux sorties voisines qui ne peuvent jamais être allumées ensemble : allumer l'une coupe l'autre, avec une coupure avant établissement.",
@@ -1237,6 +1244,13 @@ const FONCTIONS = {
             texte: "One gesture cuts or restores the eight outputs of a board. In the app, the gesture crosses every board of the installation.",
             exemple: " “all off” as you close the van door, without walking through the pages.",
             ou: ["app", "Home Assistant"]
+          },
+          {
+            ico: "eteindre",
+            titre: "Group buttons",
+            texte: "A button with the name and icon of your choice that turns on, turns off or toggles outputs across several boards in one press. As a toggle it is lit as soon as one of its outputs is on: a press turns everything off when it is lit, everything on otherwise, each output returning to its last brightness. It goes on the app pages and on the TinyView pages.",
+            exemple: " “Evening” turns off the living-area ceiling light and the storage lamp, or turns them back on, in one press.",
+            ou: ["app", "TinyView", { mot: "to be trialled", neuf: true }]
           },
           {
             ico: "exclusif",
