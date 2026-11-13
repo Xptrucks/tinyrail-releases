@@ -678,6 +678,13 @@ const FONCTIONS = {
             ou: ["app", { mot: "à éprouver", neuf: true }]
           },
           {
+            ico: "fichier",
+            titre: "Une sauvegarde d'une app plus récente",
+            texte: "Une sauvegarde écrite par une version plus récente de l'app se restaure quand même, avec ce que la version installée comprend. Avant de restaurer, l'app dit quelle version a écrit le fichier, laquelle est installée, et la liste des réglages qu'elle ne comprend pas. Une clé d'appairage illisible n'est pas posée, et l'app le dit.",
+            exemple: " un client qui n'a pas mis l'app à jour reçoit la sauvegarde de son installateur : il retrouve ses cartes et ses pages, et sait ce qu'une mise à jour lui rendra.",
+            ou: ["app", { mot: "à éprouver", neuf: true }]
+          },
+          {
             ico: "carteNom",
             titre: "La référence de l'installateur, gardée dans l'appareil",
             texte: "L'installateur enregistre la configuration de référence dans la carte ou la TinyPower elle-même, en Bluetooth. Elle survit à une remise aux réglages d'usine. On compare l'appareil à sa référence, et l'on y revient, sur place comme à distance ; ce que l'appareil ne sait pas remettre est dit.",
@@ -1831,6 +1838,13 @@ const FONCTIONS = {
             titre: "A backup that forgets nothing",
             texte: "The backup carries every setting of the installation: each board's, dimming step and network included, the TinyPower and its labels, and the fuse tiles of the pages. Before the password, the app says which devices were not read just now.",
             exemple: " a TinyPower out of range goes with its last reading, and the app says so instead of implying an exact copy.",
+            ou: ["app", { mot: "to be trialled", neuf: true }]
+          },
+          {
+            ico: "fichier",
+            titre: "A backup from a newer app",
+            texte: "A backup written by a newer version of the app is still restored, with what the installed version understands. Before restoring, the app says which version wrote the file, which one is installed, and the list of settings it does not understand. A pairing key it cannot read is not installed, and the app says so.",
+            exemple: " a customer who has not updated the app receives the backup from their installer: they get their boards and pages back, and know what an update will restore.",
             ou: ["app", { mot: "to be trialled", neuf: true }]
           },
           {
